@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FZG 專案追蹤器</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px;min-height:100vh}
+header{max-width:1200px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+h1{font-size:1.5em;color:var(--accent)}
+.views{display:flex;gap:4px;background:var(--surface);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.view-btn{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85em;border:none;color:var(--muted);background:transparent}
+.view-btn.active{background:var(--accent);color:#fff}
+.stats{max-width:1200px;margin:0 auto 20px;display:flex;gap:12px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px}
+.stat .num{font-size:1.5em;font-weight:700}
+.stat .label{font-size:0.75em;color:var(--muted)}
+.board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
+.column h3{font-size:0.85em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.col-todo h3{color:var(--muted)}
+.col-doing h3{color:var(--yellow)}
+.col-done h3{color:var(--green)}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px}
+.card .name{font-weight:600;font-size:0.85em;margin-bottom:4px}
+.card .meta{font-size:0.7em;color:var(--muted);display:flex;justify-content:space-between}
+.card .progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.card .progress-fill{height:100%;border-radius:2px;background:var(--accent)}
+.timeline{max-width:1200px;margin:0 auto}
+.tl-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.tl-bar{flex:1;height:20px;background:var(--border);border-radius:4px;position:relative;overflow:hidden}
+.tl-fill{height:100%;border-radius:4px;position:absolute;left:0;top:0}
+.tl-name{width:150px;font-size:0.8em;font-weight:600;flex-shrink:0}
+.tl-dates{width:120px;font-size:0.7em;color:var(--muted);flex-shrink:0;text-align:right}
+.report{max-width:800px;margin:0 auto}
+.report-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.report-section h3{font-size:0.9em;margin-bottom:10px;color:var(--accent)}
+.overdue{color:var(--red);font-weight:600}
+.hidden{display:none}
+.empty{text-align:center;color:var(--muted);padding:40px}
+@media(max-width:768px){.board{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 FZG 專案追蹤器</h1>
+  <div class="views">
+    <button class="view-btn active" data-view="board">看板</button>
+    <button class="view-btn" data-view="timeline">時間軸</button>
+    <button class="view-btn" data-view="report">報告</button>
+  </div>
+</header>
+<div class="stats" id="stats"></div>
+<div id="boardView" class="board"></div>
+<div id="timelineView" class="timeline hidden"></div>
+<div id="reportView" class="report hidden"></div>
+<script>
+const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+let tasks=[];
+async function fetchData(){
+  try{
+    const res=await fetch(CSV_URL);
+    const text=await res.text();
+    const json=JSON.parse(text.substring(47).slice(0,-2));
+    const rows=json.table.rows;
+    const cols=json.table.cols.map(c=>c.label);
+    tasks=rows.map(r=>{
+      const obj={};
+      cols.forEach((c,i)=>{obj[c]=r.c[i]?r.c[i].v||'':''});
+      return obj;
+    }).filter(t=>t['任務名稱']);
+    render();
+  }catch(e){document.getElementById('boardView').innerHTML='<div class="empty">無法載入資料，請確認 Google Sheet 已公開分享。</div>'}
+}
+function render(){
+  renderStats();renderBoard();renderTimeline();renderReport();
+}
+function renderStats(){
+  const total=tasks.length;
+  const done=tasks.filter(t=>t['狀態']==='已完成').length;
+  const doing=tasks.filter(t=>t['狀態']==='進行中').length;
+  const todo=tasks.filter(t=>t['狀態']==='待辦').length;
+  const avgProgress=total?Math.round(tasks.reduce((s,t)=>s+(parseInt(t['進度'])||0),0)/total):0;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="num">${total}</div><div class="label">總任務</div></div>
+    <div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">已完成</div></div>
+    <div class="stat"><div class="num" style="color:var(--yellow)">${doing}</div><div class="label">進行中</div></div>
+    <div class="stat"><div class="num">${todo}</div><div class="label">待辦</div></div>
+    <div class="stat"><div class="num">${avgProgress}%</div><div class="label">平均進度</div></div>`;
+}
+function renderBoard(){
+  const todo=tasks.filter(t=>t['狀態']==='待辦');
+  const doing=tasks.filter(t=>t['狀態']==='進行中');
+  const done=tasks.filter(t=>t['狀態']==='已完成');
+  const cardHtml=items=>items.map(t=>`<div class="card"><div class="name">${t['任務名稱']}</div><div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div></div>`).join('');
+  document.getElementById('boardView').innerHTML=`
+    <div class="column col-todo"><h3>📝 待辦 (${todo.length})</h3>${cardHtml(todo)||'<div class="empty">無任務</div>'}</div>
+    <div class="column col-doing"><h3>🔄 進行中 (${doing.length})</h3>${cardHtml(doing)||'<div class="empty">無任務</div>'}</div>
+    <div class="column col-done"><h3>✅ 已完成 (${done.length})</h3>${cardHtml(done)||'<div class="empty">無任務</div>'}</div>`;
+}
+function renderTimeline(){
+  if(!tasks.length){document.getElementById('timelineView').innerHTML='<div class="empty">無資料</div>';return}
+  const html=tasks.map(t=>{
+    const p=parseInt(t['進度'])||0;
+    const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+    return `<div class="tl-item"><div class="tl-name">${t['任務名稱']}</div><div class="tl-bar"><div class="tl-fill" style="width:${p}%;background:${color}"></div></div><div class="tl-dates">${t['開始日']||'?'} ~ ${t['截止日']||'?'}</div></div>`;
+  }).join('');
+  document.getElementById('timelineView').innerHTML=html;
+}
+function renderReport(){
+  const total=tasks.length;
+  const done=tasks.filter(t=>t['狀態']==='已完成').length;
+  const today=new Date().toISOString().split('T')[0];
+  const overdue=tasks.filter(t=>t['狀態']!=='已完成'&&t['截止日']&&t['截止日']<today);
+  let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
+  if(overdue.length){
+    html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
+  }
+  const doing=tasks.filter(t=>t['狀態']==='進行中');
+  if(doing.length){
+    html+=`<div class="report-section"><h3>🔄 進行中任務</h3>${doing.map(t=>`<p>• ${t['任務名稱']} — ${t['進度']||0}%</p>`).join('')}</div>`;
+  }
+  document.getElementById('reportView').innerHTML=html;
+}
+document.querySelector('.views').onclick=e=>{
+  if(!e.target.classList.contains('view-btn'))return;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  const view=e.target.dataset.view;
+  document.getElementById('boardView').classList.toggle('hidden',view!=='board');
+  document.getElementById('timelineView').classList.toggle('hidden',view!=='timeline');
+  document.getElementById('reportView').classList.toggle('hidden',view!=='report');
+};
+fetchData();
+</script>
+</body>
+</html>
