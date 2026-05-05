@@ -149,7 +149,9 @@ async function fetchData(){
     const rows=json.table.rows;
     tasks=rows.map(r=>{
       const obj={};
-      cols.forEach((c,i)=>{obj[c]=r.c&&r.c[i]?r.c[i].v||'':''});
+      cols.forEach((c,i)=>{
+        if(r.c&&r.c[i]){obj[c]=r.c[i].f||r.c[i].v||''}else{obj[c]=''}
+      });
       return obj;
     }).filter(t=>t['任務名稱']);
     render();
