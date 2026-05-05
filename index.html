@@ -115,9 +115,19 @@ function closeModal(){document.getElementById('addModal').classList.add('hidden'
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);render();updateMonthLabel()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'年'+(currentMonth.getMonth()+1)+'月'}
 function filterByMonth(list){
+  if(!list.length)return list;
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;
   const prefix=y+'-'+(m<10?'0'+m:m);
-  return list.filter(t=>(t['開始日']&&t['開始日'].startsWith(prefix))||(t['截止日']&&t['截止日'].startsWith(prefix))||(!t['開始日']&&!t['截止日']));
+  return list.filter(t=>{
+    if(!t['開始日']&&!t['截止日'])return true;
+    if(t['開始日']&&t['開始日'].startsWith(prefix))return true;
+    if(t['截止日']&&t['截止日'].startsWith(prefix))return true;
+    if(t['開始日']&&t['截止日']){
+      const s=t['開始日'].substring(0,7),e=t['截止日'].substring(0,7);
+      if(s<=prefix&&e>=prefix)return true;
+    }
+    return false;
+  });
 }
 async function submitTask(){
   const m=document.getElementById('addModal');
@@ -173,8 +183,9 @@ function renderBoard(){
     <div class="column col-done"><h3>✅ 已完成 (${done.length})</h3>${cardHtml(done)||'<div class="empty">無任務</div>'}</div>`;
 }
 function renderTimeline(){
-  if(!tasks.length){document.getElementById('timelineView').innerHTML='<div class="empty">無資料</div>';return}
-  const html=tasks.map(t=>{
+  const filtered=filterByMonth(tasks);
+  if(!filtered.length){document.getElementById('timelineView').innerHTML='<div class="empty">本月無任務</div>';return}
+  const html=filtered.map(t=>{
     const p=parseInt(t['進度'])||0;
     const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
     return `<div class="tl-item"><div class="tl-name">${t['任務名稱']}</div><div class="tl-bar"><div class="tl-fill" style="width:${p}%;background:${color}"></div></div><div class="tl-dates">${t['開始日']||'?'} ~ ${t['截止日']||'?'}</div></div>`;
@@ -182,15 +193,16 @@ function renderTimeline(){
   document.getElementById('timelineView').innerHTML=html;
 }
 function renderReport(){
-  const total=tasks.length;
-  const done=tasks.filter(t=>t['狀態']==='已完成').length;
+  const filtered=filterByMonth(tasks);
+  const total=filtered.length;
+  const done=filtered.filter(t=>t['狀態']==='已完成').length;
   const today=new Date().toISOString().split('T')[0];
-  const overdue=tasks.filter(t=>t['狀態']!=='已完成'&&t['截止日']&&t['截止日']<today);
+  const overdue=filtered.filter(t=>t['狀態']!=='已完成'&&t['截止日']&&t['截止日']<today);
   let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
   if(overdue.length){
     html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   }
-  const doing=tasks.filter(t=>t['狀態']==='進行中');
+  const doing=filtered.filter(t=>t['狀態']==='進行中');
   if(doing.length){
     html+=`<div class="report-section"><h3>🔄 進行中任務</h3>${doing.map(t=>`<p>• ${t['任務名稱']} — ${t['進度']||0}%</p>`).join('')}</div>`;
   }
