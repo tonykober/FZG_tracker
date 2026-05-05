@@ -211,6 +211,13 @@ function renderReport(){
   const today=new Date().toISOString().split('T')[0];
   const overdue=filtered.filter(t=>t['狀態']!=='已完成'&&t['截止日']&&t['截止日']<today);
   let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
+  const ownerMap={};
+  filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!ownerMap[o])ownerMap[o]={total:0,done:0,doing:0,todo:0};ownerMap[o].total++;if(t['狀態']==='已完成')ownerMap[o].done++;else if(t['狀態']==='進行中')ownerMap[o].doing++;else ownerMap[o].todo++});
+  if(Object.keys(ownerMap).length){
+    html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;
+    Object.entries(ownerMap).forEach(([name,d])=>{html+=`<p style="margin-bottom:6px">• <strong>${name}</strong>：共 ${d.total} 項（待辦 ${d.todo} / 進行中 ${d.doing} / 已完成 ${d.done}）</p>`});
+    html+=`</div>`;
+  }
   if(overdue.length){
     html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   }
