@@ -53,8 +53,13 @@ h1{font-size:1.5em;color:var(--accent)}
 <body>
 <header>
   <h1>📋 FZG 專案追蹤器</h1>
-  <div style="display:flex;gap:8px;align-items:center">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <button onclick="openModal()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.85em">➕ 新增任務</button>
+    <div class="views" style="display:flex;gap:4px;align-items:center">
+      <button class="view-btn" onclick="changeMonth(-1)">◀</button>
+      <span id="monthLabel" style="min-width:100px;text-align:center;font-size:0.85em"></span>
+      <button class="view-btn" onclick="changeMonth(1)">▶</button>
+    </div>
     <div class="views">
     <button class="view-btn active" data-view="board">看板</button>
     <button class="view-btn" data-view="timeline">時間軸</button>
@@ -87,16 +92,43 @@ const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[];
-function openModal(){document.getElementById('addModal').classList.remove('hidden')}
+let currentMonth=new Date();
+function openModal(idx){
+  const m=document.getElementById('addModal');
+  m.classList.remove('hidden');
+  if(idx!==undefined){
+    const t=tasks[idx];
+    document.getElementById('f-name').value=t['任務名稱']||'';
+    document.getElementById('f-owner').value=t['負責人']||'';
+    document.getElementById('f-status').value=t['狀態']||'待辦';
+    document.getElementById('f-progress').value=t['進度']||0;
+    document.getElementById('f-start').value=t['開始日']||'';
+    document.getElementById('f-due').value=t['截止日']||'';
+    document.getElementById('f-note').value=t['備註']||'';
+    m.dataset.editIdx=idx;
+  }else{
+    document.getElementById('f-name').value='';document.getElementById('f-owner').value='';document.getElementById('f-status').value='待辦';document.getElementById('f-progress').value=0;document.getElementById('f-start').value='';document.getElementById('f-due').value='';document.getElementById('f-note').value='';
+    delete m.dataset.editIdx;
+  }
+}
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);render();updateMonthLabel()}
+function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'年'+(currentMonth.getMonth()+1)+'月'}
+function filterByMonth(list){
+  const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;
+  const prefix=y+'-'+(m<10?'0'+m:m);
+  return list.filter(t=>(t['開始日']&&t['開始日'].startsWith(prefix))||(t['截止日']&&t['截止日'].startsWith(prefix))||(!t['開始日']&&!t['截止日']));
+}
 async function submitTask(){
+  const m=document.getElementById('addModal');
   const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:document.getElementById('f-progress').value,startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value};
   if(!data.name){alert('請填寫任務名稱');return}
+  if(m.dataset.editIdx!==undefined)data.action='update',data.row=m.dataset.editIdx;
   try{
     await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-    alert('✅ 任務已新增！頁面將重新載入。');
+    alert('✅ '+(data.action==='update'?'任務已更新':'任務已新增')+'！頁面將重新載入。');
     closeModal();setTimeout(()=>location.reload(),2000);
-  }catch(e){alert('❌ 新增失敗，請稍後再試。')}
+  }catch(e){alert('❌ 操作失敗，請稍後再試。')}
 }
 async function fetchData(){
   try{
@@ -130,10 +162,11 @@ function renderStats(){
     <div class="stat"><div class="num">${avgProgress}%</div><div class="label">平均進度</div></div>`;
 }
 function renderBoard(){
-  const todo=tasks.filter(t=>t['狀態']==='待辦');
-  const doing=tasks.filter(t=>t['狀態']==='進行中');
-  const done=tasks.filter(t=>t['狀態']==='已完成');
-  const cardHtml=items=>items.map(t=>`<div class="card"><div class="name">${t['任務名稱']}</div><div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div></div>`).join('');
+  const filtered=filterByMonth(tasks);
+  const todo=filtered.filter(t=>t['狀態']==='待辦');
+  const doing=filtered.filter(t=>t['狀態']==='進行中');
+  const done=filtered.filter(t=>t['狀態']==='已完成');
+  const cardHtml=items=>items.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" onclick="openModal(${idx})" style="cursor:pointer"><div class="name">${t['任務名稱']}</div><div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div></div>`}).join('');
   document.getElementById('boardView').innerHTML=`
     <div class="column col-todo"><h3>📝 待辦 (${todo.length})</h3>${cardHtml(todo)||'<div class="empty">無任務</div>'}</div>
     <div class="column col-doing"><h3>🔄 進行中 (${doing.length})</h3>${cardHtml(doing)||'<div class="empty">無任務</div>'}</div>
@@ -173,6 +206,7 @@ document.querySelector('.views').onclick=e=>{
   document.getElementById('reportView').classList.toggle('hidden',view!=='report');
 };
 fetchData();
+updateMonthLabel();
 </script>
 </body>
 </html>
