@@ -112,7 +112,7 @@ function openModal(idx){
   }
 }
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();renderTimeline();renderReport()}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();renderBoard();renderTimeline();renderReport()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'年'+(currentMonth.getMonth()+1)+'月'}
 function filterByMonth(list){
   if(!list.length)return list;
@@ -174,9 +174,10 @@ function renderStats(){
     <div class="stat"><div class="num">${avgProgress}%</div><div class="label">平均進度</div></div>`;
 }
 function renderBoard(){
-  const todo=tasks.filter(t=>t['狀態']==='待辦');
-  const doing=tasks.filter(t=>t['狀態']==='進行中');
-  const done=tasks.filter(t=>t['狀態']==='已完成');
+  const filtered=filterByMonth(tasks);
+  const todo=filtered.filter(t=>t['狀態']==='待辦');
+  const doing=filtered.filter(t=>t['狀態']==='進行中');
+  const done=filtered.filter(t=>t['狀態']==='已完成');
   const cardHtml=items=>items.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" onclick="openModal(${idx})" style="cursor:pointer"><div class="name">${t['任務名稱']}</div><div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div></div>`}).join('');
   document.getElementById('boardView').innerHTML=`
     <div class="column col-todo"><h3>📝 待辦 (${todo.length})</h3>${cardHtml(todo)||'<div class="empty">無任務</div>'}</div>
