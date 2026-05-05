@@ -56,11 +56,11 @@ h1{font-size:1.5em;color:var(--accent)}
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <button onclick="openModal()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.85em">➕ 新增任務</button>
     <div class="views" style="display:flex;gap:4px;align-items:center">
-      <button class="view-btn" onclick="changeMonth(-1)">◀</button>
+      <button style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer" onclick="changeMonth(-1)">◀</button>
       <span id="monthLabel" style="min-width:100px;text-align:center;font-size:0.85em"></span>
-      <button class="view-btn" onclick="changeMonth(1)">▶</button>
+      <button style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer" onclick="changeMonth(1)">▶</button>
     </div>
-    <div class="views">
+    <div class="views" id="viewTabs">
     <button class="view-btn active" data-view="board">看板</button>
     <button class="view-btn" data-view="timeline">時間軸</button>
     <button class="view-btn" data-view="report">報告</button>
@@ -210,7 +210,7 @@ function renderReport(){
   }
   document.getElementById('reportView').innerHTML=html;
 }
-document.querySelector('.views').onclick=e=>{
+document.getElementById('viewTabs').onclick=e=>{
   if(!e.target.classList.contains('view-btn'))return;
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
   e.target.classList.add('active');
