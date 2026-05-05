@@ -40,26 +40,64 @@ h1{font-size:1.5em;color:var(--accent)}
 .overdue{color:var(--red);font-weight:600}
 .hidden{display:none}
 .empty{text-align:center;color:var(--muted);padding:40px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:10px}
+.modal-content h3{color:var(--accent);margin-bottom:4px}
+.modal-content input,.modal-content select{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.9em}
+.modal-actions{display:flex;gap:8px;margin-top:8px}
+.modal-actions button{flex:1;padding:10px;border:none;border-radius:6px;cursor:pointer;font-size:0.9em;background:var(--accent);color:#fff}
+.modal-actions .cancel{background:var(--border);color:var(--text)}
 @media(max-width:768px){.board{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
   <h1>📋 FZG 專案追蹤器</h1>
-  <div class="views">
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="openModal()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.85em">➕ 新增任務</button>
+    <div class="views">
     <button class="view-btn active" data-view="board">看板</button>
     <button class="view-btn" data-view="timeline">時間軸</button>
     <button class="view-btn" data-view="report">報告</button>
+  </div>
   </div>
 </header>
 <div class="stats" id="stats"></div>
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
+<div id="addModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>➕ 新增任務</h3>
+    <input id="f-name" placeholder="任務名稱" />
+    <input id="f-owner" placeholder="負責人" />
+    <select id="f-status"><option>待辦</option><option>進行中</option><option>已完成</option></select>
+    <input id="f-progress" type="number" min="0" max="100" placeholder="進度 %" value="0" />
+    <input id="f-start" type="date" />
+    <input id="f-due" type="date" />
+    <input id="f-note" placeholder="備註" />
+    <div class="modal-actions">
+      <button onclick="submitTask()">確認新增</button>
+      <button onclick="closeModal()" class="cancel">取消</button>
+    </div>
+  </div>
+</div>
 <script>
 const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 let tasks=[];
+function openModal(){document.getElementById('addModal').classList.remove('hidden')}
+function closeModal(){document.getElementById('addModal').classList.add('hidden')}
+async function submitTask(){
+  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:document.getElementById('f-progress').value,startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value};
+  if(!data.name){alert('請填寫任務名稱');return}
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
+    alert('✅ 任務已新增！頁面將重新載入。');
+    closeModal();setTimeout(()=>location.reload(),1500);
+  }catch(e){alert('❌ 新增失敗，請稍後再試。')}
+}
 async function fetchData(){
   try{
     const res=await fetch(CSV_URL);
