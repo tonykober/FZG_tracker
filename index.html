@@ -187,12 +187,22 @@ function renderBoard(){
 function renderTimeline(){
   const filtered=filterByMonth(tasks);
   if(!filtered.length){document.getElementById('timelineView').innerHTML='<div class="empty">本月無任務</div>';return}
-  const html=filtered.map(t=>{
-    const p=parseInt(t['進度'])||0;
+  const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  let header='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:8px"><div style="width:140px;flex-shrink:0;font-size:0.7em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
+  for(let d=1;d<=daysInMonth;d++)header+=`<div style="flex:1;text-align:center;font-size:0.6em;color:var(--muted)">${d}</div>`;
+  header+='</div></div>';
+  const rows=filtered.map(t=>{
+    const startStr=t['開始日']||'',endStr=t['截止日']||'';
+    let startDay=1,endDay=daysInMonth;
+    if(startStr){const sd=new Date(startStr);if(sd.getFullYear()===y&&sd.getMonth()===m)startDay=sd.getDate();else if(sd>new Date(y,m,daysInMonth))return '';else if(sd<new Date(y,m,1))startDay=1}
+    if(endStr){const ed=new Date(endStr);if(ed.getFullYear()===y&&ed.getMonth()===m)endDay=ed.getDate();else if(ed<new Date(y,m,1))return '';else if(ed>new Date(y,m,daysInMonth))endDay=daysInMonth}
     const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
-    return `<div class="tl-item"><div class="tl-name">${t['任務名稱']}</div><div class="tl-bar"><div class="tl-fill" style="width:${p}%;background:${color}"></div></div><div class="tl-dates">${t['開始日']||'?'} ~ ${t['截止日']||'?'}</div></div>`;
-  }).join('');
-  document.getElementById('timelineView').innerHTML=html;
+    const leftPct=((startDay-1)/daysInMonth*100).toFixed(1);
+    const widthPct=((endDay-startDay+1)/daysInMonth*100).toFixed(1);
+    return `<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:140px;flex-shrink:0;font-size:0.75em;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t['任務名稱']}</div><div style="flex:1;position:relative;height:20px;background:var(--bg);border-radius:4px"><div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${color};border-radius:4px;opacity:0.8"></div></div></div>`;
+  }).filter(Boolean).join('');
+  document.getElementById('timelineView').innerHTML=header+rows;
 }
 function renderReport(){
   const filtered=filterByMonth(tasks);
