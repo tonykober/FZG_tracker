@@ -85,7 +85,7 @@ h1{font-size:1.5em;color:var(--accent)}
 <script>
 const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
-const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[];
 function openModal(){document.getElementById('addModal').classList.remove('hidden')}
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
@@ -95,7 +95,7 @@ async function submitTask(){
   try{
     await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
     alert('✅ 任務已新增！頁面將重新載入。');
-    closeModal();setTimeout(()=>location.reload(),1500);
+    closeModal();setTimeout(()=>location.reload(),2000);
   }catch(e){alert('❌ 新增失敗，請稍後再試。')}
 }
 async function fetchData(){
@@ -103,11 +103,11 @@ async function fetchData(){
     const res=await fetch(CSV_URL);
     const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
+    const cols=json.table.cols.map(c=>c.label.trim());
     const rows=json.table.rows;
-    const cols=json.table.cols.map(c=>c.label);
     tasks=rows.map(r=>{
       const obj={};
-      cols.forEach((c,i)=>{obj[c]=r.c[i]?r.c[i].v||'':''});
+      cols.forEach((c,i)=>{obj[c]=r.c&&r.c[i]?r.c[i].v||'':''});
       return obj;
     }).filter(t=>t['任務名稱']);
     render();
