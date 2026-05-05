@@ -82,7 +82,8 @@ h1{font-size:1.5em;color:var(--accent)}
     <input id="f-due" type="date" />
     <input id="f-note" placeholder="備註" />
     <div class="modal-actions">
-      <button onclick="submitTask()">確認新增</button>
+      <button onclick="submitTask()">確認</button>
+      <button onclick="deleteTask()" class="cancel" id="deleteBtn" style="background:var(--red);color:#fff;display:none">刪除</button>
       <button onclick="closeModal()" class="cancel">取消</button>
     </div>
   </div>
@@ -96,6 +97,7 @@ let currentMonth=new Date();
 function openModal(idx){
   const m=document.getElementById('addModal');
   m.classList.remove('hidden');
+  document.getElementById('deleteBtn').style.display=idx!==undefined?'block':'none';
   if(idx!==undefined){
     const t=tasks[idx];
     document.getElementById('f-name').value=t['任務名稱']||'';
@@ -139,6 +141,16 @@ async function submitTask(){
     alert('✅ '+(data.action==='update'?'任務已更新':'任務已新增')+'！頁面將重新載入。');
     closeModal();setTimeout(()=>location.reload(),2000);
   }catch(e){alert('❌ 操作失敗，請稍後再試。')}
+}
+async function deleteTask(){
+  const m=document.getElementById('addModal');
+  if(m.dataset.editIdx===undefined)return;
+  if(!confirm('確定要刪除這個任務嗎？'))return;
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:m.dataset.editIdx}),mode:'no-cors'});
+    alert('✅ 任務已刪除！');
+    closeModal();setTimeout(()=>location.reload(),2000);
+  }catch(e){alert('❌ 刪除失敗。')}
 }
 async function fetchData(){
   try{
