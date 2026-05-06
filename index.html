@@ -230,7 +230,7 @@ function renderBoard(){
       <div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div>
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
-      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'</div>':''}
+      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);const cp=c['進度']||0;return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:2px 0;font-size:0.7em;cursor:pointer"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span><span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted)">${cp}%</span></div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
   document.getElementById('boardView').innerHTML=`
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 style="color:var(--muted)">📝 待辦 (${todo.length})</h3>${cardHtml(todo)}</div>
