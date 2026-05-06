@@ -413,11 +413,11 @@ function renderOutsource(){
     filtered.forEach(t=>{
       const startStr=(t['開始日']||'').substring(0,10);
       const endStr=(t['截止日']||'').substring(0,10);
-      const s=startStr?new Date(startStr):new Date(y,m,1);
-      const e=endStr?new Date(endStr):new Date(y,m,days);
-      let sd=(s.getFullYear()===y&&s.getMonth()===m)?s.getDate():1;
-      let ed=(e.getFullYear()===y&&e.getMonth()===m)?e.getDate():days;
-      if(sd>days)sd=days;if(ed<1)ed=1;if(sd>ed){sd=1;ed=days}
+      let sd=1,ed=days;
+      if(startStr){const parts=startStr.split('-');const sy=parseInt(parts[0]),sm=parseInt(parts[1])-1,sday=parseInt(parts[2]);if(sy===y&&sm===m)sd=sday;else if(sy>y||(sy===y&&sm>m))sd=days+1;else sd=1}
+      if(endStr){const parts=endStr.split('-');const ey=parseInt(parts[0]),em=parseInt(parts[1])-1,eday=parseInt(parts[2]);if(ey===y&&em===m)ed=eday;else if(ey<y||(ey===y&&em<m))ed=0;else ed=days}
+      if(sd>days||ed<1||sd>ed)return;
+      sd=Math.max(1,sd);ed=Math.min(days,ed);
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
