@@ -201,7 +201,12 @@ function saveNotes(){
 }
 function loadNotes(){
   const month=currentMonth.getFullYear()+'-'+(currentMonth.getMonth()+1);
-  fetch(SCRIPT_URL+'?action=getNote&month='+encodeURIComponent(month)).then(r=>r.json()).then(d=>{document.getElementById('notesArea').value=d.text||''}).catch(()=>{document.getElementById('notesArea').value=localStorage.getItem('notes_'+month)||''});
+  const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
+  fetch(notesUrl).then(r=>r.text()).then(text=>{
+    try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
+    const found=rows.find(r=>r.c&&r.c[0]&&String(r.c[0].v)===month);
+    document.getElementById('notesArea').value=found&&found.c[1]?found.c[1].v:'';}catch(e){document.getElementById('notesArea').value=''}
+  }).catch(()=>{document.getElementById('notesArea').value=''});
 }
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
