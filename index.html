@@ -73,6 +73,7 @@ h1{font-size:1.4em;color:var(--accent)}
     <button class="btn-tab active" data-view="board" onclick="switchView(this)">看板</button>
     <button class="btn-tab" data-view="timeline" onclick="switchView(this)">時間軸</button>
     <button class="btn-tab" data-view="report" onclick="switchView(this)">報告</button>
+    <button class="btn-tab" data-view="outsource" onclick="switchView(this)">外包</button>
   </div>
 </header>
 <div class="filter-bar" id="filterBar"></div>
@@ -80,6 +81,7 @@ h1{font-size:1.4em;color:var(--accent)}
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
+<div id="outsourceView" class="board hidden"></div>
 <div id="addModal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">➕ 新增任務</h3>
@@ -120,6 +122,8 @@ function switchView(el){
   document.getElementById('boardView').classList.toggle('hidden',v!=='board');
   document.getElementById('timelineView').classList.toggle('hidden',v!=='timeline');
   document.getElementById('reportView').classList.toggle('hidden',v!=='report');
+  document.getElementById('outsourceView').classList.toggle('hidden',v!=='outsource');
+  if(v==='outsource')renderOutsource();
 }
 function openModal(idx){
   const m=document.getElementById('addModal');m.classList.remove('hidden');
@@ -321,6 +325,35 @@ function renderReport(){
   if(Object.keys(ownerMap).length){html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;Object.entries(ownerMap).forEach(([n,d])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：共${d.total}項（待辦${d.todo}/進行中${d.doing}/完成${d.done}）</p>`});html+=`</div>`}
   if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
+}
+const OUTSOURCE_SHEET_ID='11cuSAO3MZfUmau1pd603685i18d0SlQKN-h--jUrp2s';
+const OUTSOURCE_URL=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
+let outsourceTasks=[];
+async function fetchOutsource(){
+  try{
+    const res=await fetch(OUTSOURCE_URL);const text=await res.text();
+    const json=JSON.parse(text.substring(47).slice(0,-2));
+    const cols=json.table.cols.map(c=>c.label.trim());
+    outsourceTasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
+  }catch(e){}
+}
+function renderOutsource(){
+  if(!outsourceTasks.length){document.getElementById('outsourceView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">載入中...</div>';fetchOutsource().then(()=>renderOutsource());return}
+  const owners={};
+  outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
+  let html='';
+  Object.entries(owners).forEach(([owner,items])=>{
+    const done=items.filter(t=>t['狀態']==='已完成').length;
+    const doing=items.filter(t=>t['狀態']==='進行中').length;
+    html+=`<div class="column"><h3 style="color:var(--accent)">👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3>`;
+    items.forEach(t=>{
+      const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
+      const statusColor=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+      html+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>${t['備註']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px">'+t['備註']+'</div>':''}</div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById('outsourceView').innerHTML=html;
 }
 fetchData();updateMonthLabel();
 </script>
