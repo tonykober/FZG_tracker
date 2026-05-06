@@ -117,6 +117,10 @@ h1{font-size:1.4em;color:var(--accent)}
     <div style="display:flex;gap:4px"><input id="f-parent" style="flex:1"/><select id="f-parent-select" onchange="onParentSelect()" style="width:auto"></select></div>
     <label style="font-size:0.75em;color:var(--muted)">備註</label>
     <input id="f-note" />
+    <label style="font-size:0.75em;color:var(--muted)">工時（小時）</label>
+    <input id="f-hours" type="number" min="0" step="0.5" value="0" />
+    <label style="font-size:0.75em;color:var(--muted)">評論</label>
+    <textarea id="f-comment" style="min-height:40px;resize:vertical"></textarea>
     <div class="modal-actions">
       <button onclick="submitTask()">確認</button>
       <button onclick="deleteTask()" class="del" id="deleteBtn" style="display:none">刪除</button>
@@ -155,10 +159,13 @@ function openModal(idx){
     document.getElementById('f-tags').value=t['標籤']||'';
     document.getElementById('f-parent').value=t['父任務']||'';
     document.getElementById('f-note').value=t['備註']||'';
+    document.getElementById('f-hours').value=t['工時']||0;
+    document.getElementById('f-comment').value=t['評論']||'';
     m.dataset.editIdx=idx;
   }else{
     ['f-name','f-owner','f-tags','f-parent','f-note'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-start').value='';document.getElementById('f-due').value='';
+    document.getElementById('f-hours').value=0;document.getElementById('f-comment').value='';
     delete m.dataset.editIdx;
   }
 }
@@ -234,7 +241,7 @@ function getFiltered(){
 }
 async function submitTask(){
   const m=document.getElementById('addModal');
-  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:'',startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value};
+  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:'',startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value,hours:document.getElementById('f-hours').value,comment:document.getElementById('f-comment').value};
   if(!data.name){alert('請填寫任務名稱');return}
   if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
   try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});alert('✅ 完成！');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
@@ -285,7 +292,7 @@ function renderBoard(){
       ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:6px;right:6px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span style="color:var(--green)">${t['負責人']||''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
-      ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
+      ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();const d=this.parentElement.querySelector(\\''[data-subtasks]\\'' );d.style.display=d.style.display===\\''none\\''?\\''block\\'':\\''none\\'';this.textContent=d.style.display===\\''none\\''?\\''▶\\'':\\''▼\\'' " style="cursor:pointer;font-size:0.8em">▼</span><div data-subtasks style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
@@ -323,7 +330,7 @@ function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){
   e.preventDefault();if(dragIdx===null)return;
   const t=tasks[dragIdx];
-  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
+  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']};
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
   t['狀態']=status;render();dragIdx=null;
 }
@@ -354,6 +361,9 @@ function renderReport(){
   let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
   const ownerMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!ownerMap[o])ownerMap[o]={total:0,done:0,doing:0,todo:0};ownerMap[o].total++;if(t['狀態']==='已完成')ownerMap[o].done++;else if(t['狀態']==='進行中')ownerMap[o].doing++;else ownerMap[o].todo++});
   if(Object.keys(ownerMap).length){html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;Object.entries(ownerMap).forEach(([n,d])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：共${d.total}項（待辦${d.todo}/進行中${d.doing}/完成${d.done}）</p>`});html+=`</div>`}
+  const hourMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';const h=parseFloat(t['工時'])||0;if(!hourMap[o])hourMap[o]=0;hourMap[o]+=h});
+  const totalHours=Object.values(hourMap).reduce((s,v)=>s+v,0);
+  if(totalHours>0){html+=`<div class="report-section"><h3>⏱️ 工時統計（本月共 ${totalHours}h）</h3>`;Object.entries(hourMap).filter(([,h])=>h>0).sort((a,b)=>b[1]-a[1]).forEach(([n,h])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：${h}h</p>`});html+=`</div>`}
   if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
 }
