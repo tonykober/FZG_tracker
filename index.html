@@ -204,8 +204,9 @@ function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
-    const found=rows.find(r=>r.c&&r.c[0]&&String(r.c[0].v)===month);
-    document.getElementById('notesArea').value=found&&found.c[1]?found.c[1].v:'';}catch(e){document.getElementById('notesArea').value=''}
+    let noteText='';
+    rows.forEach(r=>{if(r.c&&r.c[0]&&String(r.c[0].v||r.c[0].f||'').includes(month)&&r.c[1])noteText=r.c[1].v||r.c[1].f||''});
+    document.getElementById('notesArea').value=noteText;}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
 function filterByMonth(list){
