@@ -194,18 +194,18 @@ function onOwnerSelect(){
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();if(outsourceTasks.length)renderOutsource()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function saveNotes(){
-  const month=currentMonth.getFullYear()+'-'+(currentMonth.getMonth()+1);
+  const month='m_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);
   const text=document.getElementById('notesArea').value;
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:text}),mode:'no-cors'});
   alert('✅ 已儲存');
 }
 function loadNotes(){
-  const month=currentMonth.getFullYear()+'-'+(currentMonth.getMonth()+1);
+  const month='m_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
     let noteText='';
-    rows.forEach(r=>{if(r.c&&r.c[0]&&String(r.c[0].v||r.c[0].f||'').includes(month)&&r.c[1])noteText=r.c[1].v||r.c[1].f||''});
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):''}});
     document.getElementById('notesArea').value=noteText;}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
