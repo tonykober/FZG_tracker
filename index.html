@@ -361,9 +361,9 @@ function renderReport(){
   let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
   const ownerMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!ownerMap[o])ownerMap[o]={total:0,done:0,doing:0,todo:0};ownerMap[o].total++;if(t['狀態']==='已完成')ownerMap[o].done++;else if(t['狀態']==='進行中')ownerMap[o].doing++;else ownerMap[o].todo++});
   if(Object.keys(ownerMap).length){html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;Object.entries(ownerMap).forEach(([n,d])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：共${d.total}項（待辦${d.todo}/進行中${d.doing}/完成${d.done}）</p>`});html+=`</div>`}
-  const hourMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';const h=parseFloat(t['工時'])||0;if(!hourMap[o])hourMap[o]=0;hourMap[o]+=h});
-  const totalHours=Object.values(hourMap).reduce((s,v)=>s+v,0);
-  if(totalHours>0){html+=`<div class="report-section"><h3>⏱️ 工時統計（本月共 ${totalHours}h）</h3>`;Object.entries(hourMap).filter(([,h])=>h>0).sort((a,b)=>b[1]-a[1]).forEach(([n,h])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：${h}h</p>`});html+=`</div>`}
+  const hourMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';let days=0;if(t['開始日']&&t['截止日']){const s=new Date(t['開始日'].substring(0,10)),e=new Date(t['截止日'].substring(0,10));days=Math.max(1,Math.round((e-s)/(1000*60*60*24))+1)}else if(t['開始日']||t['截止日']){days=1}if(!hourMap[o])hourMap[o]=0;hourMap[o]+=days});
+  const totalDays=Object.values(hourMap).reduce((s,v)=>s+v,0);
+  if(totalDays>0){html+=`<div class="report-section"><h3>📅 工作天數統計（本月共 ${totalDays} 天）</h3>`;Object.entries(hourMap).filter(([,h])=>h>0).sort((a,b)=>b[1]-a[1]).forEach(([n,h])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：${h} 天</p>`});html+=`</div>`}
   if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
 }
@@ -411,9 +411,13 @@ function renderOutsource(){
     for(let d=1;d<=days;d++){const wd=weekdays[new Date(y,m,d).getDay()];gh+=`<div style="flex:1;text-align:center;font-size:0.45em;color:var(--muted)">${d}<br>${wd}</div>`}
     gh+='</div></div>';
     filtered.forEach(t=>{
-      const s=t['開始日']?new Date(t['開始日']):new Date(y,m,1),e=t['截止日']?new Date(t['截止日']):new Date(y,m,days);
-      let sd=s.getMonth()===m&&s.getFullYear()===y?s.getDate():1;
-      let ed=e.getMonth()===m&&e.getFullYear()===y?e.getDate():days;
+      const startStr=(t['開始日']||'').substring(0,10);
+      const endStr=(t['截止日']||'').substring(0,10);
+      const s=startStr?new Date(startStr):new Date(y,m,1);
+      const e=endStr?new Date(endStr):new Date(y,m,days);
+      let sd=(s.getFullYear()===y&&s.getMonth()===m)?s.getDate():1;
+      let ed=(e.getFullYear()===y&&e.getMonth()===m)?e.getDate():days;
+      if(sd>days)sd=days;if(ed<1)ed=1;if(sd>ed){sd=1;ed=days}
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
