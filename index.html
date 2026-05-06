@@ -79,6 +79,13 @@ h1{font-size:1.4em;color:var(--accent)}
 </header>
 <div class="filter-bar" id="filterBar"></div>
 <div class="stats" id="stats"></div>
+<div id="monthNotes" style="max-width:1200px;margin:0 auto 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-size:0.8em;color:var(--accent);font-weight:600">📌 當月目標 / 備註</span>
+    <button onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.7em;cursor:pointer">儲存</button>
+  </div>
+  <textarea id="notesArea" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.8em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
+</div>
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
@@ -184,8 +191,10 @@ function onOwnerSelect(){
   if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();if(outsourceTasks.length)renderOutsource()}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();if(outsourceTasks.length)renderOutsource()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
+function saveNotes(){const key='notes_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);localStorage.setItem(key,document.getElementById('notesArea').value);alert('✅ 已儲存')}
+function loadNotes(){const key='notes_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);document.getElementById('notesArea').value=localStorage.getItem(key)||''}
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
   return list.filter(t=>{
@@ -255,7 +264,7 @@ function renderBoard(){
     return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})" style="position:relative">
       ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:6px;right:6px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
-      <div class="meta"><span>${t['負責人']||''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
+      <div class="meta"><span style="color:var(--green)">${t['負責人']||''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
@@ -304,7 +313,8 @@ function renderTimeline(){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const days=new Date(y,m+1,0).getDate();
   let h='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:130px;flex-shrink:0;font-size:0.65em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
-  for(let d=1;d<=days;d++)h+=`<div style="flex:1;text-align:center;font-size:0.55em;color:var(--muted)">${d}</div>`;
+  const weekdays=['日','一','二','三','四','五','六'];
+  for(let d=1;d<=days;d++){const wd=weekdays[new Date(y,m,d).getDay()];h+=`<div style="flex:1;text-align:center;font-size:0.5em;color:var(--muted)">${d}<br>${wd}</div>`}
   h+='</div></div>';
   filtered.forEach(t=>{
     const s=t['開始日']?new Date(t['開始日']):new Date(y,m,1),e=t['截止日']?new Date(t['截止日']):new Date(y,m,days);
@@ -365,7 +375,7 @@ function renderOutsource(){
   });
   document.getElementById('outsourceView').innerHTML=html;
 }
-fetchData();updateMonthLabel();
+fetchData();updateMonthLabel();loadNotes();
 </script>
 </body>
 </html>
