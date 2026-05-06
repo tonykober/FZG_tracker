@@ -339,18 +339,25 @@ function renderTimeline(){
   if(!filtered.length){document.getElementById('timelineView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const days=new Date(y,m+1,0).getDate();
-  let h='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:130px;flex-shrink:0;font-size:0.65em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
   const weekdays=['日','一','二','三','四','五','六'];
+  let h='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.6em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
   for(let d=1;d<=days;d++){const wd=weekdays[new Date(y,m,d).getDay()];h+=`<div style="flex:1;text-align:center;font-size:0.5em;color:var(--muted)">${d}<br>${wd}</div>`}
   h+='</div></div>';
-  filtered.forEach(t=>{
-    const s=t['開始日']?new Date(t['開始日']):new Date(y,m,1),e=t['截止日']?new Date(t['截止日']):new Date(y,m,days);
-    let sd=s.getMonth()===m&&s.getFullYear()===y?s.getDate():1;
-    let ed=e.getMonth()===m&&e.getFullYear()===y?e.getDate():days;
-    const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
-    const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-    const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
-    h+=`<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)"><div style="width:130px;flex-shrink:0;font-size:0.7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:18px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+  const groups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
+  Object.entries(groups).forEach(([owner,items])=>{
+    h+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
+    items.forEach(t=>{
+      const startStr=(t['開始日']||'').substring(0,10);const endStr=(t['截止日']||'').substring(0,10);
+      let sd=1,ed=days;
+      if(startStr){const p=startStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)sd=parseInt(p[2]);else if(parseInt(p[0])>y||(parseInt(p[0])===y&&parseInt(p[1])-1>m))sd=days+1;else sd=1}
+      if(endStr){const p=endStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)ed=parseInt(p[2]);else if(parseInt(p[0])<y||(parseInt(p[0])===y&&parseInt(p[1])-1<m))ed=0;else ed=days}
+      if(sd>days||ed<1)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
+      const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+      const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
+      const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
+      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+    });
+    h+=`</div></div>`;
   });
   document.getElementById('timelineView').innerHTML=h;
 }
@@ -410,7 +417,10 @@ function renderOutsource(){
     let gh='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:180px;flex-shrink:0;font-size:0.6em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
     for(let d=1;d<=days;d++){const wd=weekdays[new Date(y,m,d).getDay()];gh+=`<div style="flex:1;text-align:center;font-size:0.45em;color:var(--muted)">${d}<br>${wd}</div>`}
     gh+='</div></div>';
-    filtered.forEach(t=>{
+    const gGroups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
+    Object.entries(gGroups).forEach(([owner,items])=>{
+      gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
+      items.forEach(t=>{
       const startStr=(t['開始日']||'').substring(0,10);
       const endStr=(t['截止日']||'').substring(0,10);
       let sd=1,ed=days;
@@ -420,7 +430,9 @@ function renderOutsource(){
       sd=Math.max(1,sd);ed=Math.min(days,ed);
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-      gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+      gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+    });
+      gh+=`</div></div>`;
     });
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
