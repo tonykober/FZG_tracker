@@ -159,7 +159,7 @@ function onParentSelect(){
   const input=document.getElementById('f-parent');
   if(sel.value==='__new'){const v=prompt('輸入父任務名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
-}}
+}
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function filterByMonth(list){
