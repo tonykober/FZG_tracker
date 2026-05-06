@@ -91,7 +91,9 @@ h1{font-size:1.4em;color:var(--accent)}
     <input id="f-start" type="date" />
     <input id="f-due" type="date" />
     <input id="f-tags" placeholder="標籤（逗號分隔）" />
-    <input id="f-parent" placeholder="父任務名稱（選填，用於子任務）" />
+    <select id="f-tags-select" onchange="onTagSelect()"></select>
+    <input id="f-parent" placeholder="父任務名稱" />
+    <select id="f-parent-select" onchange="onParentSelect()"></select>
     <input id="f-note" placeholder="備註" />
     <div class="modal-actions">
       <button onclick="submitTask()">確認</button>
@@ -115,6 +117,7 @@ function switchView(el){
 }
 function openModal(idx){
   const m=document.getElementById('addModal');m.classList.remove('hidden');
+  populateSelects();
   document.getElementById('deleteBtn').style.display=idx!==undefined?'block':'none';
   document.getElementById('modalTitle').textContent=idx!==undefined?'✏️ 編輯任務':'➕ 新增任務';
   if(idx!==undefined){
@@ -137,6 +140,26 @@ function openModal(idx){
   }
 }
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
+function populateSelects(){
+  const allTags=new Set();tasks.forEach(t=>(t['標籤']||'').split(',').filter(Boolean).forEach(tag=>allTags.add(tag.trim())));
+  const tagSel=document.getElementById('f-tags-select');
+  tagSel.innerHTML='<option value="">選擇標籤加入...</option>'+[...allTags].map(t=>`<option value="${t}">${t}</option>`).join('')+'<option value="__new">+ 新增標籤</option>';
+  const parentSel=document.getElementById('f-parent-select');
+  const parentNames=[...new Set(tasks.map(t=>t['任務名稱']).filter(Boolean))];
+  parentSel.innerHTML='<option value="">選擇父任務...</option>'+parentNames.map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
+}
+function onTagSelect(){
+  const sel=document.getElementById('f-tags-select');
+  const input=document.getElementById('f-tags');
+  if(sel.value==='__new'){const v=prompt('輸入新標籤名稱：');if(v){input.value=input.value?(input.value+','+v):v}sel.value=''}
+  else if(sel.value){const cur=input.value?input.value.split(',').map(s=>s.trim()):[];if(!cur.includes(sel.value))cur.push(sel.value);input.value=cur.join(',');sel.value=''}
+}
+function onParentSelect(){
+  const sel=document.getElementById('f-parent-select');
+  const input=document.getElementById('f-parent');
+  if(sel.value==='__new'){const v=prompt('輸入父任務名稱：');if(v)input.value=v;sel.value=''}
+  else if(sel.value){input.value=sel.value;sel.value=''}
+}}
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function filterByMonth(list){
@@ -219,9 +242,13 @@ function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){
   e.preventDefault();if(dragIdx===null)return;
   const t=tasks[dragIdx];
-  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:status==='已完成'?'100':t['進度'],startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
+  let progress=t['進度'];
+  if(status==='已完成')progress='100';
+  else if(status==='待辦')progress='0';
+  else if(status==='進行中'&&(!progress||progress==='0'))progress='50';
+  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:progress,startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-  t['狀態']=status;if(status==='已完成')t['進度']='100';
+  t['狀態']=status;t['進度']=progress;
   render();dragIdx=null;
 }
 function renderTimeline(){
