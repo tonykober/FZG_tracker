@@ -145,13 +145,18 @@ function openModal(idx){
   }
 }
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
+function openModalWithParent(parentName){
+  openModal();
+  document.getElementById('f-parent').value=parentName;
+}
 function populateSelects(){
   const allTags=new Set();tasks.forEach(t=>(t['標籤']||'').split(',').filter(Boolean).forEach(tag=>allTags.add(tag.trim())));
   const tagSel=document.getElementById('f-tags-select');
   tagSel.innerHTML='<option value="">選擇...</option>'+[...allTags].map(t=>`<option value="${t}">${t}</option>`).join('')+'<option value="__new">+ 新增</option>';
   const parentSel=document.getElementById('f-parent-select');
-  const parentNames=[...new Set(tasks.map(t=>t['任務名稱']).filter(Boolean))];
-  parentSel.innerHTML='<option value="">選擇...</option>'+parentNames.map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
+  const getTaskLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p||!p['父任務'])return 1;return 2};
+  const parentNames=tasks.filter(t=>getTaskLevel(t)<2).map(t=>t['任務名稱']).filter(Boolean);
+  parentSel.innerHTML='<option value="">選擇...</option>'+[...new Set(parentNames)].map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
   const ownerSel=document.getElementById('f-owner-select');
   const owners=[...new Set(tasks.map(t=>t['負責人']).filter(Boolean))];
   ownerSel.innerHTML='<option value="">選擇...</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('')+'<option value="__new">+ 新增</option>';
@@ -233,17 +238,41 @@ function renderBoard(){
   const todo=parentTasks.filter(t=>t['狀態']==='待辦');
   const doing=parentTasks.filter(t=>t['狀態']==='進行中');
   const done=parentTasks.filter(t=>t['狀態']==='已完成');
+  const getLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p||!p['父任務'])return 1;return 2};
   const cardHtml=(items)=>items.map(t=>{
     const idx=tasks.indexOf(t);
     const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':t['優先級']==='低'?'p-low':'';
     const children=getChildren(t['任務名稱']);
     const childDone=children.filter(c=>c['狀態']==='已完成').length;
     const tags=(t['標籤']||'').split(',').filter(Boolean);
-    return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})">
+    const level=getLevel(t);
+    const canAddSub=level<2;
+    return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})" style="position:relative">
+      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:6px;right:6px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span>${t['負責人']||''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
-      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:6px 8px;font-size:0.7em;cursor:pointer;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--surface)"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span>${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}<span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted);font-size:0.9em">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span></div>`}).join('')+'</div></div>':''}
+      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{
+        const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
+        const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
+        const cLevel=getLevel(c);const cCanAddSub=cLevel<2;
+        return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--surface);padding:6px 8px">
+          <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7em;cursor:pointer">
+            <span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span>
+            ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
+            <span style="flex:1">${c['任務名稱']}</span>
+            <span style="color:var(--muted);font-size:0.9em">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
+            ${cCanAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
+          </div>
+          ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
+            const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';
+            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:var(--bg)">
+              <span style="color:${g['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':'⬜'}</span>
+              ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
+              <span style="flex:1">${g['任務名稱']}</span>
+              <span style="color:var(--muted)">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
+            </div>`}).join('')+'</div>':''}
+        </div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
   const groupByOwner=(items)=>{
     const groups={};
