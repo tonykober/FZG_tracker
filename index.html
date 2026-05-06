@@ -83,17 +83,24 @@ h1{font-size:1.4em;color:var(--accent)}
 <div id="addModal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">➕ 新增任務</h3>
-    <input id="f-name" placeholder="任務名稱" />
-    <input id="f-owner" placeholder="負責人" />
+    <label style="font-size:0.75em;color:var(--muted)">任務名稱</label>
+    <input id="f-name" />
+    <label style="font-size:0.75em;color:var(--muted)">負責人</label>
+    <div style="display:flex;gap:4px"><input id="f-owner" style="flex:1"/><select id="f-owner-select" onchange="onOwnerSelect()" style="width:auto"></select></div>
+    <label style="font-size:0.75em;color:var(--muted)">狀態</label>
     <select id="f-status"><option>待辦</option><option>進行中</option><option>已完成</option></select>
+    <label style="font-size:0.75em;color:var(--muted)">優先級</label>
     <select id="f-priority"><option value="">無優先級</option><option value="高">高</option><option value="中">中</option><option value="低">低</option></select>
-    <input id="f-start" type="date" />
-    <input id="f-due" type="date" />
-    <input id="f-tags" placeholder="標籤（逗號分隔）" />
-    <select id="f-tags-select" onchange="onTagSelect()"></select>
-    <input id="f-parent" placeholder="父任務名稱" />
-    <select id="f-parent-select" onchange="onParentSelect()"></select>
-    <input id="f-note" placeholder="備註" />
+    <label style="font-size:0.75em;color:var(--muted)">開始日期</label>
+    <input id="f-start" type="date" style="width:100%" onclick="this.showPicker()" />
+    <label style="font-size:0.75em;color:var(--muted)">截止日期</label>
+    <input id="f-due" type="date" style="width:100%" onclick="this.showPicker()" />
+    <label style="font-size:0.75em;color:var(--muted)">標籤</label>
+    <div style="display:flex;gap:4px"><input id="f-tags" style="flex:1"/><select id="f-tags-select" onchange="onTagSelect()" style="width:auto"></select></div>
+    <label style="font-size:0.75em;color:var(--muted)">父任務</label>
+    <div style="display:flex;gap:4px"><input id="f-parent" style="flex:1"/><select id="f-parent-select" onchange="onParentSelect()" style="width:auto"></select></div>
+    <label style="font-size:0.75em;color:var(--muted)">備註</label>
+    <input id="f-note" />
     <div class="modal-actions">
       <button onclick="submitTask()">確認</button>
       <button onclick="deleteTask()" class="del" id="deleteBtn" style="display:none">刪除</button>
@@ -141,10 +148,13 @@ function closeModal(){document.getElementById('addModal').classList.add('hidden'
 function populateSelects(){
   const allTags=new Set();tasks.forEach(t=>(t['標籤']||'').split(',').filter(Boolean).forEach(tag=>allTags.add(tag.trim())));
   const tagSel=document.getElementById('f-tags-select');
-  tagSel.innerHTML='<option value="">選擇標籤加入...</option>'+[...allTags].map(t=>`<option value="${t}">${t}</option>`).join('')+'<option value="__new">+ 新增標籤</option>';
+  tagSel.innerHTML='<option value="">選擇...</option>'+[...allTags].map(t=>`<option value="${t}">${t}</option>`).join('')+'<option value="__new">+ 新增</option>';
   const parentSel=document.getElementById('f-parent-select');
   const parentNames=[...new Set(tasks.map(t=>t['任務名稱']).filter(Boolean))];
-  parentSel.innerHTML='<option value="">選擇父任務...</option>'+parentNames.map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
+  parentSel.innerHTML='<option value="">選擇...</option>'+parentNames.map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
+  const ownerSel=document.getElementById('f-owner-select');
+  const owners=[...new Set(tasks.map(t=>t['負責人']).filter(Boolean))];
+  ownerSel.innerHTML='<option value="">選擇...</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('')+'<option value="__new">+ 新增</option>';
 }
 function onTagSelect(){
   const sel=document.getElementById('f-tags-select');
@@ -156,6 +166,12 @@ function onParentSelect(){
   const sel=document.getElementById('f-parent-select');
   const input=document.getElementById('f-parent');
   if(sel.value==='__new'){const v=prompt('輸入父任務名稱：');if(v)input.value=v;sel.value=''}
+  else if(sel.value){input.value=sel.value;sel.value=''}
+}
+function onOwnerSelect(){
+  const sel=document.getElementById('f-owner-select');
+  const input=document.getElementById('f-owner');
+  if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render()}
