@@ -193,8 +193,16 @@ function onOwnerSelect(){
 }
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();if(outsourceTasks.length)renderOutsource()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
-function saveNotes(){const key='notes_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);localStorage.setItem(key,document.getElementById('notesArea').value);alert('✅ 已儲存')}
-function loadNotes(){const key='notes_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);document.getElementById('notesArea').value=localStorage.getItem(key)||''}
+function saveNotes(){
+  const month=currentMonth.getFullYear()+'-'+(currentMonth.getMonth()+1);
+  const text=document.getElementById('notesArea').value;
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:text}),mode:'no-cors'});
+  alert('✅ 已儲存');
+}
+function loadNotes(){
+  const month=currentMonth.getFullYear()+'-'+(currentMonth.getMonth()+1);
+  fetch(SCRIPT_URL+'?action=getNote&month='+encodeURIComponent(month)).then(r=>r.json()).then(d=>{document.getElementById('notesArea').value=d.text||''}).catch(()=>{document.getElementById('notesArea').value=localStorage.getItem('notes_'+month)||''});
+}
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
   return list.filter(t=>{
