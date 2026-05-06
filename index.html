@@ -125,16 +125,15 @@ function openModal(idx){
     document.getElementById('f-owner').value=t['負責人']||'';
     document.getElementById('f-status').value=t['狀態']||'待辦';
     document.getElementById('f-priority').value=t['優先級']||'';
-    document.getElementById('f-progress').value=t['進度']||0;
-    document.getElementById('f-start').value=t['開始日']||'';
-    document.getElementById('f-due').value=t['截止日']||'';
+    const sd=t['開始日']||'';document.getElementById('f-start').value=sd.length>=10?sd.substring(0,10):'';
+    const ed=t['截止日']||'';document.getElementById('f-due').value=ed.length>=10?ed.substring(0,10):'';
     document.getElementById('f-tags').value=t['標籤']||'';
     document.getElementById('f-parent').value=t['父任務']||'';
     document.getElementById('f-note').value=t['備註']||'';
     m.dataset.editIdx=idx;
   }else{
     ['f-name','f-owner','f-tags','f-parent','f-note'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-progress').value=0;document.getElementById('f-start').value='';document.getElementById('f-due').value='';
+    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-start').value='';document.getElementById('f-due').value='';
     delete m.dataset.editIdx;
   }
 }
@@ -226,7 +225,7 @@ function renderBoard(){
     const tags=(t['標籤']||'').split(',').filter(Boolean);
     return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})">
       <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
-      <div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div>
+      <div class="meta"><span>${t['負責人']||''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:2px 0;font-size:0.7em;cursor:pointer"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span><span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted)">${c['狀態']}</span></div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
