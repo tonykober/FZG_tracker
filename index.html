@@ -332,7 +332,15 @@ function drop(e,status){
   const t=tasks[dragIdx];
   const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']};
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-  t['狀態']=status;render();dragIdx=null;
+  t['狀態']=status;
+  if(status==='已完成'){
+    const children=tasks.filter(c=>c['父任務']===t['任務名稱']);
+    children.forEach(c=>{const ci=tasks.indexOf(c);c['狀態']='已完成';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:'已完成',progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:c['父任務'],hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
+      const grandChildren=tasks.filter(g=>g['父任務']===c['任務名稱']);
+      grandChildren.forEach(g=>{const gi=tasks.indexOf(g);g['狀態']='已完成';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:gi,name:g['任務名稱'],owner:g['負責人'],status:'已完成',progress:'',startDate:g['開始日'],dueDate:g['截止日'],note:g['備註'],priority:g['優先級'],tags:g['標籤'],parent:g['父任務'],hours:g['工時'],comment:g['評論']}),mode:'no-cors'})});
+    });
+  }
+  render();dragIdx=null;
 }
 function renderTimeline(){
   const filtered=getFiltered();
