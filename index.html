@@ -87,7 +87,6 @@ h1{font-size:1.4em;color:var(--accent)}
     <input id="f-owner" placeholder="負責人" />
     <select id="f-status"><option>待辦</option><option>進行中</option><option>已完成</option></select>
     <select id="f-priority"><option value="">無優先級</option><option value="高">高</option><option value="中">中</option><option value="低">低</option></select>
-    <input id="f-progress" type="number" min="0" max="100" placeholder="進度 %" value="0" />
     <input id="f-start" type="date" />
     <input id="f-due" type="date" />
     <input id="f-tags" placeholder="標籤（逗號分隔）" />
@@ -181,7 +180,7 @@ function getFiltered(){
 }
 async function submitTask(){
   const m=document.getElementById('addModal');
-  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:document.getElementById('f-progress').value,startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value};
+  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:'',startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value};
   if(!data.name){alert('請填寫任務名稱');return}
   if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
   try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});alert('✅ 完成！');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
@@ -210,7 +209,7 @@ function renderFilterBar(){
 function render(){renderStats();renderBoard();renderTimeline();renderReport()}
 function renderStats(){
   const f=getFiltered(),total=f.length,done=f.filter(t=>t['狀態']==='已完成').length;
-  document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num">${total?Math.round(done/total*100):0}%</div><div class="label">完成率</div></div>`;
+  document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num" style="color:var(--yellow)">${total-done}</div><div class="label">未完成</div></div>`;
 }
 function renderBoard(){
   const filtered=getFiltered();
@@ -228,9 +227,8 @@ function renderBoard(){
     return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})">
       <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div>
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
-      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);const cp=c['進度']||0;return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:2px 0;font-size:0.7em;cursor:pointer"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span><span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted)">${cp}%</span></div>`}).join('')+'</div></div>':''}
+      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:2px 0;font-size:0.7em;cursor:pointer"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span><span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted)">${c['狀態']}</span></div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
   document.getElementById('boardView').innerHTML=`
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 style="color:var(--muted)">📝 待辦 (${todo.length})</h3>${cardHtml(todo)}</div>
@@ -242,14 +240,9 @@ function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){
   e.preventDefault();if(dragIdx===null)return;
   const t=tasks[dragIdx];
-  let progress=t['進度'];
-  if(status==='已完成')progress='100';
-  else if(status==='待辦')progress='0';
-  else if(status==='進行中'&&(!progress||progress==='0'))progress='50';
-  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:progress,startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
+  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-  t['狀態']=status;t['進度']=progress;
-  render();dragIdx=null;
+  t['狀態']=status;render();dragIdx=null;
 }
 function renderTimeline(){
   const filtered=getFiltered();
