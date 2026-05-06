@@ -344,7 +344,7 @@ function renderTimeline(){
   const today=new Date();const isThisMonth=today.getFullYear()===y&&today.getMonth()===m;
   for(let d=1;d<=days;d++){const wd=weekdays[new Date(y,m,d).getDay()];const isToday=isThisMonth&&d===today.getDate();h+=`<div style="flex:1;text-align:center;font-size:0.5em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'}">${d}<br>${wd}</div>`}
   h+='</div></div>';
-  if(isThisMonth){const todayPos=(150+((today.getDate()-0.5)/days*(100))).toString();h+=`<div style="position:absolute;top:0;bottom:0;left:calc(150px + ${((today.getDate()-0.5)/days*100).toFixed(1)}% * (100% - 150px) / 100%);width:0;border-left:2px solid var(--red);z-index:10;pointer-events:none"></div>`}
+  if(isThisMonth){const todayPos=(150+((today.getDate()-0.5)/days*(100))).toString();h+=`<div style="position:absolute;top:30px;bottom:0;left:calc(150px + ${((today.getDate()-0.5)/days*100).toFixed(1)}% * (100% - 150px) / 100%);width:0;border-left:2px solid var(--red);z-index:10;pointer-events:none"></div>`}
 
   const groups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
   Object.entries(groups).forEach(([owner,items])=>{
@@ -362,7 +362,7 @@ function renderTimeline(){
     });
     h+=`</div></div>`;
   });
-  if(isThisMonth){const todayPos=((today.getDate()-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:0;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
+  if(isThisMonth){const todayPos=((today.getDate()-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:30px;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
   h+='</div>';
   document.getElementById('timelineView').innerHTML=h;
 }
@@ -440,7 +440,7 @@ function renderOutsource(){
     });
       gh+=`</div></div>`;
     });
-    if(isThisMonth2){const todayPos=((today2.getDate()-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:0;bottom:0;left:calc(180px + (100% - 180px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
+    if(isThisMonth2){const todayPos=((today2.getDate()-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:30px;bottom:0;left:calc(180px + (100% - 180px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
     gh+='</div>';
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
