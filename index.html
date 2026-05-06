@@ -94,7 +94,7 @@ h1{font-size:1.4em;color:var(--accent)}
     <button class="btn-tab active" onclick="outsourceMode='list';renderOutsource();this.classList.add('active');this.nextElementSibling.classList.remove('active')">列表</button>
     <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsource();this.classList.add('active');this.previousElementSibling.classList.remove('active')">甘特圖</button>
   </div>
-  <div id="outsourceContent" class="board"></div>
+  <div id="outsourceContent"></div>
 </div>
 <div id="addModal" class="modal hidden">
   <div class="modal-content">
@@ -425,7 +425,7 @@ function renderOutsource(){
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
-  document.getElementById('outsourceContent').innerHTML=html;
+  document.getElementById('outsourceContent').innerHTML='<div class="board">'+html+'</div>';
 }
 fetchData();updateMonthLabel();loadNotes();
 </script>
