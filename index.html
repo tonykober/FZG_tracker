@@ -245,10 +245,15 @@ function renderBoard(){
       ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';return `<div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;padding:3px 0;font-size:0.7em;cursor:pointer;border-bottom:1px solid var(--border)"><span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span>${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}<span style="flex:1">${c['任務名稱']}</span><span style="color:var(--muted);font-size:0.9em">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span></div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
+  const groupByOwner=(items)=>{
+    const groups={};
+    items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
+    return Object.entries(groups).map(([owner,list])=>`<div style="margin-bottom:8px"><div style="font-size:0.7em;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">👤 ${owner}</div>${cardHtml(list)}</div>`).join('');
+  };
   document.getElementById('boardView').innerHTML=`
-    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 style="color:var(--muted)">📝 待辦 (${todo.length})</h3>${cardHtml(todo)}</div>
-    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'進行中')"><h3 style="color:var(--yellow)">🔄 進行中 (${doing.length})</h3>${cardHtml(doing)}</div>
-    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 style="color:var(--green)">✅ 已完成 (${done.length})</h3>${cardHtml(done)}</div>`;
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 style="color:var(--muted)">📝 待辦 (${todo.length})</h3>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div>
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'進行中')"><h3 style="color:var(--yellow)">🔄 進行中 (${doing.length})</h3>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div>
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 style="color:var(--green)">✅ 已完成 (${done.length})</h3>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div>`;
 }
 let dragIdx=null;
 function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
