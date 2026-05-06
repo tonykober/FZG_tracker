@@ -183,7 +183,7 @@ function onOwnerSelect(){
   if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render()}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();if(outsourceTasks.length)renderOutsource()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
@@ -339,8 +339,17 @@ async function fetchOutsource(){
 }
 function renderOutsource(){
   if(!outsourceTasks.length){document.getElementById('outsourceView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">載入中...</div>';fetchOutsource().then(()=>renderOutsource());return}
+  const filtered=filterByMonth(outsourceTasks.map(t=>({'開始日':t['開始日'],'截止日':t['截止日'],...t}))).length?filterByMonth(outsourceTasks):outsourceTasks.filter(t=>{
+    const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
+    if(!t['開始日']&&!t['截止日'])return true;
+    if(t['開始日']&&t['開始日'].startsWith(prefix))return true;
+    if(t['截止日']&&t['截止日'].startsWith(prefix))return true;
+    if(t['開始日']&&t['截止日'])return t['開始日'].substring(0,7)<=prefix&&t['截止日'].substring(0,7)>=prefix;
+    return false;
+  });
+  if(!filtered.length){document.getElementById('outsourceView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">本月無外包工作項目</div>';return}
   const owners={};
-  outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
+  filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
   let html='';
   Object.entries(owners).forEach(([owner,items])=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
