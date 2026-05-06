@@ -362,7 +362,7 @@ function renderTimeline(){
     });
     h+=`</div></div>`;
   });
-  for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
+  for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
   if(isThisMonth){const todayPos=((today.getDate()-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
   h+='</div>';
   document.getElementById('timelineView').innerHTML=h;
@@ -441,7 +441,7 @@ function renderOutsource(){
     });
       gh+=`</div></div>`;
     });
-    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(180px + (100% - 180px) * ${pos} / 100);width:calc((100% - 180px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
+    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(180px + (100% - 180px) * ${pos} / 100);width:calc((100% - 180px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
     if(isThisMonth2){const todayPos=((today2.getDate()-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(180px + (100% - 180px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
     gh+='</div>';
     document.getElementById('outsourceContent').innerHTML=gh;
