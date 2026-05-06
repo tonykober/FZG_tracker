@@ -5,85 +5,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FZG 專案追蹤器</title>
 <style>
-:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149}
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#a371f7}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px;min-height:100vh}
-header{max-width:1200px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-h1{font-size:1.5em;color:var(--accent)}
-.views{display:flex;gap:4px;background:var(--surface);border-radius:8px;padding:3px;border:1px solid var(--border)}
-.view-btn{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85em;border:none;color:var(--muted);background:transparent}
-.view-btn.active{background:var(--accent);color:#fff}
-.stats{max-width:1200px;margin:0 auto 20px;display:flex;gap:12px;flex-wrap:wrap}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px}
-.stat .num{font-size:1.5em;font-weight:700}
-.stat .label{font-size:0.75em;color:var(--muted)}
-.board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
-.column h3{font-size:0.85em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.col-todo h3{color:var(--muted)}
-.col-doing h3{color:var(--yellow)}
-.col-done h3{color:var(--green)}
-.card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px}
-.card .name{font-weight:600;font-size:0.85em;margin-bottom:4px}
-.card .meta{font-size:0.7em;color:var(--muted);display:flex;justify-content:space-between}
-.card .progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+header{max-width:1200px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+h1{font-size:1.4em;color:var(--accent)}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{border:none;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:0.8em}
+.btn-green{background:var(--green);color:#fff}
+.btn-tab{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:6px 12px}
+.btn-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.search-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:0.8em;width:150px}
+.month-nav{display:flex;align-items:center;gap:6px}
+.month-nav button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;cursor:pointer}
+.month-nav span{font-size:0.8em;min-width:90px;text-align:center}
+.filter-bar{max-width:1200px;margin:0 auto 12px;display:flex;gap:6px;flex-wrap:wrap}
+.filter-tag{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px 10px;font-size:0.7em;cursor:pointer}
+.filter-tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.stats{max-width:1200px;margin:0 auto 16px;display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.stat .num{font-size:1.3em;font-weight:700}
+.stat .label{font-size:0.7em;color:var(--muted)}
+.board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:200px}
+.column h3{font-size:0.8em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:7px;cursor:pointer;transition:border-color .2s}
+.card:hover{border-color:var(--accent)}
+.card .name{font-weight:600;font-size:0.8em;margin-bottom:3px}
+.card .meta{font-size:0.65em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.card .progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:5px}
 .card .progress-fill{height:100%;border-radius:2px;background:var(--accent)}
+.card .tags{margin-top:4px;display:flex;gap:3px;flex-wrap:wrap}
+.card .tag-pill{font-size:0.6em;padding:1px 6px;border-radius:8px;background:var(--surface);border:1px solid var(--border)}
+.card .subtasks{font-size:0.6em;color:var(--muted);margin-top:3px}
+.priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.p-high{background:var(--red)}
+.p-mid{background:var(--yellow)}
+.p-low{background:var(--green)}
 .timeline{max-width:1200px;margin:0 auto}
-.tl-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
-.tl-bar{flex:1;height:20px;background:var(--border);border-radius:4px;position:relative;overflow:hidden}
-.tl-fill{height:100%;border-radius:4px;position:absolute;left:0;top:0}
-.tl-name{width:150px;font-size:0.8em;font-weight:600;flex-shrink:0}
-.tl-dates{width:120px;font-size:0.7em;color:var(--muted);flex-shrink:0;text-align:right}
 .report{max-width:800px;margin:0 auto}
-.report-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
-.report-section h3{font-size:0.9em;margin-bottom:10px;color:var(--accent)}
-.overdue{color:var(--red);font-weight:600}
+.report-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+.report-section h3{font-size:0.85em;margin-bottom:8px;color:var(--accent)}
+.overdue{color:var(--red)}
 .hidden{display:none!important}
-.empty{text-align:center;color:var(--muted);padding:40px}
 .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100}
-.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:10px}
-.modal-content h3{color:var(--accent);margin-bottom:4px}
-.modal-content input,.modal-content select{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:0.9em}
-.modal-actions{display:flex;gap:8px;margin-top:8px}
-.modal-actions button{flex:1;padding:10px;border:none;border-radius:6px;cursor:pointer;font-size:0.9em;background:var(--accent);color:#fff}
+.modal-content{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;width:90%;max-width:420px;display:flex;flex-direction:column;gap:8px;max-height:90vh;overflow-y:auto}
+.modal-content h3{color:var(--accent)}
+.modal-content input,.modal-content select,.modal-content textarea{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:0.85em}
+.modal-actions{display:flex;gap:6px;margin-top:6px}
+.modal-actions button{flex:1;padding:9px;border:none;border-radius:6px;cursor:pointer;font-size:0.85em;background:var(--accent);color:#fff}
 .modal-actions .cancel{background:var(--border);color:var(--text)}
+.modal-actions .del{background:var(--red);color:#fff}
 @media(max-width:768px){.board{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
   <h1>📋 FZG 專案追蹤器</h1>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <button onclick="openModal()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:0.85em">➕ 新增任務</button>
-    <div class="views" style="display:flex;gap:4px;align-items:center">
-      <button style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer" onclick="changeMonth(-1)">◀</button>
-      <span id="monthLabel" style="min-width:100px;text-align:center;font-size:0.85em"></span>
-      <button style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer" onclick="changeMonth(1)">▶</button>
+  <div class="toolbar">
+    <button class="btn btn-green" onclick="openModal()">➕ 新增</button>
+    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">◀</button>
+      <span id="monthLabel"></span>
+      <button onclick="changeMonth(1)">▶</button>
     </div>
-    <div class="views" id="viewTabs">
-    <button class="view-btn active" data-view="board">看板</button>
-    <button class="view-btn" data-view="timeline">時間軸</button>
-    <button class="view-btn" data-view="report">報告</button>
-  </div>
+    <button class="btn-tab active" data-view="board" onclick="switchView(this)">看板</button>
+    <button class="btn-tab" data-view="timeline" onclick="switchView(this)">時間軸</button>
+    <button class="btn-tab" data-view="report" onclick="switchView(this)">報告</button>
   </div>
 </header>
+<div class="filter-bar" id="filterBar"></div>
 <div class="stats" id="stats"></div>
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
 <div id="addModal" class="modal hidden">
   <div class="modal-content">
-    <h3>➕ 新增任務</h3>
+    <h3 id="modalTitle">➕ 新增任務</h3>
     <input id="f-name" placeholder="任務名稱" />
     <input id="f-owner" placeholder="負責人" />
     <select id="f-status"><option>待辦</option><option>進行中</option><option>已完成</option></select>
+    <select id="f-priority"><option value="">無優先級</option><option value="高">高</option><option value="中">中</option><option value="低">低</option></select>
     <input id="f-progress" type="number" min="0" max="100" placeholder="進度 %" value="0" />
     <input id="f-start" type="date" />
     <input id="f-due" type="date" />
+    <input id="f-tags" placeholder="標籤（逗號分隔）" />
+    <input id="f-parent" placeholder="父任務名稱（選填，用於子任務）" />
     <input id="f-note" placeholder="備註" />
     <div class="modal-actions">
       <button onclick="submitTask()">確認</button>
-      <button onclick="deleteTask()" class="cancel" id="deleteBtn" style="background:var(--red);color:#fff;display:none">刪除</button>
+      <button onclick="deleteTask()" class="del" id="deleteBtn" style="display:none">刪除</button>
       <button onclick="closeModal()" class="cancel">取消</button>
     </div>
   </div>
@@ -92,164 +104,156 @@ h1{font-size:1.5em;color:var(--accent)}
 const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
-let tasks=[];
-let currentMonth=new Date();
+let tasks=[],currentMonth=new Date(),activeFilter='';
+function switchView(el){
+  document.querySelectorAll('.btn-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const v=el.dataset.view;
+  document.getElementById('boardView').classList.toggle('hidden',v!=='board');
+  document.getElementById('timelineView').classList.toggle('hidden',v!=='timeline');
+  document.getElementById('reportView').classList.toggle('hidden',v!=='report');
+}
 function openModal(idx){
-  const m=document.getElementById('addModal');
-  m.classList.remove('hidden');
+  const m=document.getElementById('addModal');m.classList.remove('hidden');
   document.getElementById('deleteBtn').style.display=idx!==undefined?'block':'none';
+  document.getElementById('modalTitle').textContent=idx!==undefined?'✏️ 編輯任務':'➕ 新增任務';
   if(idx!==undefined){
     const t=tasks[idx];
     document.getElementById('f-name').value=t['任務名稱']||'';
     document.getElementById('f-owner').value=t['負責人']||'';
     document.getElementById('f-status').value=t['狀態']||'待辦';
+    document.getElementById('f-priority').value=t['優先級']||'';
     document.getElementById('f-progress').value=t['進度']||0;
     document.getElementById('f-start').value=t['開始日']||'';
     document.getElementById('f-due').value=t['截止日']||'';
+    document.getElementById('f-tags').value=t['標籤']||'';
+    document.getElementById('f-parent').value=t['父任務']||'';
     document.getElementById('f-note').value=t['備註']||'';
     m.dataset.editIdx=idx;
   }else{
-    document.getElementById('f-name').value='';document.getElementById('f-owner').value='';document.getElementById('f-status').value='待辦';document.getElementById('f-progress').value=0;document.getElementById('f-start').value='';document.getElementById('f-due').value='';document.getElementById('f-note').value='';
+    ['f-name','f-owner','f-tags','f-parent','f-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-progress').value=0;document.getElementById('f-start').value='';document.getElementById('f-due').value='';
     delete m.dataset.editIdx;
   }
 }
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();renderBoard();renderTimeline();renderReport()}
-function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'年'+(currentMonth.getMonth()+1)+'月'}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render()}
+function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function filterByMonth(list){
-  if(!list.length)return list;
-  const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;
-  const prefix=y+'-'+(m<10?'0'+m:m);
+  const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
   return list.filter(t=>{
     if(!t['開始日']&&!t['截止日'])return true;
     if(t['開始日']&&t['開始日'].startsWith(prefix))return true;
     if(t['截止日']&&t['截止日'].startsWith(prefix))return true;
-    if(t['開始日']&&t['截止日']){
-      const s=t['開始日'].substring(0,7),e=t['截止日'].substring(0,7);
-      if(s<=prefix&&e>=prefix)return true;
-    }
+    if(t['開始日']&&t['截止日'])return t['開始日'].substring(0,7)<=prefix&&t['截止日'].substring(0,7)>=prefix;
     return false;
   });
 }
+function getFiltered(){
+  let list=filterByMonth(tasks);
+  const q=document.getElementById('search').value.toLowerCase();
+  if(q)list=list.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q));
+  if(activeFilter)list=list.filter(t=>(t['標籤']||'').includes(activeFilter));
+  return list;
+}
 async function submitTask(){
   const m=document.getElementById('addModal');
-  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:document.getElementById('f-progress').value,startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value};
+  const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:document.getElementById('f-progress').value,startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value};
   if(!data.name){alert('請填寫任務名稱');return}
-  if(m.dataset.editIdx!==undefined)data.action='update',data.row=m.dataset.editIdx;
-  try{
-    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-    alert('✅ '+(data.action==='update'?'任務已更新':'任務已新增')+'！頁面將重新載入。');
-    closeModal();setTimeout(()=>location.reload(),2000);
-  }catch(e){alert('❌ 操作失敗，請稍後再試。')}
+  if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
+  try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});alert('✅ 完成！');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
 }
 async function deleteTask(){
   const m=document.getElementById('addModal');
-  if(m.dataset.editIdx===undefined)return;
-  if(!confirm('確定要刪除這個任務嗎？'))return;
-  try{
-    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:m.dataset.editIdx}),mode:'no-cors'});
-    alert('✅ 任務已刪除！');
-    closeModal();setTimeout(()=>location.reload(),2000);
-  }catch(e){alert('❌ 刪除失敗。')}
+  if(!confirm('確定刪除？'))return;
+  try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:m.dataset.editIdx}),mode:'no-cors'});alert('✅ 已刪除');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
 }
 async function fetchData(){
   try{
-    const res=await fetch(CSV_URL);
-    const text=await res.text();
+    const res=await fetch(CSV_URL);const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
     const cols=json.table.cols.map(c=>c.label.trim());
-    const rows=json.table.rows;
-    tasks=rows.map(r=>{
-      const obj={};
-      cols.forEach((c,i)=>{
-        if(r.c&&r.c[i]){obj[c]=r.c[i].f||r.c[i].v||''}else{obj[c]=''}
-      });
-      return obj;
-    }).filter(t=>t['任務名稱']);
-    render();
-  }catch(e){document.getElementById('boardView').innerHTML='<div class="empty">無法載入資料，請確認 Google Sheet 已公開分享。</div>'}
+    tasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']);
+    render();renderFilterBar();
+  }catch(e){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">無法載入資料</div>'}
 }
-function render(){
-  renderStats();renderBoard();renderTimeline();renderReport();
+function renderFilterBar(){
+  const allTags=new Set();tasks.forEach(t=>(t['標籤']||'').split(',').filter(Boolean).forEach(tag=>allTags.add(tag.trim())));
+  if(!allTags.size){document.getElementById('filterBar').innerHTML='';return}
+  let html=`<span class="filter-tag ${!activeFilter?'active':''}" onclick="activeFilter='';render();renderFilterBar()">全部</span>`;
+  allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
+  document.getElementById('filterBar').innerHTML=html;
 }
+function render(){renderStats();renderBoard();renderTimeline();renderReport()}
 function renderStats(){
-  const total=tasks.length;
-  const done=tasks.filter(t=>t['狀態']==='已完成').length;
-  const doing=tasks.filter(t=>t['狀態']==='進行中').length;
-  const todo=tasks.filter(t=>t['狀態']==='待辦').length;
-  const avgProgress=total?Math.round(tasks.reduce((s,t)=>s+(parseInt(t['進度'])||0),0)/total):0;
-  document.getElementById('stats').innerHTML=`
-    <div class="stat"><div class="num">${total}</div><div class="label">總任務</div></div>
-    <div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">已完成</div></div>
-    <div class="stat"><div class="num" style="color:var(--yellow)">${doing}</div><div class="label">進行中</div></div>
-    <div class="stat"><div class="num">${todo}</div><div class="label">待辦</div></div>
-    <div class="stat"><div class="num">${avgProgress}%</div><div class="label">平均進度</div></div>`;
+  const f=getFiltered(),total=f.length,done=f.filter(t=>t['狀態']==='已完成').length;
+  document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num">${total?Math.round(done/total*100):0}%</div><div class="label">完成率</div></div>`;
 }
 function renderBoard(){
-  const filtered=filterByMonth(tasks);
-  const todo=filtered.filter(t=>t['狀態']==='待辦');
-  const doing=filtered.filter(t=>t['狀態']==='進行中');
-  const done=filtered.filter(t=>t['狀態']==='已完成');
-  const cardHtml=items=>items.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" onclick="openModal(${idx})" style="cursor:pointer"><div class="name">${t['任務名稱']}</div><div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div></div>`}).join('');
+  const filtered=getFiltered();
+  const parentTasks=filtered.filter(t=>!t['父任務']);
+  const getChildren=name=>filtered.filter(t=>t['父任務']===name);
+  const todo=parentTasks.filter(t=>t['狀態']==='待辦');
+  const doing=parentTasks.filter(t=>t['狀態']==='進行中');
+  const done=parentTasks.filter(t=>t['狀態']==='已完成');
+  const cardHtml=(items)=>items.map(t=>{
+    const idx=tasks.indexOf(t);
+    const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':t['優先級']==='低'?'p-low':'';
+    const children=getChildren(t['任務名稱']);
+    const childDone=children.filter(c=>c['狀態']==='已完成').length;
+    const tags=(t['標籤']||'').split(',').filter(Boolean);
+    return `<div class="card" onclick="openModal(${idx})" draggable="true" ondragstart="drag(event,${idx})">
+      <div class="name">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
+      <div class="meta"><span>${t['負責人']||''}</span><span>${t['截止日']||''}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${t['進度']||0}%"></div></div>
+      ${tags.length?'<div class="tags">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}
+      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+'</div>':''}
+    </div>`}).join('');
   document.getElementById('boardView').innerHTML=`
-    <div class="column col-todo"><h3>📝 待辦 (${todo.length})</h3>${cardHtml(todo)||'<div class="empty">無任務</div>'}</div>
-    <div class="column col-doing"><h3>🔄 進行中 (${doing.length})</h3>${cardHtml(doing)||'<div class="empty">無任務</div>'}</div>
-    <div class="column col-done"><h3>✅ 已完成 (${done.length})</h3>${cardHtml(done)||'<div class="empty">無任務</div>'}</div>`;
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 style="color:var(--muted)">📝 待辦 (${todo.length})</h3>${cardHtml(todo)}</div>
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'進行中')"><h3 style="color:var(--yellow)">🔄 進行中 (${doing.length})</h3>${cardHtml(doing)}</div>
+    <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 style="color:var(--green)">✅ 已完成 (${done.length})</h3>${cardHtml(done)}</div>`;
+}
+let dragIdx=null;
+function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
+function drop(e,status){
+  e.preventDefault();if(dragIdx===null)return;
+  const t=tasks[dragIdx];
+  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:status==='已完成'?'100':t['進度'],startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務']};
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
+  t['狀態']=status;if(status==='已完成')t['進度']='100';
+  render();dragIdx=null;
 }
 function renderTimeline(){
-  const filtered=filterByMonth(tasks);
-  if(!filtered.length){document.getElementById('timelineView').innerHTML='<div class="empty">本月無任務</div>';return}
+  const filtered=getFiltered();
+  if(!filtered.length){document.getElementById('timelineView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
-  const daysInMonth=new Date(y,m+1,0).getDate();
-  let header='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:8px"><div style="width:140px;flex-shrink:0;font-size:0.7em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
-  for(let d=1;d<=daysInMonth;d++)header+=`<div style="flex:1;text-align:center;font-size:0.6em;color:var(--muted)">${d}</div>`;
-  header+='</div></div>';
-  const rows=filtered.map(t=>{
-    const startStr=t['開始日']||'',endStr=t['截止日']||'';
-    let startDay=1,endDay=daysInMonth;
-    if(startStr){const sd=new Date(startStr);if(sd.getFullYear()===y&&sd.getMonth()===m)startDay=sd.getDate();else if(sd>new Date(y,m,daysInMonth))return '';else if(sd<new Date(y,m,1))startDay=1}
-    if(endStr){const ed=new Date(endStr);if(ed.getFullYear()===y&&ed.getMonth()===m)endDay=ed.getDate();else if(ed<new Date(y,m,1))return '';else if(ed>new Date(y,m,daysInMonth))endDay=daysInMonth}
+  const days=new Date(y,m+1,0).getDate();
+  let h='<div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:130px;flex-shrink:0;font-size:0.65em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
+  for(let d=1;d<=days;d++)h+=`<div style="flex:1;text-align:center;font-size:0.55em;color:var(--muted)">${d}</div>`;
+  h+='</div></div>';
+  filtered.forEach(t=>{
+    const s=t['開始日']?new Date(t['開始日']):new Date(y,m,1),e=t['截止日']?new Date(t['截止日']):new Date(y,m,days);
+    let sd=s.getMonth()===m&&s.getFullYear()===y?s.getDate():1;
+    let ed=e.getMonth()===m&&e.getFullYear()===y?e.getDate():days;
     const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
-    const leftPct=((startDay-1)/daysInMonth*100).toFixed(1);
-    const widthPct=((endDay-startDay+1)/daysInMonth*100).toFixed(1);
-    return `<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:140px;flex-shrink:0;font-size:0.75em;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t['任務名稱']}</div><div style="flex:1;position:relative;height:20px;background:var(--bg);border-radius:4px"><div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${color};border-radius:4px;opacity:0.8"></div></div></div>`;
-  }).filter(Boolean).join('');
-  document.getElementById('timelineView').innerHTML=header+rows;
+    const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
+    const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
+    h+=`<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)"><div style="width:130px;flex-shrink:0;font-size:0.7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:18px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+  });
+  document.getElementById('timelineView').innerHTML=h;
 }
 function renderReport(){
-  const filtered=filterByMonth(tasks);
-  const total=filtered.length;
-  const done=filtered.filter(t=>t['狀態']==='已完成').length;
+  const filtered=getFiltered(),total=filtered.length,done=filtered.filter(t=>t['狀態']==='已完成').length;
   const today=new Date().toISOString().split('T')[0];
   const overdue=filtered.filter(t=>t['狀態']!=='已完成'&&t['截止日']&&t['截止日']<today);
   let html=`<div class="report-section"><h3>📊 整體進度</h3><p>完成率：${total?Math.round(done/total*100):0}%（${done}/${total}）</p></div>`;
-  const ownerMap={};
-  filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!ownerMap[o])ownerMap[o]={total:0,done:0,doing:0,todo:0};ownerMap[o].total++;if(t['狀態']==='已完成')ownerMap[o].done++;else if(t['狀態']==='進行中')ownerMap[o].doing++;else ownerMap[o].todo++});
-  if(Object.keys(ownerMap).length){
-    html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;
-    Object.entries(ownerMap).forEach(([name,d])=>{html+=`<p style="margin-bottom:6px">• <strong>${name}</strong>：共 ${d.total} 項（待辦 ${d.todo} / 進行中 ${d.doing} / 已完成 ${d.done}）</p>`});
-    html+=`</div>`;
-  }
-  if(overdue.length){
-    html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
-  }
-  const doing=filtered.filter(t=>t['狀態']==='進行中');
-  if(doing.length){
-    html+=`<div class="report-section"><h3>🔄 進行中任務</h3>${doing.map(t=>`<p>• ${t['任務名稱']} — ${t['進度']||0}%</p>`).join('')}</div>`;
-  }
+  const ownerMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!ownerMap[o])ownerMap[o]={total:0,done:0,doing:0,todo:0};ownerMap[o].total++;if(t['狀態']==='已完成')ownerMap[o].done++;else if(t['狀態']==='進行中')ownerMap[o].doing++;else ownerMap[o].todo++});
+  if(Object.keys(ownerMap).length){html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;Object.entries(ownerMap).forEach(([n,d])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：共${d.total}項（待辦${d.todo}/進行中${d.doing}/完成${d.done}）</p>`});html+=`</div>`}
+  if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
 }
-document.getElementById('viewTabs').onclick=e=>{
-  if(!e.target.classList.contains('view-btn'))return;
-  document.getElementById('viewTabs').querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
-  e.target.classList.add('active');
-  const view=e.target.dataset.view;
-  document.getElementById('boardView').classList.toggle('hidden',view!=='board');
-  document.getElementById('timelineView').classList.toggle('hidden',view!=='timeline');
-  document.getElementById('reportView').classList.toggle('hidden',view!=='report');
-};
-fetchData();
-updateMonthLabel();
+fetchData();updateMonthLabel();
 </script>
 </body>
 </html>
