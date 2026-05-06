@@ -265,7 +265,7 @@ function renderBoard(){
           <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7em;cursor:pointer">
             <span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span>
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
-            <span style="flex:1">${c['任務名稱']}</span>${c['負責人']?'<span style="color:var(--accent);font-size:0.85em;margin-right:4px">'+ c['負責人'] +'</span>':''}
+            <span style="flex:1">${c['任務名稱']}</span>${c['負責人']?'<span style="color:var(--green);font-size:0.85em;margin-right:4px">'+ c['負責人'] +'</span>':''}
             <span style="color:var(--muted);font-size:0.9em">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
             ${cCanAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
           </div>
@@ -274,7 +274,7 @@ function renderBoard(){
             return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:var(--bg);transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
               <span style="color:${g['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
-              <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--accent);font-size:0.9em">${g['負責人']}</span>`:````}
+              <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--green);font-size:0.9em">${g['負責人']}</span>`:````}
               <span style="color:var(--muted)">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
