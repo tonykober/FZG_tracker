@@ -409,7 +409,7 @@ function renderBoard(){
             return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:var(--bg);transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
               <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
-              <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--green);font-size:0.9em">${g['負責人']}</span>`:````}
+              <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--green);font-size:0.9em">${g['負責人']}</span>`:''}
               <span style="color:var(--muted)">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
