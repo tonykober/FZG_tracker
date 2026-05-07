@@ -397,8 +397,12 @@ async function fetchOutsource(){
   try{
     const res=await fetch(url);const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
+    if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
-    outsourceTasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
+    const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
+    const prefix=currentMonth.getFullYear()+'-'+('0'+m).slice(-2);
+    const hasCurrentMonth=items.some(t=>(t['開始日']||'').startsWith(prefix)||(t['截止日']||'').startsWith(prefix));
+    outsourceTasks=hasCurrentMonth||!items[0]['開始日']?items:[];
   }catch(e){outsourceTasks=[];}
 }
 async function renderOutsource(){
