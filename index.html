@@ -334,7 +334,7 @@ async function submitTask(){
   if(!data.name){const count=tasks.filter(t=>t['任務名稱'].startsWith('未命名')).length;data.name='未命名'+(count+1)}
   if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
   try{
-    await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
     if(data.action==='update'){
       const t=tasks[parseInt(m.dataset.editIdx)];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
@@ -342,7 +342,7 @@ async function submitTask(){
       tasks.push({'任務名稱':data.name,'負責人':data.owner,'狀態':data.status,'開始日':data.startDate,'截止日':data.dueDate,'備註':data.note,'優先級':data.priority,'標籤':data.tags,'父任務':data.parent,'工時':data.hours,'評論':data.comment});
     }
     closeModal();render();renderFilterBar();
-  }catch(e){alert('❌ 失敗')}
+  }catch(e){alert('❌ 失敗：'+e.message)}
 }
 async function deleteTask(){
   const m=document.getElementById('addModal');
