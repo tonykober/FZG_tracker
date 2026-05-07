@@ -394,7 +394,7 @@ function renderTimeline(){
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
-      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${indent?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${indent?'24':'12'}px;${indent?'color:var(--muted)':''}">${indent?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:${indent?'12':'16'}px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:${indent?'0.6':'0.8'}"></div></div></div>`;
+      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${indent?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${indent?'24':'12'}px;${indent?'color:var(--yellow)':''}">${indent?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:${indent?'12':'16'}px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
     };
     parents.forEach(t=>{
       renderGanttRow(t,false);
