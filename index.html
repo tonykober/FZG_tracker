@@ -62,24 +62,31 @@ h1{font-size:1.4em;color:var(--accent)}
 <body>
 <header>
   <h1>📋 FZG 專案追蹤器</h1>
-  <div class="toolbar">
-    <button class="btn btn-green" onclick="openModal()">➕ 新增</button>
-    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render();renderOutsource()"/>
-    <div class="month-nav">
-      <button onclick="changeMonth(-1)">◀</button>
-      <span id="monthLabel"></span>
-      <button onclick="changeMonth(1)">▶</button>
-    </div>
+</header>
+<div style="max-width:1200px;margin:0 auto 12px;display:flex;flex-direction:column;gap:8px;align-items:center">
+  <div style="display:flex;gap:4px">
+    <button class="btn-tab active" id="mainTabInternal" onclick="switchMainTab('internal')">內部</button>
+    <button class="btn-tab" id="mainTabOutsource" onclick="switchMainTab('outsource')">外包</button>
+  </div>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">◀</button>
+    <span id="monthLabel"></span>
+    <button onclick="changeMonth(1)">▶</button>
+  </div>
+</div>
+<div id="internalSection">
+  <div style="max-width:1200px;margin:0 auto 10px;display:flex;gap:6px;align-items:center;justify-content:center">
     <button class="btn-tab active" data-view="board" onclick="switchView(this)">看板</button>
     <button class="btn-tab" data-view="timeline" onclick="switchView(this)">時間軸</button>
     <button class="btn-tab" data-view="report" onclick="switchView(this)">報告</button>
-    <span style="color:var(--border);margin:0 4px">|</span>
-    <button class="btn-tab" data-view="outsource" onclick="switchView(this)" style="border-color:var(--yellow)">📦 外包</button>
   </div>
-</header>
-<div class="filter-bar" id="filterBar"></div>
-<div class="stats" id="stats"></div>
-<div id="monthNotes" style="max-width:1200px;margin:0 auto 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
+  <div style="max-width:1200px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center">
+    <button class="btn btn-green" onclick="openModal()">➕ 新增任務</button>
+    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
+  </div>
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="stats" id="stats"></div>
+  <div id="monthNotes" style="max-width:1200px;margin:0 auto 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
     <span style="font-size:0.8em;color:var(--accent);font-weight:600">📌 當月目標 / 備註</span>
     <button onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.7em;cursor:pointer">儲存</button>
@@ -89,10 +96,14 @@ h1{font-size:1.4em;color:var(--accent)}
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
-<div id="outsourceView" class="hidden" style="max-width:1200px;margin:0 auto">
-  <div style="margin-bottom:12px;display:flex;gap:6px">
-    <button class="btn-tab active" onclick="outsourceMode='list';renderOutsource();this.classList.add('active');this.nextElementSibling.classList.remove('active')">列表</button>
-    <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsource();this.classList.add('active');this.previousElementSibling.classList.remove('active')">甘特圖</button>
+</div>
+<div id="outsourceSection" class="hidden">
+  <div style="max-width:1200px;margin:0 auto 12px;display:flex;gap:6px;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:6px">
+      <button class="btn-tab active" onclick="outsourceMode='list';renderOutsource();this.classList.add('active');this.nextElementSibling.classList.remove('active')">列表</button>
+      <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsource();this.classList.add('active');this.previousElementSibling.classList.remove('active')">甘特圖</button>
+    </div>
+    <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsource()"/>
   </div>
   <div id="outsourceContent"></div>
 </div>
@@ -133,15 +144,20 @@ const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[],currentMonth=new Date(),activeFilter='';
+function switchMainTab(tab){
+  document.getElementById('mainTabInternal').classList.toggle('active',tab==='internal');
+  document.getElementById('mainTabOutsource').classList.toggle('active',tab==='outsource');
+  document.getElementById('internalSection').classList.toggle('hidden',tab!=='internal');
+  document.getElementById('outsourceSection').classList.toggle('hidden',tab!=='outsource');
+  if(tab==='outsource')renderOutsource();
+}
 function switchView(el){
-  document.querySelectorAll('.btn-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   const v=el.dataset.view;
   document.getElementById('boardView').classList.toggle('hidden',v!=='board');
   document.getElementById('timelineView').classList.toggle('hidden',v!=='timeline');
   document.getElementById('reportView').classList.toggle('hidden',v!=='report');
-  document.getElementById('outsourceView').classList.toggle('hidden',v!=='outsource');
-  if(v==='outsource')renderOutsource();
 }
 function openModal(idx){
   const m=document.getElementById('addModal');m.classList.remove('hidden');
@@ -409,8 +425,8 @@ async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
   await fetchOutsource();
   let outsourceFiltered=outsourceTasks;
-  const q=document.getElementById('search').value.toLowerCase();
-  if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q));
+  const q=(document.getElementById('searchOutsource')||{}).value||'';
+  if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q.toLowerCase()));
   if(!outsourceFiltered.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
   outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
