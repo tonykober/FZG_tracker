@@ -411,6 +411,7 @@ function renderBoard(){
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--green);font-size:0.9em">${g['負責人']}</span>`:''}
               <span style="color:var(--muted)">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
+              <span onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
