@@ -401,6 +401,7 @@ async function fetchOutsource(){
   }catch(e){outsourceTasks=[];}
 }
 function renderOutsource(){
+  document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
   fetchOutsource().then(()=>{
   if(!outsourceTasks.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
