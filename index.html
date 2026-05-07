@@ -64,7 +64,7 @@ h1{font-size:1.4em;color:var(--accent)}
   <h1>📋 FZG 專案追蹤器</h1>
   <div class="toolbar">
     <button class="btn btn-green" onclick="openModal()">➕ 新增</button>
-    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
+    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render();renderOutsource()"/>
     <div class="month-nav">
       <button onclick="changeMonth(-1)">◀</button>
       <span id="monthLabel"></span>
@@ -408,9 +408,12 @@ async function fetchOutsource(){
 async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
   await fetchOutsource();
-  if(!outsourceTasks.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
+  let outsourceFiltered=outsourceTasks;
+  const q=document.getElementById('search').value.toLowerCase();
+  if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q));
+  if(!outsourceFiltered.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
-  outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
+  outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
   let html='';
   Object.entries(owners).forEach(([owner,items])=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
@@ -431,7 +434,7 @@ async function renderOutsource(){
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.45em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
-    const gGroups={};outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
+    const gGroups={};outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     Object.entries(gGroups).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
       items.forEach(t=>{
