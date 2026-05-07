@@ -235,10 +235,12 @@ function toggleStatus(idx,e){
 function inlineEdit(idx,field,e){
   e.stopPropagation();
   const t=tasks[idx];
-  let val;
   if(field==='負責人'){
-    val=prompt('修改負責人：',t['負責人']||'');
-    if(val===null)return;t['負責人']=val;
+    const owners=[...new Set(tasks.map(x=>x['負責人']).filter(Boolean))];
+    const options=owners.map((o,i)=>(i+1)+'. '+o).join('\n');
+    const val=prompt('選擇負責人（輸入編號或直接輸入名稱）：\n'+options+'\n\n目前：'+(t['負責人']||'未指派'),t['負責人']||'');
+    if(val===null)return;
+    const num=parseInt(val);t['負責人']=(num>0&&num<=owners.length)?owners[num-1]:val;
   }else if(field==='日期'){
     const s=prompt('開始日（YYYY-MM-DD）：',t['開始日']?t['開始日'].substring(0,10):'');
     if(s===null)return;
@@ -246,7 +248,9 @@ function inlineEdit(idx,field,e){
     if(d===null)return;
     t['開始日']=s;t['截止日']=d;
   }else if(field==='標籤'){
-    val=prompt('修改標籤（逗號分隔）：',t['標籤']||'');
+    const allTags=[...new Set(tasks.flatMap(x=>(x['標籤']||'').split(',').filter(Boolean).map(s=>s.trim())))];
+    const options=allTags.length?'現有標籤：'+allTags.join(', ')+'\n\n':'';
+    const val=prompt(options+'修改標籤（逗號分隔）：',t['標籤']||'');
     if(val===null)return;t['標籤']=val;
   }
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
@@ -341,8 +345,8 @@ function renderBoard(){
     const tags=(t['標籤']||'').split(',').filter(Boolean);
     const level=getLevel(t);
     const canAddSub=level<2;
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.7em;color:var(--muted);opacity:0.5" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">✕</span>
-      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:6px;right:6px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
+    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.75em;color:var(--red);opacity:0.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">✕</span>
+      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:22px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name" onclick="openModal(${idx})" style="cursor:pointer">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
