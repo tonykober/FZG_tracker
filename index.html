@@ -85,14 +85,16 @@ h1{font-size:1.4em;color:var(--accent)}
     <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
   </div>
   <div class="filter-bar" id="filterBar"></div>
-  <div class="stats" id="stats"></div>
-  <div id="monthNotes" style="max-width:1200px;margin:0 auto 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <span style="font-size:0.8em;color:var(--accent);font-weight:600">📌 當月目標 / 備註</span>
-    <button onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.7em;cursor:pointer">儲存</button>
+  <div style="max-width:1200px;margin:0 auto 12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+    <div class="stats" id="stats" style="margin:0;flex-shrink:0"></div>
+    <div id="monthNotes" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:0.75em;color:var(--accent);font-weight:600">📌 當月目標</span>
+        <button onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.65em;cursor:pointer">儲存</button>
+      </div>
+      <textarea id="notesArea" style="width:100%;min-height:50px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-size:0.75em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
+    </div>
   </div>
-  <textarea id="notesArea" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:0.8em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
-</div>
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
 <div id="reportView" class="report hidden"></div>
