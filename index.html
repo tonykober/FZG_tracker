@@ -204,7 +204,7 @@ function onOwnerSelect(){
   if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();if(outsourceTasks.length)renderOutsource()}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();renderOutsource()}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function saveNotes(){
   const month='month_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);
