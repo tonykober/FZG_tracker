@@ -224,6 +224,14 @@ function onOwnerSelect(){
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();renderOutsource()}
+function toggleStatus(idx,e){
+  e.stopPropagation();
+  const t=tasks[idx];
+  const next=t['狀態']==='待辦'?'進行中':t['狀態']==='進行中'?'已完成':'待辦';
+  t['狀態']=next;
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:next,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+  render();
+}
 function updateMonthLabel(){document.getElementById('monthLabel').textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1)}
 function saveNotes(){
   const month='month_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);
@@ -318,7 +326,7 @@ function renderBoard(){
         const cLevel=getLevel(c);const cCanAddSub=cLevel<2;
         return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--surface);padding:6px 8px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
           <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7em;cursor:pointer">
-            <span style="color:${c['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':'⬜'}</span>
+            <span onclick="toggleStatus(${ci},event)" style="cursor:pointer;color:${c['狀態']==='已完成'?'var(--green)':c['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':c['狀態']==='進行中'?'🔄':'⬜'}</span>
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
             <span style="flex:1">${c['任務名稱']}</span>${c['負責人']?'<span style="color:var(--green);font-size:0.85em;margin-right:4px">'+ c['負責人'] +'</span>':''}
             <span style="color:var(--muted);font-size:0.9em">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
@@ -327,7 +335,7 @@ function renderBoard(){
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
             const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';
             return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:var(--bg);transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-              <span style="color:${g['狀態']==='已完成'?'var(--green)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':'⬜'}</span>
+              <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>${g['負責人']?`<span style="color:var(--green);font-size:0.9em">${g['負責人']}</span>`:````}
               <span style="color:var(--muted)">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
