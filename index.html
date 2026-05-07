@@ -393,6 +393,7 @@ let outsourceTasks=[],outsourceMode='list';
 async function fetchOutsource(){
   const m=currentMonth.getMonth()+1;const sheetName=currentMonth.getFullYear()+'/'+('0'+m).slice(-2);
   const url=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`;
+  outsourceTasks=[];
   try{
     const res=await fetch(url);const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
@@ -400,9 +401,9 @@ async function fetchOutsource(){
     outsourceTasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
   }catch(e){outsourceTasks=[];}
 }
-function renderOutsource(){
+async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
-  fetchOutsource().then(()=>{
+  await fetchOutsource();
   if(!outsourceTasks.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
   outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
@@ -450,7 +451,6 @@ function renderOutsource(){
     return;
   }
   document.getElementById('outsourceContent').innerHTML='<div class="board">'+html+'</div>';
-  });
 }
 fetchData();updateMonthLabel();loadNotes();
 </script>
