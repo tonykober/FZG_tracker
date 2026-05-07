@@ -190,6 +190,8 @@ function openModal(idx){
 }
 function closeModal(){document.getElementById('addModal').classList.add('hidden')}
 function openModalWithParent(parentName){
+  const p=tasks.find(t=>t['任務名稱']===parentName);
+  if(p&&getLevel(p)>=1){alert('已達最大子任務層級（2層）');return}
   openModal();
   document.getElementById('f-parent').value=parentName;
 }
