@@ -237,30 +237,60 @@ function toggleStatus(idx,e){
 function inlineEdit(idx,field,e){
   e.stopPropagation();
   const t=tasks[idx];
+  const m=document.createElement('div');
+  m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200';
+  let html='<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;width:90%;max-width:360px">';
   if(field==='負責人'){
     const owners=[...new Set(tasks.map(x=>x['負責人']).filter(Boolean))];
-    const options=owners.map((o,i)=>(i+1)+'. '+o).join('\n');
-    const val=prompt('選擇負責人（輸入編號或直接輸入名稱）：\n'+options+'\n\n目前：'+(t['負責人']||'未指派'),t['負責人']||'');
-    if(val===null)return;
-    const num=parseInt(val);t['負責人']=(num>0&&num<=owners.length)?owners[num-1]:val;
+    html+=`<label style="font-size:0.8em;color:var(--accent);margin-bottom:6px;display:block">修改負責人</label>`;
+    html+=`<select id="ie-owner" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:8px"><option value="">選擇...</option>${owners.map(o=>`<option value="${o}" ${o===t['負責人']?'selected':''}>${o}</option>`).join('')}<option value="__new">+ 新增</option></select>`;
+    html+=`<input id="ie-owner-new" placeholder="或直接輸入" value="${t['負責人']||''}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);box-sizing:border-box">`;
   }else if(field==='日期'){
-    const s=prompt('開始日（YYYY-MM-DD）：',t['開始日']?t['開始日'].substring(0,10):'');
-    if(s===null)return;
-    const d=prompt('截止日（YYYY-MM-DD）：',t['截止日']?t['截止日'].substring(0,10):'');
-    if(d===null)return;
-    t['開始日']=s;t['截止日']=d;
+    html+=`<label style="font-size:0.8em;color:var(--accent);margin-bottom:6px;display:block">修改日期</label>`;
+    html+=`<div style="margin-bottom:6px"><span style="font-size:0.75em;color:var(--muted)">開始日</span><input id="ie-start" type="date" value="${t['開始日']?t['開始日'].substring(0,10):''}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
+    html+=`<div><span style="font-size:0.75em;color:var(--muted)">截止日</span><input id="ie-due" type="date" value="${t['截止日']?t['截止日'].substring(0,10):''}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
   }else if(field==='標籤'){
     const allTags=[...new Set(tasks.flatMap(x=>(x['標籤']||'').split(',').filter(Boolean).map(s=>s.trim())))];
-    const options=allTags.length?'現有標籤：'+allTags.join(', ')+'\n\n':'';
-    const val=prompt(options+'修改標籤（逗號分隔）：',t['標籤']||'');
-    if(val===null)return;t['標籤']=val;
+    html+=`<label style="font-size:0.8em;color:var(--accent);margin-bottom:6px;display:block">修改標籤</label>`;
+    if(allTags.length)html+=`<div style="margin-bottom:8px;display:flex;gap:4px;flex-wrap:wrap">${allTags.map(tg=>`<span onclick="document.getElementById('ie-tags').value+=(document.getElementById('ie-tags').value?',':'')+this.textContent" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-size:0.7em;cursor:pointer">${tg}</span>`).join('')}</div>`;
+    html+=`<input id="ie-tags" value="${t['標籤']||''}" placeholder="逗號分隔" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);box-sizing:border-box">`;
   }
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
-  render();
+  html+=`<div style="display:flex;gap:6px;margin-top:12px"><button id="ie-ok" style="flex:1;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer">確認</button><button id="ie-cancel" style="flex:1;padding:8px;background:var(--border);color:var(--text);border:none;border-radius:6px;cursor:pointer">取消</button></div></div>`;
+  m.innerHTML=html;
+  document.body.appendChild(m);
+  m.querySelector('#ie-cancel').onclick=()=>m.remove();
+  m.onclick=(ev)=>{if(ev.target===m)m.remove()};
+  m.querySelector('#ie-ok').onclick=()=>{
+    if(field==='負責人'){const sel=m.querySelector('#ie-owner');const inp=m.querySelector('#ie-owner-new');t['負責人']=sel.value==='__new'||!sel.value?inp.value:sel.value}
+    else if(field==='日期'){t['開始日']=m.querySelector('#ie-start').value;t['截止日']=m.querySelector('#ie-due').value}
+    else if(field==='標籤'){t['標籤']=m.querySelector('#ie-tags').value}
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+    m.remove();render();
+  };
+  if(m.querySelector('#ie-owner'))m.querySelector('#ie-owner').onchange=function(){if(this.value&&this.value!=='__new')m.querySelector('#ie-owner-new').value=this.value};
 }
 function quickDelete(idx,e){
   e.stopPropagation();
-  if(!confirm('確定要刪除「'+tasks[idx]['任務名稱']+'」嗎？'))return;
+  const t=tasks[idx];
+  if(!confirm('確定要刪除「'+t['任務名稱']+'」嗎？'))return;
+  const parentOfDeleted=t['父任務']||'';
+  const children=tasks.filter(c=>c['父任務']===t['任務名稱']);
+  children.forEach(c=>{
+    const ci=tasks.indexOf(c);
+    const grandChildren=tasks.filter(g=>g['父任務']===c['任務名稱']);
+    if(!parentOfDeleted){
+      c['父任務']='';
+      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:'',hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
+    } else {
+      c['父任務']=parentOfDeleted;
+      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:parentOfDeleted,hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
+    }
+    grandChildren.forEach(g=>{
+      const gi=tasks.indexOf(g);
+      g['父任務']=parentOfDeleted||t['任務名稱']?'':'';
+      if(!parentOfDeleted){g['父任務']=c['任務名稱']}
+    });
+  });
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:idx}),mode:'no-cors'});
   tasks.splice(idx,1);render();
 }
