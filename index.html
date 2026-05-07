@@ -387,7 +387,7 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
-      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:22px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
+      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name" onclick="openModal(${idx})" style="cursor:pointer">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
