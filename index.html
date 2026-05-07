@@ -80,11 +80,6 @@ h1{font-size:1.4em;color:var(--accent)}
     <button class="btn-tab" data-view="timeline" onclick="switchView(this)">時間軸</button>
     <button class="btn-tab" data-view="report" onclick="switchView(this)">報告</button>
   </div>
-  <div style="max-width:1200px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center">
-    <button class="btn btn-green" onclick="openModal()">➕ 新增任務</button>
-    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
-  </div>
-  <div class="filter-bar" id="filterBar"></div>
   <div style="max-width:1200px;margin:0 auto 12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
     <div class="stats" id="stats" style="margin:0;flex-shrink:0"></div>
     <div id="monthNotes" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px">
@@ -94,6 +89,11 @@ h1{font-size:1.4em;color:var(--accent)}
       </div>
       <textarea id="notesArea" style="width:100%;min-height:50px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-size:0.75em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
     </div>
+  </div>
+  <div class="filter-bar" id="filterBar"></div>
+  <div style="max-width:1200px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center">
+    <button class="btn btn-green" onclick="openModal()">➕ 新增任務</button>
+    <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
   </div>
 <div id="boardView" class="board"></div>
 <div id="timelineView" class="timeline hidden"></div>
