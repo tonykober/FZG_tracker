@@ -183,7 +183,7 @@ function openModal(idx){
     m.dataset.editIdx=idx;
   }else{
     ['f-name','f-owner','f-tags','f-parent','f-note'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-start').value='';document.getElementById('f-due').value='';
+    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-start').value=new Date().toISOString().split('T')[0];document.getElementById('f-due').value=new Date().toISOString().split('T')[0];
     document.getElementById('f-hours').value=0;document.getElementById('f-comment').value='';
     delete m.dataset.editIdx;
   }
@@ -301,7 +301,7 @@ function renderStats(){
 }
 function renderBoard(){
   const filtered=getFiltered();
-  const parentTasks=filtered.filter(t=>!t['父任務']);
+  const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
   const getChildren=name=>filtered.filter(t=>t['父任務']===name);
   const todo=parentTasks.filter(t=>t['狀態']==='待辦');
   const doing=parentTasks.filter(t=>t['狀態']==='進行中');
