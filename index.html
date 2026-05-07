@@ -402,7 +402,6 @@ function renderTimeline(){
       children.forEach(c=>{renderGanttRow(c,true);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,true))});
     });
     items.filter(t=>t['父任務']&&!parents.find(p=>p['任務名稱']===t['父任務'])&&!items.find(s=>s['任務名稱']===t['父任務'])).forEach(t=>renderGanttRow(t,false));
-    });
     h+=`</div></div>`;
   });
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
