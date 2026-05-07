@@ -314,10 +314,11 @@ function loadNotes(){
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
   return list.filter(t=>{
-    if(!t['開始日']&&!t['截止日'])return true;
-    if(t['開始日']&&t['開始日'].startsWith(prefix))return true;
-    if(t['截止日']&&t['截止日'].startsWith(prefix))return true;
-    if(t['開始日']&&t['截止日'])return t['開始日'].substring(0,7)<=prefix&&t['截止日'].substring(0,7)>=prefix;
+    const sd=t['開始日']||'';const ed=t['截止日']||'';
+    if(!sd&&!ed)return true;
+    if(sd&&sd.startsWith(prefix))return true;
+    if(ed&&ed.startsWith(prefix))return true;
+    if(sd&&ed)return sd.substring(0,7)<=prefix&&ed.substring(0,7)>=prefix;
     return false;
   });
 }
@@ -339,7 +340,7 @@ async function submitTask(){
       const t=tasks[parseInt(m.dataset.editIdx)];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
     }else{
-      tasks.push({'任務名稱':data.name,'負責人':data.owner,'狀態':data.status,'開始日':data.startDate,'截止日':data.dueDate,'備註':data.note,'優先級':data.priority,'標籤':data.tags,'父任務':data.parent,'工時':data.hours,'評論':data.comment});
+      tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||''});
     }
     closeModal();render();renderFilterBar();
   }catch(e){alert('❌ 失敗：'+e.message)}
