@@ -389,29 +389,22 @@ function renderReport(){
   document.getElementById('reportView').innerHTML=html;
 }
 const OUTSOURCE_SHEET_ID='11cuSAO3MZfUmau1pd603685i18d0SlQKN-h--jUrp2s';
-const OUTSOURCE_URL=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let outsourceTasks=[],outsourceMode='list';
 async function fetchOutsource(){
+  const m=currentMonth.getMonth()+1;const sheetName=currentMonth.getFullYear()+'/'+('0'+m).slice(-2);
+  const url=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`;
   try{
-    const res=await fetch(OUTSOURCE_URL);const text=await res.text();
+    const res=await fetch(url);const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
     const cols=json.table.cols.map(c=>c.label.trim());
     outsourceTasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
-  }catch(e){}
+  }catch(e){outsourceTasks=[];}
 }
 function renderOutsource(){
-  if(!outsourceTasks.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">載入中...</div>';fetchOutsource().then(()=>renderOutsource());return}
-  const filtered=filterByMonth(outsourceTasks.map(t=>({'開始日':t['開始日'],'截止日':t['截止日'],...t}))).length?filterByMonth(outsourceTasks):outsourceTasks.filter(t=>{
-    const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
-    if(!t['開始日']&&!t['截止日'])return true;
-    if(t['開始日']&&t['開始日'].startsWith(prefix))return true;
-    if(t['截止日']&&t['截止日'].startsWith(prefix))return true;
-    if(t['開始日']&&t['截止日'])return t['開始日'].substring(0,7)<=prefix&&t['截止日'].substring(0,7)>=prefix;
-    return false;
-  });
-  if(!filtered.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">本月無外包工作項目</div>';return}
+  fetchOutsource().then(()=>{
+  if(!outsourceTasks.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
-  filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
+  outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
   let html='';
   Object.entries(owners).forEach(([owner,items])=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
@@ -432,7 +425,7 @@ function renderOutsource(){
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.45em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
-    const gGroups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
+    const gGroups={};outsourceTasks.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     Object.entries(gGroups).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
       items.forEach(t=>{
@@ -456,6 +449,7 @@ function renderOutsource(){
     return;
   }
   document.getElementById('outsourceContent').innerHTML='<div class="board">'+html+'</div>';
+  });
 }
 fetchData();updateMonthLabel();loadNotes();
 </script>
