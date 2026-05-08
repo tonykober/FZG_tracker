@@ -154,9 +154,9 @@ function getDeadlineBg(t){
   const today=new Date();today.setHours(0,0,0,0);
   const d=new Date(due+'T00:00:00');
   const diff=Math.round((d-today)/(1000*60*60*24));
-  if(diff<0)return 'rgba(248,81,73,0.15)';
-  if(diff===0)return 'rgba(210,153,34,0.2)';
-  if(diff===1)return 'rgba(210,153,34,0.1)';
+  if(diff<0)return '#3d1f1f';
+  if(diff===0)return '#3d2f1a';
+  if(diff===1)return '#3d3520';
   return '';
 }
 function switchMainTab(tab){
