@@ -456,6 +456,13 @@ async function fetchOutsource(){
     outsourceTasks=hasCurrentMonth||!items[0]['開始日']?items:[];
   }catch(e){outsourceTasks=[];}
 }
+function outsourceDrop(e,zone){
+  const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
+  const zones=JSON.parse(localStorage.getItem('fzg_outsource_zones')||'{}');
+  zones[owner]=zone;
+  localStorage.setItem('fzg_outsource_zones',JSON.stringify(zones));
+  renderOutsource();
+}
 async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
   await fetchOutsource();
@@ -465,18 +472,21 @@ async function renderOutsource(){
   if(!outsourceFiltered.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
   outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
+  const zones=JSON.parse(localStorage.getItem('fzg_outsource_zones')||'{}');
+  const zoneNames=['一區','二區','三區'];
   let cols=['','',''];
   Object.entries(owners).forEach(([owner,items],i)=>{
+    const zone=zones[owner]||'一區';
+    const zi=zoneNames.indexOf(zone);const colIdx=zi>=0?zi:(i%3);
     const done=items.filter(t=>t['狀態']==='已完成').length;
-    const doing=items.filter(t=>t['狀態']==='進行中').length;
-    let c=`<div style="margin-bottom:8px"><div onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="font-size:0.7em;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
+    let c=`<div class="outsource-group" draggable="true" data-owner="${owner}" ondragstart="event.dataTransfer.setData('text/plain','${owner.replace(/'/g,"\\'")}');event.dataTransfer.effectAllowed='move'" style="margin-bottom:8px"><div onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="font-size:0.7em;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
       const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       c+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>${t['備註']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px">'+t['備註']+'</div>':''}</div>`;
     });
     c+=`</div></div>`;
-    cols[i%3]+=c;
+    cols[colIdx]+=c;
   });
   if(outsourceMode==='gantt'){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
@@ -509,7 +519,7 @@ async function renderOutsource(){
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
-  document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column">'+cols[0]+'</div><div class="column">'+cols[1]+'</div><div class="column">'+cols[2]+'</div></div>';
+  document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column" data-zone="一區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'一區\')"><h3 style="color:var(--muted);font-size:0.8em;margin-bottom:8px">一區</h3>'+cols[0]+'</div><div class="column" data-zone="二區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'二區\')"><h3 style="color:var(--muted);font-size:0.8em;margin-bottom:8px">二區</h3>'+cols[1]+'</div><div class="column" data-zone="三區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'三區\')"><h3 style="color:var(--muted);font-size:0.8em;margin-bottom:8px">三區</h3>'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}
