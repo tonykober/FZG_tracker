@@ -58,11 +58,16 @@ h1{font-size:1.4em;color:var(--accent)}
 .modal-actions .del{background:var(--red);color:#fff}
 @media(max-width:768px){.board{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:stretch}.month-nav{justify-content:center}.stats{justify-content:center}header{flex-direction:column;align-items:stretch}header h1{text-align:center}.btn-tab{padding:5px 10px;font-size:0.75em}.card .meta{flex-direction:column;gap:2px}.modal-content{width:95%;max-width:none}.timeline{overflow-x:auto;-webkit-overflow-scrolling:touch}.timeline>div{min-width:700px}}
 .gantt-handle:hover{background:rgba(255,255,255,0.3)}
+body.locked .edit-ctrl{display:none!important}
+body.locked .card{cursor:default}
+body.locked .gantt-bar{cursor:default}
+body.locked .gantt-handle{display:none}
 </style>
 </head>
 <body>
 <header>
   <h1 onclick="location.reload()" style="cursor:pointer" title="點擊刷新頁面">📋 FZG 專案追蹤器</h1>
+  <div style="display:flex;gap:4px;align-items:center"><input id="adminPw" type="password" placeholder="密碼" style="width:60px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.75em"><button onclick="toggleAdmin()" class="btn" style="background:var(--accent);color:#fff;font-size:0.7em" id="adminBtn">管理</button></div>
 </header>
 <div style="max-width:1200px;margin:0 auto 12px;display:flex;flex-direction:column;gap:8px;align-items:center">
   <div style="display:flex;gap:4px">
@@ -86,14 +91,14 @@ h1{font-size:1.4em;color:var(--accent)}
     <div id="monthNotes" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:0.75em;color:var(--accent);font-weight:600">📌 當月目標</span>
-        <button onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.65em;cursor:pointer">儲存</button>
+        <button class="edit-ctrl" onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.65em;cursor:pointer">儲存</button>
       </div>
       <textarea id="notesArea" style="width:100%;min-height:50px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-size:0.75em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
     </div>
   </div>
   <hr style="max-width:1200px;margin:0 auto 10px;border:none;border-top:1px solid var(--border)">
   <div style="max-width:1200px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center">
-    <button class="btn btn-green" onclick="openModal()">➕ 新增任務</button>
+    <button class="btn btn-green edit-ctrl" onclick="openModal()">➕ 新增任務</button>
     <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()"/>
   </div>
   <div class="filter-bar" id="filterBar"></div>
@@ -148,6 +153,18 @@ const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[],currentMonth=new Date(),activeFilter='';
+let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
+function toggleAdmin(){
+  if(unlocked){unlocked=false;sessionStorage.removeItem('fzg_unlocked')}
+  else{if(document.getElementById('adminPw').value!=='fzg'){alert('密碼錯誤');return}unlocked=true;sessionStorage.setItem('fzg_unlocked','1')}
+  document.getElementById('adminPw').value='';
+  applyLock();render();renderFilterBar();
+}
+function applyLock(){
+  document.body.classList.toggle('locked',!unlocked);
+  document.getElementById('adminBtn').textContent=unlocked?'鎖定':'管理';
+  document.getElementById('adminPw').style.display=unlocked?'none':'';
+}
 function getDeadlineBg(t){
   if(t['狀態']==='已完成')return '';
   const due=(t['截止日']||'').substring(0,10);if(!due)return '';
@@ -175,6 +192,7 @@ function switchView(el){
   document.getElementById('reportView').classList.toggle('hidden',v!=='report');
 }
 function openModal(idx){
+  if(!unlocked)return;
   const m=document.getElementById('addModal');m.classList.remove('hidden');
   populateSelects();
   document.getElementById('deleteBtn').style.display=idx!==undefined?'block':'none';
@@ -237,7 +255,7 @@ function onOwnerSelect(){
 }
 function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();renderOutsource()}
 function toggleStatus(idx,e){
-  e.stopPropagation();
+  e.stopPropagation();if(!unlocked)return;
   const t=tasks[idx];
   const next=t['狀態']==='待辦'?'進行中':t['狀態']==='進行中'?'已完成':'待辦';
   t['狀態']=next;
@@ -245,7 +263,7 @@ function toggleStatus(idx,e){
   render();
 }
 function inlineEdit(idx,field,e){
-  e.stopPropagation();
+  e.stopPropagation();if(!unlocked)return;
   const t=tasks[idx];
   const m=document.createElement('div');
   m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200';
@@ -280,7 +298,7 @@ function inlineEdit(idx,field,e){
   if(m.querySelector('#ie-owner'))m.querySelector('#ie-owner').onchange=function(){if(this.value&&this.value!=='__new')m.querySelector('#ie-owner-new').value=this.value};
 }
 function quickDelete(idx,e){
-  e.stopPropagation();
+  e.stopPropagation();if(!unlocked)return;
   const t=tasks[idx];
   if(!confirm('確定要刪除「'+t['任務名稱']+'」嗎？'))return;
   const parentOfDeleted=t['父任務']||'';
@@ -398,8 +416,8 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg}"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
-      ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
+    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg}"><span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
+      ${canAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name" onclick="openModal(${idx})" style="cursor:pointer">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
@@ -414,8 +432,8 @@ function renderBoard(){
             <span onclick="event.stopPropagation();openModal(${ci})" style="flex:1;cursor:pointer">${c['任務名稱']}</span>
             <span onclick="inlineEdit(${ci},'負責人',event)" style="color:var(--green);font-size:0.85em;cursor:pointer;margin-right:4px">${c['負責人']||'未指派'}</span>
             <span onclick="inlineEdit(${ci},'日期',event)" style="color:var(--muted);font-size:0.9em;cursor:pointer">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
-            ${cCanAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
-            <span onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
+            ${cCanAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
+            <span class="edit-ctrl" onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
           </div>
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
             const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
@@ -426,7 +444,7 @@ function renderBoard(){
               <span onclick="inlineEdit(${gi},'負責人',event)" style="color:var(--green);font-size:0.9em;cursor:pointer;margin-right:4px">${g['負責人']||'未指派'}</span>
               <span onclick="inlineEdit(${gi},'日期',event)" style="color:var(--muted);cursor:pointer">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
               ${(g['標籤']||'').split(',').filter(Boolean).length?`<span onclick="inlineEdit(${gi},'標籤',event)" style="cursor:pointer">${(g['標籤']||'').split(',').filter(Boolean).map(tg=>'<span class="tag-pill" style="font-size:0.9em">'+tg.trim()+'</span>').join('')}</span>`:''}
-              <span onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
+              <span class="edit-ctrl" onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
     </div>`}).join('');
@@ -441,8 +459,8 @@ function renderBoard(){
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 style="color:var(--green)">✅ 已完成 (${done.length})</h3>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div>`;
 }
 let dragIdx=null;
-function drag(e,idx){dragIdx=idx;e.dataTransfer.effectAllowed='move'}
-function drop(e,status){
+function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
+function drop(e,status){if(!unlocked)return;
   e.preventDefault();if(dragIdx===null)return;
   const t=tasks[dragIdx];
   const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']};
@@ -639,7 +657,7 @@ async function renderOutsource(){
   }
   document.getElementById('outsourceContent').innerHTML='<div class="board">'+html+'</div>';
 }
-fetchData();updateMonthLabel();loadNotes();
+fetchData();updateMonthLabel();loadNotes();applyLock();
 </script>
 </body>
 </html>
