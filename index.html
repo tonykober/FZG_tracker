@@ -460,7 +460,7 @@ function renderTimeline(){
   Object.entries(groups).forEach(([owner,items])=>{
     h+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
     const parents=items.filter(t=>!t['父任務']);
-    const renderGanttRow=(t,indent)=>{
+    const renderGanttRow=(t,level)=>{
       const startStr=(t['開始日']||'').substring(0,10);const endStr=(t['截止日']||'').substring(0,10);
       let sd=1,ed=days;
       if(startStr){const p=startStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)sd=parseInt(p[2]);else if(parseInt(p[0])>y||(parseInt(p[0])===y&&parseInt(p[1])-1>m))sd=days+1;else sd=1}
@@ -469,14 +469,15 @@ function renderTimeline(){
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
-      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${indent?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${indent?'24':'12'}px;${indent?'color:var(--yellow)':''}">${indent?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:${indent?'12':'16'}px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+      const pl=level===0?12:level===1?24:36;
+      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${level?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;${level?'color:var(--yellow)':''}">${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
     };
     parents.forEach(t=>{
-      renderGanttRow(t,false);
+      renderGanttRow(t,0);
       const children=items.filter(c=>c['父任務']===t['任務名稱']);
-      children.forEach(c=>{renderGanttRow(c,true);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,true))});
+      children.forEach(c=>{renderGanttRow(c,1);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,2))});
     });
-    items.filter(t=>t['父任務']&&!parents.find(p=>p['任務名稱']===t['父任務'])&&!items.find(s=>s['任務名稱']===t['父任務'])).forEach(t=>renderGanttRow(t,false));
+    items.filter(t=>t['父任務']&&!parents.find(p=>p['任務名稱']===t['父任務'])&&!items.find(s=>s['任務名稱']===t['父任務'])).forEach(t=>renderGanttRow(t,0));
     h+=`</div></div>`;
   });
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
