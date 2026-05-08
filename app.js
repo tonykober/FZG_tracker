@@ -469,7 +469,7 @@ async function renderOutsource(){
   Object.entries(owners).forEach(([owner,items],i)=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
     const doing=items.filter(t=>t['狀態']==='進行中').length;
-    let c=`<div class="column" style="margin-bottom:12px"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);cursor:pointer"><span class="tog">▼</span> 👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3><div>`;
+    let c=`<div style="margin-bottom:8px"><div onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="font-size:0.7em;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
       const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
@@ -509,7 +509,7 @@ async function renderOutsource(){
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
-  document.getElementById('outsourceContent').innerHTML='<div style="max-width:1200px;margin:0 auto;display:flex;gap:12px;align-items:start"><div style="flex:1;display:flex;flex-direction:column;gap:12px">'+cols[0]+'</div><div style="flex:1;display:flex;flex-direction:column;gap:12px">'+cols[1]+'</div><div style="flex:1;display:flex;flex-direction:column;gap:12px">'+cols[2]+'</div></div>';
+  document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column">'+cols[0]+'</div><div class="column">'+cols[1]+'</div><div class="column">'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}
