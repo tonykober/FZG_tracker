@@ -183,7 +183,7 @@ function openModal(idx){
     m.dataset.editIdx=idx;
   }else{
     ['f-name','f-owner','f-tags','f-parent','f-note'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';document.getElementById('f-start').value=new Date().toISOString().split('T')[0];document.getElementById('f-due').value=new Date().toISOString().split('T')[0];
+    document.getElementById('f-status').value='待辦';document.getElementById('f-priority').value='';const _today=new Date(),_defDate=(_today.getFullYear()===currentMonth.getFullYear()&&_today.getMonth()===currentMonth.getMonth())?_today.toISOString().split('T')[0]:`${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-01`;document.getElementById('f-start').value=_defDate;document.getElementById('f-due').value=_defDate;
     document.getElementById('f-hours').value=0;document.getElementById('f-comment').value='';
     delete m.dataset.editIdx;
   }
