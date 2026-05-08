@@ -508,7 +508,7 @@ async function renderOutsource(){
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
-  document.getElementById('outsourceContent').innerHTML='<div class="board">'+html+'</div>';
+  document.getElementById('outsourceContent').innerHTML='<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px">'+html+'</div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}
