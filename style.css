@@ -20,7 +20,7 @@ h1{font-size:1.4em;color:var(--accent)}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
 .stat .num{font-size:1.3em;font-weight:700}
 .stat .label{font-size:0.7em;color:var(--muted)}
-.board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
 .column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
 .column h3{font-size:0.8em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:7px;cursor:pointer;transition:border-color .2s}
