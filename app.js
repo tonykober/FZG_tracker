@@ -186,7 +186,7 @@ function loadNotes(){
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
     let noteText='';
     rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):''}});
-    document.getElementById('notesArea').value=noteText;}catch(e){document.getElementById('notesArea').value=''}
+    document.getElementById('notesArea').value=noteText;var na=document.getElementById('notesArea');na.style.height='auto';na.style.height=na.scrollHeight+'px';}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
 function filterByMonth(list){

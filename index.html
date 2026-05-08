@@ -32,10 +32,10 @@
     <div class="stats" id="stats" style="margin:0;flex-shrink:0"></div>
     <div id="monthNotes" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:0.75em;color:var(--accent);font-weight:600">📌 當月目標</span>
+        <span style="font-size:0.75em;color:var(--accent);font-weight:600">📌 當月要點</span>
         <button class="edit-ctrl" onclick="saveNotes()" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.65em;cursor:pointer">儲存</button>
       </div>
-      <textarea id="notesArea" style="width:100%;min-height:50px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-size:0.75em;resize:vertical" placeholder="輸入當月目標或備註..."></textarea>
+      <textarea id="notesArea" style="width:100%;min-height:50px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-size:0.75em;resize:none;overflow:hidden" placeholder="輸入當月要點或備註..." oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
   </div>
   <hr style="max-width:1200px;margin:0 auto 10px;border:none;border-top:1px solid var(--border)">
