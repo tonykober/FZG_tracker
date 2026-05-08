@@ -481,9 +481,9 @@ async function renderOutsource(){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
     const days=new Date(y,m+1,0).getDate();
     const weekdays=['日','一','二','三','四','五','六'];
-    let gh='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:180px;flex-shrink:0;font-size:0.6em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
+    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.6em;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
-    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.45em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
+    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.5em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
     const gGroups={};outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     Object.entries(gGroups).forEach(([owner,items])=>{
@@ -498,13 +498,13 @@ async function renderOutsource(){
       sd=Math.max(1,sd);ed=Math.min(days,ed);
       const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-      gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+      gh+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
     });
       gh+=`</div></div>`;
     });
-    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(180px + (100% - 180px) * ${pos} / 100);width:calc((100% - 180px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
-    if(isThisMonth2){const todayPos=((today2.getDate()-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(180px + (100% - 180px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
-    gh+='</div>';
+    for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
+    if(isThisMonth2){const todayPos=((today2.getDate()-0.5)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
+    gh+='</div></div>';
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
