@@ -339,7 +339,6 @@ function renderTimeline(){
   const today=new Date();const isThisMonth=today.getFullYear()===y&&today.getMonth()===m;
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth&&d===today.getDate();const isWeekend=dow===0||dow===6;h+=`<div style="flex:1;text-align:center;font-size:0.5em;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
   h+='</div></div>';
-  if(isThisMonth){const todayPos=(150+((today.getDate()-0.5)/days*(100))).toString();h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + ${((today.getDate()-0.5)/days*100).toFixed(1)}% * (100% - 150px) / 100%);width:0;border-left:2px solid var(--red);z-index:10;pointer-events:none"></div>`}
 
   const groups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
   Object.entries(groups).forEach(([owner,items])=>{
