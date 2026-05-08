@@ -469,13 +469,13 @@ async function renderOutsource(){
   Object.entries(owners).forEach(([owner,items])=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
     const doing=items.filter(t=>t['狀態']==='進行中').length;
-    html+=`<div class="column"><h3 style="color:var(--accent)">👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3>`;
+    html+=`<div class="column"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);cursor:pointer"><span class="tog">▼</span> 👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3><div>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
       const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       html+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>${t['備註']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px">'+t['備註']+'</div>':''}</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   });
   if(outsourceMode==='gantt'){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
