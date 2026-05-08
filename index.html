@@ -56,7 +56,8 @@ h1{font-size:1.4em;color:var(--accent)}
 .modal-actions button{flex:1;padding:9px;border:none;border-radius:6px;cursor:pointer;font-size:0.85em;background:var(--accent);color:#fff}
 .modal-actions .cancel{background:var(--border);color:var(--text)}
 .modal-actions .del{background:var(--red);color:#fff}
-@media(max-width:768px){.board{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:stretch}.month-nav{justify-content:center}.stats{justify-content:center}header{flex-direction:column;align-items:stretch}header h1{text-align:center}.btn-tab{padding:5px 10px;font-size:0.75em}.card .meta{flex-direction:column;gap:2px}.modal-content{width:95%;max-width:none}}
+@media(max-width:768px){.board{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:stretch}.month-nav{justify-content:center}.stats{justify-content:center}header{flex-direction:column;align-items:stretch}header h1{text-align:center}.btn-tab{padding:5px 10px;font-size:0.75em}.card .meta{flex-direction:column;gap:2px}.modal-content{width:95%;max-width:none}.timeline{overflow-x:auto;-webkit-overflow-scrolling:touch}.timeline>div{min-width:700px}}
+.gantt-handle:hover{background:rgba(255,255,255,0.3)}
 </style>
 </head>
 <body>
@@ -147,6 +148,17 @@ const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[],currentMonth=new Date(),activeFilter='';
+function getDeadlineBg(t){
+  if(t['狀態']==='已完成')return '';
+  const due=(t['截止日']||'').substring(0,10);if(!due)return '';
+  const today=new Date();today.setHours(0,0,0,0);
+  const d=new Date(due+'T00:00:00');
+  const diff=Math.round((d-today)/(1000*60*60*24));
+  if(diff<0)return 'rgba(248,81,73,0.15)';
+  if(diff===0)return 'rgba(210,153,34,0.2)';
+  if(diff===1)return 'rgba(210,153,34,0.1)';
+  return '';
+}
 function switchMainTab(tab){
   document.getElementById('mainTabInternal').classList.toggle('active',tab==='internal');
   document.getElementById('mainTabOutsource').classList.toggle('active',tab==='outsource');
@@ -385,7 +397,8 @@ function renderBoard(){
     const tags=(t['標籤']||'').split(',').filter(Boolean);
     const level=getLevel(t);
     const canAddSub=level<2;
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
+    const _dbg=getDeadlineBg(t);
+    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg?'background:'+_dbg:''}"><span onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
       ${canAddSub?`<span onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name" onclick="openModal(${idx})" style="cursor:pointer">${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
@@ -393,8 +406,8 @@ function renderBoard(){
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();var d=this.nextElementSibling;if(d.style.display===\'none\'){d.style.display=\'block\';this.textContent=\'▼\'}else{d.style.display=\'none\';this.textContent=\'▶\'}" style="cursor:pointer;font-size:0.8em">▼</span><div style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
-        const cLevel=getLevel(c);const cCanAddSub=cLevel<2;
-        return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:var(--surface);padding:6px 8px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        const cLevel=getLevel(c);const cCanAddSub=cLevel<2;const _cdbg=getDeadlineBg(c);
+        return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;background:${_cdbg||'var(--surface)'};padding:6px 8px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
           <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7em;cursor:pointer">
             <span onclick="toggleStatus(${ci},event)" style="cursor:pointer;color:${c['狀態']==='已完成'?'var(--green)':c['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':c['狀態']==='進行中'?'🔄':'⬜'}</span>
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
@@ -405,8 +418,8 @@ function renderBoard(){
             <span onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
           </div>
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
-            const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';
-            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:var(--bg);transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
+            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;background:${_gdbg||'var(--bg)'};transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
               <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>
@@ -469,8 +482,8 @@ function renderTimeline(){
       const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
-      const pl=level===0?12:level===1?24:36;
-      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${level?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;${level?'color:var(--yellow)':''}">${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+      const pl=level===0?12:level===1?24:36;const _ti=tasks.indexOf(t);
+      h+=`<div style="display:flex;align-items:center;padding:4px 0"><div style="width:150px;flex-shrink:0;font-size:${level?'0.6':'0.65'}em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;${level?'color:var(--yellow)':''}">${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div class="gantt-track" style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div class="gantt-bar" data-idx="${_ti}" style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8;cursor:grab"><div class="gantt-handle gantt-handle-l" data-idx="${_ti}" data-side="l" style="position:absolute;left:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:3px 0 0 3px"></div><div class="gantt-handle gantt-handle-r" data-idx="${_ti}" data-side="r" style="position:absolute;right:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:0 3px 3px 0"></div></div></div></div>`;
     };
     parents.forEach(t=>{
       renderGanttRow(t,0);
@@ -484,6 +497,63 @@ function renderTimeline(){
   if(isThisMonth){const todayPos=((today.getDate()-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
   h+='</div>';
   document.getElementById('timelineView').innerHTML=h;
+  // Gantt drag setup
+  document.querySelectorAll('.gantt-handle').forEach(handle=>{
+    handle.addEventListener('mousedown',e=>{
+      e.stopPropagation();e.preventDefault();
+      const idx=parseInt(handle.dataset.idx),side=handle.dataset.side;
+      const track=handle.closest('.gantt-track');
+      const trackRect=track.getBoundingClientRect();
+      const trackW=trackRect.width;
+      const onMove=ev=>{
+        const x=Math.max(0,Math.min(trackW,ev.clientX-trackRect.left));
+        const dayFloat=x/trackW*days;
+        const day=Math.max(1,Math.min(days,Math.round(dayFloat)+1));
+        const t=tasks[idx];
+        const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        if(side==='l'){if(dateStr<=((t['截止日']||'').substring(0,10)||dateStr)){t['開始日']=dateStr}}
+        else{if(dateStr>=((t['開始日']||'').substring(0,10)||dateStr)){t['截止日']=dateStr}}
+        render();
+      };
+      const onUp=()=>{
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+        const t=tasks[idx];
+        fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  });
+  document.querySelectorAll('.gantt-bar').forEach(bar=>{
+    bar.addEventListener('mousedown',e=>{
+      if(e.target.classList.contains('gantt-handle'))return;
+      e.preventDefault();
+      const idx=parseInt(bar.dataset.idx);
+      const track=bar.closest('.gantt-track');
+      const trackRect=track.getBoundingClientRect();
+      const trackW=trackRect.width;
+      const startX=e.clientX;
+      const t=tasks[idx];
+      const origStart=t['開始日'].substring(0,10);const origEnd=t['截止日'].substring(0,10);
+      const onMove=ev=>{
+        const dx=ev.clientX-startX;
+        const dayShift=Math.round(dx/trackW*days);
+        if(dayShift===0)return;
+        const sDate=new Date(origStart+'T00:00:00');const eDate=new Date(origEnd+'T00:00:00');
+        sDate.setDate(sDate.getDate()+dayShift);eDate.setDate(eDate.getDate()+dayShift);
+        t['開始日']=sDate.toISOString().split('T')[0];t['截止日']=eDate.toISOString().split('T')[0];
+        render();
+      };
+      const onUp=()=>{
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+        fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  });
 }
 function renderReport(){
   const filtered=getFiltered(),total=filtered.length,done=filtered.filter(t=>t['狀態']==='已完成').length;
