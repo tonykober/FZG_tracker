@@ -469,7 +469,7 @@ async function renderOutsource(){
   Object.entries(owners).forEach(([owner,items])=>{
     const done=items.filter(t=>t['狀態']==='已完成').length;
     const doing=items.filter(t=>t['狀態']==='進行中').length;
-    html+=`<div class="column"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);cursor:pointer"><span class="tog">▼</span> 👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3><div>`;
+    html+=`<div class="column" style="break-inside:avoid;margin-bottom:12px"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);cursor:pointer"><span class="tog">▼</span> 👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3><div>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
       const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
@@ -508,7 +508,7 @@ async function renderOutsource(){
     document.getElementById('outsourceContent').innerHTML=gh;
     return;
   }
-  document.getElementById('outsourceContent').innerHTML='<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px">'+html+'</div>';
+  document.getElementById('outsourceContent').innerHTML='<div style="max-width:1200px;margin:0 auto;columns:3;column-gap:12px">'+html+'</div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}
