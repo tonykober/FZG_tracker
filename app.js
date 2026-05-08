@@ -32,6 +32,7 @@ function switchMainTab(tab){
   document.getElementById('internalSection').classList.toggle('hidden',tab!=='internal');
   document.getElementById('outsourceSection').classList.toggle('hidden',tab!=='outsource');
   if(tab==='outsource')renderOutsource();
+  window.scrollTo(0,0);
 }
 function switchView(el){
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
