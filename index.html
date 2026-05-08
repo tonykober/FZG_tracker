@@ -619,7 +619,7 @@ async function renderOutsource(){
     html+=`<div class="column"><h3 style="color:var(--accent)">👤 ${owner} <span style="font-weight:normal;font-size:0.85em;color:var(--muted)">(${done}/${items.length}完成)</span></h3>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
-      const statusColor=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+      const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       html+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>${t['備註']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px">'+t['備註']+'</div>':''}</div>`;
     });
     html+=`</div>`;
@@ -643,7 +643,7 @@ async function renderOutsource(){
       if(endStr){const parts=endStr.split('-');const ey=parseInt(parts[0]),em=parseInt(parts[1])-1,eday=parseInt(parts[2]);if(ey===y&&em===m)ed=eday;else if(ey<y||(ey===y&&em<m))ed=0;else ed=days}else{ed=sd}
       if(sd>days||ed<1||sd>ed)return;
       sd=Math.max(1,sd);ed=Math.min(days,ed);
-      const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+      const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       gh+=`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><div style="width:180px;flex-shrink:0;font-size:0.65em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="color:var(--green)">${t['負責人']||''}</span> ${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
     });
