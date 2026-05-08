@@ -30,7 +30,7 @@ h1{font-size:1.4em;color:var(--accent)}
 .column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:200px}
 .column h3{font-size:0.8em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:7px;cursor:pointer;transition:border-color .2s}
-.card:hover{border-color:var(--accent)}
+.card:hover{border-top-color:var(--accent);border-right-color:var(--accent);border-bottom-color:var(--accent)}
 .card .name{font-weight:600;font-size:0.8em;margin-bottom:3px}
 .card .meta{font-size:0.65em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 .card .progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:5px}
@@ -166,15 +166,15 @@ function applyLock(){
   document.getElementById('adminPw').style.display=unlocked?'none':'';
 }
 function getDeadlineBg(t){
-  if(t['狀態']==='已完成')return '';
-  const due=(t['截止日']||'').substring(0,10);if(!due)return '';
+  if(t['狀態']==='已完成')return 'border-left:6px solid var(--border)';
+  const due=(t['截止日']||'').substring(0,10);if(!due)return 'border-left:6px solid var(--border)';
   const today=new Date();today.setHours(0,0,0,0);
   const d=new Date(due+'T00:00:00');
   const diff=Math.round((d-today)/(1000*60*60*24));
   if(diff<0)return 'border-left:6px solid #dc143c';
   if(diff===0)return 'border-left:6px solid #ff8c00';
   if(diff===1)return 'border-left:6px solid #ffd700';
-  return '';
+  return 'border-left:6px solid var(--border)';
 }
 function switchMainTab(tab){
   document.getElementById('mainTabInternal').classList.toggle('active',tab==='internal');
