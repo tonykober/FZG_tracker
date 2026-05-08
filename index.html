@@ -154,9 +154,9 @@ function getDeadlineBg(t){
   const today=new Date();today.setHours(0,0,0,0);
   const d=new Date(due+'T00:00:00');
   const diff=Math.round((d-today)/(1000*60*60*24));
-  if(diff<0)return 'background:#2d1a1a;border-left:3px solid #f85149';
-  if(diff===0)return 'background:#2d231a;border-left:3px solid #e3833a';
-  if(diff===1)return 'background:#2d2b1e;border-left:3px solid #d29922';
+  if(diff<0)return 'background:#2d1a1a;border-left:4px solid #ff2d2d';
+  if(diff===0)return 'background:#2d231a;border-left:4px solid #ff6b2b';
+  if(diff===1)return 'background:#2d2b1e;border-left:4px solid #ffd700';
   return '';
 }
 function switchMainTab(tab){
