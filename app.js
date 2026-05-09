@@ -385,7 +385,7 @@ function renderTimeline(){
 
   const groups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
   Object.entries(groups).forEach(([owner,items])=>{
-    h+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:1rem;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
+    h+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">▼</span>&nbsp;👤 ${owner} (${items.length})</span><div>`;
     const parents=items.filter(t=>!t['父任務']);
     const renderGanttRow=(t,level)=>{
       const startStr=(t['開始日']||'').substring(0,10);const endStr=(t['截止日']||'').substring(0,10);
@@ -577,7 +577,7 @@ function renderOutsourceFromCache(){
     gh+='</div></div>';
     const gGroups={};outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     Object.entries(gGroups).forEach(([owner,items])=>{
-      gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:1rem;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
+      gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">▼</span>&nbsp;👤 ${owner} (${items.length})</span><div>`;
       items.forEach(t=>{
       const startStr=(t['開始日']||'').replace(/\//g,'-').substring(0,10);
       const endStr=(t['截止日']||'').replace(/\//g,'-').substring(0,10);
