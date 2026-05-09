@@ -484,7 +484,7 @@ async function fetchOutsource(){
     outsourceTasks=merged;
   }catch(e){outsourceTasks=[];}
 }
-function cardClick(el,e){if(e)e.stopPropagation();document.querySelectorAll('.card.card-hl').forEach(e=>{if(e!==el)e.classList.remove('card-hl')});el.classList.toggle('card-hl')}
+function cardClick(el,e){if(e)e.stopPropagation();const was=el.classList.contains('card-hl');document.querySelectorAll('.card-hl').forEach(e=>e.classList.remove('card-hl'));if(!was)el.classList.add('card-hl')}
 let _ganttTip=null,_ganttTipTimer=null;
 function ganttRowClick(el,name){
   if(_ganttTip){_ganttTip.remove();_ganttTip=null;clearTimeout(_ganttTipTimer)}
