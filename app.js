@@ -378,7 +378,7 @@ function renderTimeline(){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const days=new Date(y,m+1,0).getDate();
   const weekdays=['日','一','二','三','四','五','六'];
-  let h='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted)">任務</div><div style="flex:1;display:flex;position:relative">';
+  let h='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted);border-right:1px solid var(--border);margin-right:4px">任務</div><div style="flex:1;display:flex;position:relative">';
   const today=new Date();const isThisMonth=today.getFullYear()===y&&today.getMonth()===m;
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth&&d===today.getDate();const isWeekend=dow===0||dow===6;h+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
   h+='</div></div>';
@@ -397,7 +397,7 @@ function renderTimeline(){
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
       const pl=level===0?12:level===1?24:36;const _ti=tasks.indexOf(t);
-      h+=`<div onclick="ganttRowClick(this,'${t['任務名稱'].replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;${level?'color:var(--yellow)':''}">${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div class="gantt-track" style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div class="gantt-bar" data-idx="${_ti}" style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8;cursor:grab"><div class="gantt-handle gantt-handle-l" data-idx="${_ti}" data-side="l" style="position:absolute;left:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:3px 0 0 3px"></div><div class="gantt-handle gantt-handle-r" data-idx="${_ti}" data-side="r" style="position:absolute;right:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:0 3px 3px 0"></div></div></div></div>`;
+      h+=`<div onclick="ganttRowClick(this,'${t['任務名稱'].replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;border-right:1px solid var(--border);margin-right:4px;${level?'color:var(--yellow)':''}">${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div class="gantt-track" style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div class="gantt-bar" data-idx="${_ti}" style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8;cursor:grab"><div class="gantt-handle gantt-handle-l" data-idx="${_ti}" data-side="l" style="position:absolute;left:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:3px 0 0 3px"></div><div class="gantt-handle gantt-handle-r" data-idx="${_ti}" data-side="r" style="position:absolute;right:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:0 3px 3px 0"></div></div></div></div>`;
     };
     parents.forEach(t=>{
       renderGanttRow(t,0);
@@ -573,7 +573,7 @@ function renderOutsourceFromCache(){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
     const days=new Date(y,m+1,0).getDate();
     const weekdays=['日','一','二','三','四','五','六'];
-    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
+    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted);border-right:1px solid var(--border);margin-right:4px">任務</div><div style="flex:1;display:flex">';
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
@@ -590,7 +590,7 @@ function renderOutsourceFromCache(){
       sd=Math.max(1,sd);ed=Math.min(days,ed);
       const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-      gh+=`<div onclick="ganttRowClick(this,'${(t['工作項目']||'').replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px">${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+      gh+=`<div onclick="ganttRowClick(this,'${(t['工作項目']||'').replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px;border-right:1px solid var(--border);margin-right:4px">${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
     });
       gh+=`</div></div>`;
     });
