@@ -502,7 +502,7 @@ function ganttRowClick(el,name){
     lbl.style.cssText='position:absolute;top:-1px;font-size:0.7em;color:#fff;z-index:5;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #000';
     track.style.position='relative';track.appendChild(lbl);
     const container=el.closest('.timeline')||el.closest('#outsourceContent');
-    const updatePos=()=>{if(!lbl.parentNode)return;const sl=container?container.scrollLeft:0;const vw=container?container.clientWidth:track.clientWidth;lbl.style.left=Math.max(0,sl-track.offsetLeft+4)+'px'};
+    const updatePos=()=>{if(!lbl.parentNode)return;const sl=container?container.scrollLeft:0;const vw=container?container.clientWidth:track.clientWidth;const lblW=lbl.offsetWidth;lbl.style.left=Math.max(0,sl-track.offsetLeft+(vw-lblW)/2)+'px'};
     updatePos();
     if(container){container.addEventListener('scroll',updatePos);setTimeout(()=>container.removeEventListener('scroll',updatePos),10000)}
   }
