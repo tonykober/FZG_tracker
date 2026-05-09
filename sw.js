@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fzg-tracker-v1';
+const CACHE_NAME = 'fzg-tracker-v2';
 const ASSETS = ['/', '/index.html', '/style.css', '/app.js'];
 
 self.addEventListener('install', e => {
