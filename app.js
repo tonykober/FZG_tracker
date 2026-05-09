@@ -499,7 +499,7 @@ function ganttRowClick(el,name){
   const track=el.querySelector('[style*="position:relative"]');
   if(track){
     const lbl=document.createElement('div');lbl.className='gantt-bar-label';lbl.textContent=name;
-    lbl.style.cssText='position:absolute;top:-1px;font-size:0.7em;color:#fff;z-index:5;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #000';
+    lbl.style.cssText='position:absolute;top:-1px;font-size:0.875rem;color:#fff;z-index:5;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #000';
     track.style.position='relative';track.appendChild(lbl);
     const container=el.closest('.timeline')||el.closest('#outsourceContent');
     const updatePos=()=>{if(!lbl.parentNode)return;const sl=container?container.scrollLeft:0;const vw=container?container.clientWidth:track.clientWidth;const lblW=lbl.offsetWidth;lbl.style.left=Math.max(0,sl-track.offsetLeft+(vw-lblW)/2)+'px'};
