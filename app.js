@@ -269,12 +269,14 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" onclick="cardClick(this,event)" style="position:relative;${_dbg}"><span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
+    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg}"><span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
       ${canAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
-      <div class="name" onclick="openModal(${idx})" style="cursor:pointer"><span onclick="event.stopPropagation();var d=this.parentElement.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
-      <div>
+      <div class="card-header" onclick="cardClick(this,event)">
+      <div class="name" onclick="openModal(${idx})" style="cursor:pointer"><span onclick="event.stopPropagation();var d=this.closest('.card').querySelector('.card-body');d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
+      </div>
+      <div class="card-body">
       ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();var d=this.nextElementSibling;if(d.style.display===\'none\'){d.style.display=\'block\';this.textContent=\'▼\'}else{d.style.display=\'none\';this.textContent=\'▶\'}" style="cursor:pointer;font-size:0.8em">▼</span><div style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
