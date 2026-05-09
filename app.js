@@ -247,6 +247,7 @@ function renderFilterBar(){
   allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
   document.getElementById('filterBar').innerHTML=html;
 }
+function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
 function render(){renderStats();renderBoard();renderTimeline();renderReport()}
 function renderStats(){
   const f=getFiltered(),total=f.length,done=f.filter(t=>t['狀態']==='已完成').length;
@@ -275,7 +276,7 @@ function renderBoard(){
       <div class="card-body">
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
-      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();var d=this.nextElementSibling;if(d.style.display===\'none\'){d.style.display=\'block\';this.textContent=\'▼\'}else{d.style.display=\'none\';this.textContent=\'▶\'}" style="cursor:pointer;font-size:0.75rem">▼</span><div style="margin-top:4px">'+children.map(c=>{
+      ${children.length?'<div class="subtasks" onclick="toggleSub(this,event)" style="cursor:pointer"><span style="font-size:0.75rem">▼</span> 子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
         const cLevel=getLevel(c);const cCanAddSub=cLevel<2;const _cdbg=getDeadlineBg(c);
