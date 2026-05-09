@@ -462,9 +462,7 @@ async function fetchOutsource(){
     if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
-    const prefix=currentMonth.getFullYear()+'-'+('0'+m).slice(-2);
-    const hasCurrentMonth=items.some(t=>(t['開始日']||'').startsWith(prefix)||(t['截止日']||'').startsWith(prefix));
-    outsourceTasks=hasCurrentMonth||!items[0]['開始日']?items:[];
+    outsourceTasks=items;
   }catch(e){outsourceTasks=[];}
 }
 let _ganttTip=null,_ganttTipTimer=null;
@@ -523,8 +521,8 @@ async function renderOutsource(){
     Object.entries(gGroups).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0"><span onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;color:var(--accent);font-weight:600">👤 ${owner} (${items.length}) <span>▼</span></span><div>`;
       items.forEach(t=>{
-      const startStr=(t['開始日']||'').substring(0,10);
-      const endStr=(t['截止日']||'').substring(0,10);
+      const startStr=(t['開始日']||'').replace(/\//g,'-').substring(0,10);
+      const endStr=(t['截止日']||'').replace(/\//g,'-').substring(0,10);
       let sd=1,ed=days;
       if(startStr){const parts=startStr.split('-');const sy=parseInt(parts[0]),sm=parseInt(parts[1])-1,sday=parseInt(parts[2]);if(sy===y&&sm===m)sd=sday;else if(sy>y||(sy===y&&sm>m))sd=days+1;else sd=1}
       if(endStr){const parts=endStr.split('-');const ey=parseInt(parts[0]),em=parseInt(parts[1])-1,eday=parseInt(parts[2]);if(ey===y&&em===m)ed=eday;else if(ey<y||(ey===y&&em<m))ed=0;else ed=days}else{ed=sd}
