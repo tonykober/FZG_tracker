@@ -39,7 +39,6 @@ h1{font-size:36px!important;color:var(--accent)}
 .p-mid{background:var(--yellow)}
 .p-low{background:var(--green)}
 .timeline{max-width:1200px;margin:0 auto;overflow:hidden;position:relative}
-.timeline::after{content:'';position:absolute;left:150px;top:0;bottom:0;width:1px;background:var(--border);pointer-events:none}
 .report{max-width:800px;margin:0 auto;font-size:0.875rem}
 .report-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
 .report-section h3{font-size:1rem;margin-bottom:8px;color:var(--accent)}
