@@ -308,7 +308,8 @@ function renderBoard(){
   const groupByOwner=(items)=>{
     const groups={};
     items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
-    return Object.entries(groups).map(([owner,list])=>`<div style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
+    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+    return Object.entries(groups).sort((a,b)=>(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)).map(([owner,list])=>`<div class="owner-group card" draggable="true" data-owner="${owner}" ondragstart="event.dataTransfer.setData('text/owner','${owner.replace(/'/g,"\\'")}');this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog" onclick="event.stopPropagation();var d=this.closest('.owner-group').lastElementChild;d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▶':'▼'">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardView').innerHTML=`
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
@@ -316,6 +317,22 @@ function renderBoard(){
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
 }
 let dragIdx=null;
+function ownerGroupDrop(e,el){
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
+  const srcOwner=e.dataTransfer.getData('text/owner');if(!srcOwner)return;
+  const tgtOwner=el.dataset.owner;if(srcOwner===tgtOwner)return;
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+  const column=el.closest('.column');
+  const groups=[...column.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
+  const fromPos=groups.indexOf(srcOwner);if(fromPos>=0)groups.splice(fromPos,1);
+  const toPos=groups.indexOf(tgtOwner);
+  const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
+  groups.splice(above?toPos:toPos+1,0,srcOwner);
+  groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
+  localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+  render();
+}
 function cardDragOver(e,el){e.preventDefault();if(el.classList.contains('dragging'))return;document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));const rect=el.getBoundingClientRect();el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
 function cardDrop(e,targetIdx,el){
   e.preventDefault();e.stopPropagation();
