@@ -378,7 +378,7 @@ function renderTimeline(){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const days=new Date(y,m+1,0).getDate();
   const weekdays=['日','一','二','三','四','五','六'];
-  let h='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted)">任務</div><div style="flex:1;display:flex;position:relative">';
+  let h='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex;position:relative">';
   const today=new Date();const isThisMonth=today.getFullYear()===y&&today.getMonth()===m;
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth&&d===today.getDate();const isWeekend=dow===0||dow===6;h+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
   h+='</div></div>';
@@ -573,7 +573,7 @@ function renderOutsourceFromCache(){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
     const days=new Date(y,m+1,0).getDate();
     const weekdays=['日','一','二','三','四','五','六'];
-    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0;font-size:0.75rem;color:var(--muted)">任務</div><div style="flex:1;display:flex">';
+    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex">';
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
