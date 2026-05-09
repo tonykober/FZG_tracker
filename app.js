@@ -273,7 +273,7 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" data-idx="${idx}" ondragstart="drag(event,${idx});this.classList.add('dragging')" ondragend="this.classList.remove('dragging');var ph=document.querySelector('.drag-placeholder');if(ph)ph.remove()" ondragover="cardDragOver(event,this)" ondragleave="var ph=document.querySelector('.drag-placeholder');if(ph&&!this.contains(event.relatedTarget))ph.remove()" ondrop="cardDrop(event,${idx},this)" style="${_dbg}">
+    return `<div class="drag-placeholder" data-before="${idx}"></div><div class="card" draggable="true" data-idx="${idx}" ondragstart="drag(event,${idx});this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-placeholder').forEach(p=>p.style.height='0')" ondragover="cardDragOver(event,this)" ondrop="cardDrop(event,${idx},this)" style="${_dbg}">
       <div class="card-buttons"><div class="name" onclick="event.stopPropagation();var b=this.closest('.card').querySelector('.card-body');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('span').textContent=b.style.display==='none'?'▶':'▼'" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
       <div class="card-body">
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
@@ -316,20 +316,20 @@ function renderBoard(){
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
 }
 let dragIdx=null;
-function cardDragOver(e,el){e.preventDefault();let ph=document.querySelector('.drag-placeholder');if(!ph){ph=document.createElement('div');ph.className='drag-placeholder'}const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;if(above){el.parentNode.insertBefore(ph,el)}else{el.parentNode.insertBefore(ph,el.nextSibling)}}
+function cardDragOver(e,el){e.preventDefault();document.querySelectorAll('.drag-placeholder.active').forEach(p=>p.classList.remove('active'));const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;const ph=above?el.previousElementSibling:el.nextElementSibling;if(ph&&ph.classList.contains('drag-placeholder'))ph.classList.add('active')}
 function cardDrop(e,targetIdx,el){
   e.preventDefault();e.stopPropagation();
-  const ph=document.querySelector('.drag-placeholder');
-  if(!unlocked||dragIdx===null||dragIdx===targetIdx){if(ph)ph.remove();return}
+  document.querySelectorAll('.drag-placeholder.active').forEach(p=>p.classList.remove('active'));
+  if(!unlocked||dragIdx===null||dragIdx===targetIdx)return;
   const src=tasks[dragIdx],tgt=tasks[targetIdx];
-  if(src['狀態']!==tgt['狀態']){if(ph)ph.remove();drop(e,tgt['狀態']);return}
+  if(src['狀態']!==tgt['狀態']){drop(e,tgt['狀態']);return}
   const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
   const sameStatus=tasks.filter(x=>x['狀態']===src['狀態']&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
   const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
   const toPos=sameStatus.indexOf(tgt);
   sameStatus.splice(above?toPos:toPos+1,0,src);
   sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
-  if(ph)ph.remove();render();dragIdx=null;
+  render();dragIdx=null;
 }
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){if(!unlocked)return;
