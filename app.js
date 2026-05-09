@@ -462,12 +462,28 @@ async function fetchOutsource(){
     if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
-    outsourceTasks=items;
+    // Consolidate: merge same owner+task with consecutive dates
+    const merged=[];
+    const toDate=s=>{const p=(s||'').replace(/\//g,'-').split('-');return p.length===3?new Date(+p[0],+p[1]-1,+p[2]):null};
+    const fmtDate=d=>d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+    const diffDays=(a,b)=>Math.round((b-a)/(86400000));
+    items.forEach(t=>{
+      const existing=merged.find(m=>m['負責人']===t['負責人']&&m['工作項目']===t['工作項目']);
+      if(existing){
+        const eEnd=toDate(existing['截止日']),tStart=toDate(t['開始日']),tEnd=toDate(t['截止日']);
+        if(eEnd&&tStart&&diffDays(eEnd,tStart)<=1){
+          if(tEnd&&(!toDate(existing['截止日'])||tEnd>toDate(existing['截止日'])))existing['截止日']=fmtDate(tEnd);
+          existing['狀態']=t['狀態']||existing['狀態'];
+        }else{merged.push({...t})}
+      }else{merged.push({...t})}
+    });
+    outsourceTasks=merged;
   }catch(e){outsourceTasks=[];}
 }
 let _ganttTip=null,_ganttTipTimer=null;
 function ganttRowClick(el,name){
   if(_ganttTip){_ganttTip.remove();_ganttTip=null;clearTimeout(_ganttTipTimer)}
+  document.querySelectorAll('.gantt-bar-label').forEach(e=>e.remove());
   if(el.classList.contains('gantt-row-hl')){el.classList.remove('gantt-row-hl');return}
   document.querySelectorAll('.gantt-row-hl').forEach(e=>e.classList.remove('gantt-row-hl'));
   el.classList.add('gantt-row-hl');
@@ -475,6 +491,9 @@ function ganttRowClick(el,name){
   el.style.position='relative';el.appendChild(tip);
   _ganttTip=tip;
   _ganttTipTimer=setTimeout(()=>{if(tip.parentNode)tip.remove();_ganttTip=null},3000);
+  // Show name on bar
+  const track=el.querySelector('[style*="position:relative"]');
+  if(track){const lbl=document.createElement('div');lbl.className='gantt-bar-label';lbl.textContent=name;lbl.style.cssText='position:sticky;left:4px;top:-1px;font-size:0.7em;color:#fff;z-index:5;white-space:nowrap;pointer-events:none';track.appendChild(lbl)}
 }
 function outsourceDrop(e,zone){
   const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
