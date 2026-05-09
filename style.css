@@ -23,17 +23,17 @@ h1{font-size:36px!important;color:var(--accent)}
 .stat .label{font-size:0.75rem;color:var(--muted)}
 .board{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start;box-sizing:border-box;width:100%}
 .column{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
-.column h3{font-size:0.8em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.owner-title{font-size:0.7em}
+.column h3{font-size:1rem;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.owner-title{font-size:0.875rem}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:7px;cursor:pointer;transition:border-color .2s;max-width:100%;overflow:hidden;word-break:break-word}
 .card:hover{outline:2px solid var(--accent);outline-offset:-2px}
-.card .name{font-weight:600;font-size:0.8em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis}
-.card .meta{font-size:0.65em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.card .name{font-weight:600;font-size:0.8125rem;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis}
+.card .meta{font-size:0.75rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 .card .progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:5px}
 .card .progress-fill{height:100%;border-radius:2px;background:var(--accent)}
 .card .tags{margin-top:4px;display:flex;gap:3px;flex-wrap:wrap}
-.card .tag-pill{font-size:0.6em;padding:1px 6px;border-radius:8px;background:var(--surface);border:1px solid var(--border)}
-.card .subtasks{font-size:0.6em;color:var(--muted);margin-top:3px}
+.card .tag-pill{font-size:0.75rem;padding:1px 6px;border-radius:8px;background:var(--surface);border:1px solid var(--border)}
+.card .subtasks{font-size:0.75rem;color:var(--muted);margin-top:3px}
 .priority-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
 .p-high{background:var(--red)}
 .p-mid{background:var(--yellow)}

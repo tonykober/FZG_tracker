@@ -269,36 +269,36 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg}"><span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.6em;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
-      ${canAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.6em;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
+    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="position:relative;${_dbg}"><span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="position:absolute;top:4px;right:4px;cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span>
+      ${canAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:32px;font-size:0.75rem;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}
       <div class="name" onclick="openModal(${idx})" style="cursor:pointer"><span onclick="event.stopPropagation();var d=this.closest('.card').querySelector('.card-body');d.style.display=d.style.display==='none'?'block':'none';this.textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer;font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div>
       <div class="card-body">
       <div class="meta"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer">${t['負責人']||'未指派'}</span><span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${tags.length?'<div class="tags" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</div>':''}${t['評論']?'<div style="font-size:0.65em;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
-      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();var d=this.nextElementSibling;if(d.style.display===\'none\'){d.style.display=\'block\';this.textContent=\'▼\'}else{d.style.display=\'none\';this.textContent=\'▶\'}" style="cursor:pointer;font-size:0.8em">▼</span><div style="margin-top:4px">'+children.map(c=>{
+      ${children.length?'<div class="subtasks">子任務：'+childDone+'/'+children.length+' <span onclick="event.stopPropagation();var d=this.nextElementSibling;if(d.style.display===\'none\'){d.style.display=\'block\';this.textContent=\'▼\'}else{d.style.display=\'none\';this.textContent=\'▶\'}" style="cursor:pointer;font-size:0.75rem">▼</span><div style="margin-top:4px">'+children.map(c=>{
         const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
         const cLevel=getLevel(c);const cCanAddSub=cLevel<2;const _cdbg=getDeadlineBg(c);
         return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${_cdbg||'background:var(--surface)'};padding:6px 8px;transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
-          <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer">
+          <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.875rem;cursor:pointer">
             <span onclick="toggleStatus(${ci},event)" style="cursor:pointer;color:${c['狀態']==='已完成'?'var(--green)':c['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':c['狀態']==='進行中'?'🔄':'⬜'}</span>
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
             <span onclick="event.stopPropagation();openModal(${ci})" style="flex:1;cursor:pointer">${c['任務名稱']}</span>
             <span onclick="inlineEdit(${ci},'負責人',event)" style="color:var(--green);font-size:0.85em;cursor:pointer;margin-right:4px">${c['負責人']||'未指派'}</span>
             <span onclick="inlineEdit(${ci},'日期',event)" style="color:var(--muted);font-size:0.9em;cursor:pointer">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
             ${cCanAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
-            <span class="edit-ctrl" onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
+            <span class="edit-ctrl" onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
           </div>
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
             const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
-            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.7rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;${_gdbg||'background:var(--bg)'};transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
+            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.875rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;${_gdbg||'background:var(--bg)'};transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
               <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>
               <span onclick="inlineEdit(${gi},'負責人',event)" style="color:var(--green);font-size:0.9em;cursor:pointer;margin-right:4px">${g['負責人']||'未指派'}</span>
               <span onclick="inlineEdit(${gi},'日期',event)" style="color:var(--muted);cursor:pointer">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
               ${(g['標籤']||'').split(',').filter(Boolean).length?`<span onclick="inlineEdit(${gi},'標籤',event)" style="cursor:pointer">${(g['標籤']||'').split(',').filter(Boolean).map(tg=>'<span class="tag-pill" style="font-size:0.9em">'+tg.trim()+'</span>').join('')}</span>`:''}
-              <span class="edit-ctrl" onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.7em;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
+              <span class="edit-ctrl" onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
     </div></div>`}).join('');
