@@ -222,7 +222,8 @@ async function submitTask(){
       const t=tasks[parseInt(m.dataset.editIdx)];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
     }else{
-      tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||''});
+      const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
+      tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
     }
     closeModal();render();renderFilterBar();
   }catch(e){alert('❌ 失敗：'+e.message)}
@@ -258,9 +259,10 @@ function renderBoard(){
   const filtered=getFiltered();
   const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
   const getChildren=name=>filtered.filter(t=>t['父任務']===name);
-  const todo=parentTasks.filter(t=>t['狀態']==='待辦');
-  const doing=parentTasks.filter(t=>t['狀態']==='進行中');
-  const done=parentTasks.filter(t=>t['狀態']==='已完成');
+  const sortFn=(a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999);
+  const todo=parentTasks.filter(t=>t['狀態']==='待辦').sort(sortFn);
+  const doing=parentTasks.filter(t=>t['狀態']==='進行中').sort(sortFn);
+  const done=parentTasks.filter(t=>t['狀態']==='已完成').sort(sortFn);
   const getLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p)return 0;if(!p['父任務'])return 1;const gp=tasks.find(x=>x['任務名稱']===p['父任務']);if(!gp)return 1;return 2};
   const cardHtml=(items)=>items.map(t=>{
     const idx=tasks.indexOf(t);
@@ -318,6 +320,14 @@ function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataT
 function drop(e,status){if(!unlocked)return;
   e.preventDefault();if(dragIdx===null)return;
   const t=tasks[dragIdx];
+  if(t['狀態']===status){
+    // Same status: reorder within column
+    const sameStatus=tasks.filter(x=>x['狀態']===status&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
+    const fromPos=sameStatus.indexOf(t);
+    if(fromPos>=0){sameStatus.splice(fromPos,1);sameStatus.push(t)}// move to end (simple reorder)
+    sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
+    render();dragIdx=null;return;
+  }
   const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']};
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
   t['狀態']=status;
