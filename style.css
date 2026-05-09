@@ -59,8 +59,8 @@ h1{font-size:36px!important;color:var(--accent)}
 .card-buttons{display:flex;gap:4px;align-items:center}
 .card-btn{font-size:0.75rem;color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer}
 .card.dragging{opacity:0.5}
-.drag-placeholder{width:100%;height:0;overflow:hidden;pointer-events:none}
-.drag-placeholder.active{height:36px;background:rgba(229,57,53,0.2);border:2px dashed #e53935;border-radius:8px;margin-bottom:4px}
+.card.drag-over-top{box-shadow:0 -4px 0 0 #e53935 inset}
+.card.drag-over-bottom{box-shadow:0 4px 0 0 #e53935 inset}
 .gantt-row-hl{background:rgba(66,133,244,0.3)!important}
 .gantt-row-hl>div:not(.gantt-tooltip){background:transparent!important}
 .gantt-row-hl .gantt-bar,.gantt-row-hl>div>div[style*="position:absolute"]{z-index:1}
