@@ -462,18 +462,22 @@ async function fetchOutsource(){
     if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
-    // Consolidate: merge same owner+task with consecutive dates
+    // Consolidate: merge same owner + similar task name with consecutive dates
     const merged=[];
     const toDate=s=>{const p=(s||'').replace(/\//g,'-').split('-');return p.length===3?new Date(+p[0],+p[1]-1,+p[2]):null};
     const fmtDate=d=>d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
     const diffDays=(a,b)=>Math.round((b-a)/(86400000));
+    const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
+    const isSimilar=(a,b)=>{if(a===b)return true;const na=normalize(a),nb=normalize(b);return na.includes(nb)||nb.includes(na)};
     items.forEach(t=>{
-      const existing=merged.find(m=>m['負責人']===t['負責人']&&m['工作項目']===t['工作項目']);
+      const existing=merged.find(m=>m['負責人']===t['負責人']&&isSimilar(m['工作項目'],t['工作項目']));
       if(existing){
         const eEnd=toDate(existing['截止日']),tStart=toDate(t['開始日']),tEnd=toDate(t['截止日']);
         if(eEnd&&tStart&&diffDays(eEnd,tStart)<=1){
-          if(tEnd&&(!toDate(existing['截止日'])||tEnd>toDate(existing['截止日'])))existing['截止日']=fmtDate(tEnd);
+          if(tEnd&&tEnd>eEnd)existing['截止日']=fmtDate(tEnd);
+          const eStart=toDate(existing['開始日']);if(tStart&&eStart&&tStart<eStart)existing['開始日']=fmtDate(tStart);
           existing['狀態']=t['狀態']||existing['狀態'];
+          if(t['工作項目'].length<existing['工作項目'].length)existing['工作項目']=t['工作項目'];
         }else{merged.push({...t})}
       }else{merged.push({...t})}
     });
@@ -493,7 +497,15 @@ function ganttRowClick(el,name){
   _ganttTipTimer=setTimeout(()=>{if(tip.parentNode)tip.remove();_ganttTip=null},3000);
   // Show name on bar
   const track=el.querySelector('[style*="position:relative"]');
-  if(track){const lbl=document.createElement('div');lbl.className='gantt-bar-label';lbl.textContent=name;lbl.style.cssText='position:sticky;left:4px;top:-1px;font-size:0.7em;color:#fff;z-index:5;white-space:nowrap;pointer-events:none';track.appendChild(lbl)}
+  if(track){
+    const lbl=document.createElement('div');lbl.className='gantt-bar-label';lbl.textContent=name;
+    lbl.style.cssText='position:absolute;top:-1px;font-size:0.7em;color:#fff;z-index:5;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px #000';
+    track.style.position='relative';track.appendChild(lbl);
+    const container=el.closest('.timeline')||el.closest('#outsourceContent');
+    const updatePos=()=>{if(!lbl.parentNode)return;const sl=container?container.scrollLeft:0;const vw=container?container.clientWidth:track.clientWidth;lbl.style.left=Math.max(0,sl-track.offsetLeft+4)+'px'};
+    updatePos();
+    if(container){container.addEventListener('scroll',updatePos);setTimeout(()=>container.removeEventListener('scroll',updatePos),10000)}
+  }
 }
 function outsourceDrop(e,zone){
   const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
