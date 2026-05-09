@@ -280,7 +280,7 @@ function renderBoard(){
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
         const cLevel=getLevel(c);const cCanAddSub=cLevel<2;const _cdbg=getDeadlineBg(c);
         return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${_cdbg||'background:var(--surface)'};padding:6px 8px;transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
-          <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7em;cursor:pointer">
+          <div onclick="event.stopPropagation();openModal(${ci})" style="display:flex;align-items:center;gap:4px;font-size:0.7rem;cursor:pointer">
             <span onclick="toggleStatus(${ci},event)" style="cursor:pointer;color:${c['狀態']==='已完成'?'var(--green)':c['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${c['狀態']==='已完成'?'✅':c['狀態']==='進行中'?'🔄':'⬜'}</span>
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
             <span onclick="event.stopPropagation();openModal(${ci})" style="flex:1;cursor:pointer">${c['任務名稱']}</span>
@@ -291,7 +291,7 @@ function renderBoard(){
           </div>
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
             const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
-            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65em;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;${_gdbg||'background:var(--bg)'};transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
+            return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.65rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;${_gdbg||'background:var(--bg)'};transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
               <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>
