@@ -489,7 +489,7 @@ async function fetchOutsource(){
         }else{merged.push({...t})}
       }else{merged.push({...t})}
     });
-    outsourceTasks=merged;outsourceFetchError=false;
+    outsourceTasks=merged.filter(t=>{const s=(t['開始日']||'').replace(/\//g,'-'),e=(t['截止日']||'').replace(/\//g,'-');if(!s&&!e)return false;const prefix=currentMonth.getFullYear()+'-'+('0'+(currentMonth.getMonth()+1)).slice(-2);return(s&&s.substring(0,7)===prefix)||(e&&e.substring(0,7)===prefix)||(s&&e&&s.substring(0,7)<=prefix&&e.substring(0,7)>=prefix)});outsourceFetchError=false;
   }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
 let _ganttTip=null,_ganttTipTimer=null;
