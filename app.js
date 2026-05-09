@@ -502,10 +502,24 @@ function ganttRowClick(el,name){
 }
 function outsourceDrop(e,zone){
   const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
-  outsourceZones[owner]=zone;
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
+  const targetGroup=e.target.closest('.outsource-group');
+  const srcZone=outsourceZones[owner]||'一區';
+  if(targetGroup&&srcZone===zone){
+    // Same zone reorder
+    const targetOwner=targetGroup.dataset.owner;if(targetOwner===owner)return;
+    const rect=targetGroup.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
+    const sameZone=Object.keys(outsourceZones).filter(k=>!k.startsWith('_sort_')&&(outsourceZones[k]||'一區')===zone).sort((a,b)=>(parseInt(outsourceZones['_sort_'+a])||999)-(parseInt(outsourceZones['_sort_'+b])||999));
+    const fromPos=sameZone.indexOf(owner);if(fromPos>=0)sameZone.splice(fromPos,1);
+    const toPos=sameZone.indexOf(targetOwner);
+    sameZone.splice(above?toPos:toPos+1,0,owner);
+    sameZone.forEach((o,i)=>{outsourceZones['_sort_'+o]=String(i+1)});
+  }else{
+    outsourceZones[owner]=zone;
+  }
   localStorage.setItem('fzg_outsource_zones',JSON.stringify(outsourceZones));
-  fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveZone',owner:owner,zone:zone}),mode:'cors'}).then(r=>r.json()).then(d=>{if(d.result!=='ok')alert('區域儲存失敗')}).catch(()=>alert('區域儲存失敗（網路錯誤）'));
-  renderOutsource();
+  fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveZone',owner:owner,zone:outsourceZones[owner]||zone,sort:outsourceZones['_sort_'+owner]||''}),mode:'cors'}).catch(()=>{});
+  renderOutsourceFromCache();
 }
 async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
@@ -523,11 +537,11 @@ function renderOutsourceFromCache(){
   const zones=outsourceZones;
   const zoneNames=['一區','二區','三區'];
   let cols=['','',''];
-  Object.entries(owners).forEach(([owner,items],i)=>{
+  Object.entries(owners).sort((a,b)=>(parseInt(zones['_sort_'+a[0]])||999)-(parseInt(zones['_sort_'+b[0]])||999)).forEach(([owner,items],i)=>{
     const zone=zones[owner]||'一區';
     const zi=zoneNames.indexOf(zone);const colIdx=zi>=0?zi:(i%3);
     const done=items.filter(t=>t['狀態']==='已完成').length;
-    let c=`<div class="outsource-group" draggable="true" data-owner="${owner}" ondragstart="event.dataTransfer.setData('text/plain','${owner.replace(/'/g,"\\'")}');event.dataTransfer.effectAllowed='move'" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
+    let c=`<div class="outsource-group card" draggable="true" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" ondragstart="event.dataTransfer.setData('text/plain','${owner.replace(/'/g,"\\'")}');event.dataTransfer.effectAllowed='move';this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
     items.forEach(t=>{
       const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
       const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
