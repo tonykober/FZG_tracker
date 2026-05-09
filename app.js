@@ -273,7 +273,7 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="${_dbg}">
+    return `<div class="card" draggable="true" data-idx="${idx}" ondragstart="drag(event,${idx});this.classList.add('dragging')" ondragend="this.classList.remove('dragging')" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="cardDrop(event,${idx},this)" style="${_dbg}">
       <div class="card-buttons"><div class="name" onclick="event.stopPropagation();var b=this.closest('.card').querySelector('.card-body');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('span').textContent=b.style.display==='none'?'▶':'▼'" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
       <div class="card-body">
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
@@ -316,6 +316,21 @@ function renderBoard(){
     <div class="column" ondragover="event.preventDefault()" ondrop="drop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
 }
 let dragIdx=null;
+function cardDragOver(e,el){e.preventDefault();el.classList.remove('drag-over-top','drag-over-bottom');const rect=el.getBoundingClientRect();el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
+function cardDrop(e,targetIdx,el){
+  e.preventDefault();e.stopPropagation();el.classList.remove('drag-over-top','drag-over-bottom');
+  if(!unlocked||dragIdx===null||dragIdx===targetIdx)return;
+  const src=tasks[dragIdx],tgt=tasks[targetIdx];
+  if(src['狀態']!==tgt['狀態']){drop(e,tgt['狀態']);return}
+  // Same status reorder
+  const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
+  const sameStatus=tasks.filter(x=>x['狀態']===src['狀態']&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
+  const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
+  const toPos=sameStatus.indexOf(tgt);
+  sameStatus.splice(above?toPos:toPos+1,0,src);
+  sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
+  render();dragIdx=null;
+}
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){if(!unlocked)return;
   e.preventDefault();if(dragIdx===null)return;
