@@ -41,6 +41,7 @@ function switchView(el){
   document.getElementById('boardView').classList.toggle('hidden',v!=='board');
   document.getElementById('timelineView').classList.toggle('hidden',v!=='timeline');
   document.getElementById('reportView').classList.toggle('hidden',v!=='report');
+  render();
 }
 function openModal(idx){
   if(!unlocked)return;
@@ -248,7 +249,7 @@ function renderFilterBar(){
   document.getElementById('filterBar').innerHTML=html;
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
-function render(){renderStats();renderBoard();renderTimeline();renderReport()}
+function render(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport();renderFilterBar()}
 function renderStats(){
   const f=getFiltered(),total=f.length,done=f.filter(t=>t['狀態']==='已完成').length;
   document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num" style="color:var(--yellow)">${total-done}</div><div class="label">未完成</div></div>`;
@@ -368,63 +369,27 @@ function renderTimeline(){
   if(isThisMonth){const todayPos=((today.getDate()-0.5)/days*100).toFixed(1);h+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${todayPos} / 100);width:2px;background:var(--red);z-index:10;pointer-events:none;opacity:0.7"></div>`}
   h+='</div>';
   document.getElementById('timelineView').innerHTML=h;
-  // Gantt drag setup
-  document.querySelectorAll('.gantt-handle').forEach(handle=>{
-    handle.addEventListener('mousedown',e=>{
+  // Gantt drag setup - event delegation
+  const tv=document.getElementById('timelineView');
+  if(!tv._ganttDelegated){tv._ganttDelegated=true;tv.addEventListener('mousedown',e=>{
+    const handle=e.target.closest('.gantt-handle');
+    const bar=e.target.closest('.gantt-bar');
+    if(handle){
       e.stopPropagation();e.preventDefault();
       const idx=parseInt(handle.dataset.idx),side=handle.dataset.side;
       const track=handle.closest('.gantt-track');
-      const trackRect=track.getBoundingClientRect();
-      const trackW=trackRect.width;
-      const onMove=ev=>{
-        const x=Math.max(0,Math.min(trackW,ev.clientX-trackRect.left));
-        const dayFloat=x/trackW*days;
-        const day=Math.max(1,Math.min(days,Math.round(dayFloat)+1));
-        const t=tasks[idx];
-        const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        if(side==='l'){if(dateStr<=((t['截止日']||'').substring(0,10)||dateStr)){t['開始日']=dateStr}}
-        else{if(dateStr>=((t['開始日']||'').substring(0,10)||dateStr)){t['截止日']=dateStr}}
-        render();
-      };
-      const onUp=()=>{
-        document.removeEventListener('mousemove',onMove);
-        document.removeEventListener('mouseup',onUp);
-        const t=tasks[idx];
-        fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
-      };
-      document.addEventListener('mousemove',onMove);
-      document.addEventListener('mouseup',onUp);
-    });
-  });
-  document.querySelectorAll('.gantt-bar').forEach(bar=>{
-    bar.addEventListener('mousedown',e=>{
-      if(e.target.classList.contains('gantt-handle'))return;
+      const trackRect=track.getBoundingClientRect();const trackW=trackRect.width;
+      const onMove=ev=>{const x=Math.max(0,Math.min(trackW,ev.clientX-trackRect.left));const day=Math.max(1,Math.min(days,Math.round(x/trackW*days)+1));const t=tasks[idx];const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;if(side==='l'){if(dateStr<=((t['截止日']||'').substring(0,10)||dateStr))t['開始日']=dateStr}else{if(dateStr>=((t['開始日']||'').substring(0,10)||dateStr))t['截止日']=dateStr}render()};
+      const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);const t=tasks[idx];fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})};
+      document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+    }else if(bar&&!e.target.closest('.gantt-handle')){
       e.preventDefault();
-      const idx=parseInt(bar.dataset.idx);
-      const track=bar.closest('.gantt-track');
-      const trackRect=track.getBoundingClientRect();
-      const trackW=trackRect.width;
-      const startX=e.clientX;
-      const t=tasks[idx];
-      const origStart=t['開始日'].substring(0,10);const origEnd=t['截止日'].substring(0,10);
-      const onMove=ev=>{
-        const dx=ev.clientX-startX;
-        const dayShift=Math.round(dx/trackW*days);
-        if(dayShift===0)return;
-        const sDate=new Date(origStart+'T00:00:00');const eDate=new Date(origEnd+'T00:00:00');
-        sDate.setDate(sDate.getDate()+dayShift);eDate.setDate(eDate.getDate()+dayShift);
-        t['開始日']=sDate.toISOString().split('T')[0];t['截止日']=eDate.toISOString().split('T')[0];
-        render();
-      };
-      const onUp=()=>{
-        document.removeEventListener('mousemove',onMove);
-        document.removeEventListener('mouseup',onUp);
-        fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
-      };
-      document.addEventListener('mousemove',onMove);
-      document.addEventListener('mouseup',onUp);
-    });
-  });
+      const idx=parseInt(bar.dataset.idx);const track=bar.closest('.gantt-track');const trackRect=track.getBoundingClientRect();const trackW=trackRect.width;const startX=e.clientX;const t=tasks[idx];const origStart=t['開始日'].substring(0,10);const origEnd=t['截止日'].substring(0,10);
+      const onMove=ev=>{const dx=ev.clientX-startX;const dayShift=Math.round(dx/trackW*days);if(dayShift===0)return;const sDate=new Date(origStart+'T00:00:00');const eDate=new Date(origEnd+'T00:00:00');sDate.setDate(sDate.getDate()+dayShift);eDate.setDate(eDate.getDate()+dayShift);t['開始日']=sDate.toISOString().split('T')[0];t['截止日']=eDate.toISOString().split('T')[0];render()};
+      const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})};
+      document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+    }
+  })}
 }
 function renderReport(){
   const filtered=getFiltered(),total=filtered.length,done=filtered.filter(t=>t['狀態']==='已完成').length;
@@ -521,6 +486,9 @@ async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
   await fetchOutsource();
   await loadOutsourceZones();
+  renderOutsourceFromCache();
+}
+function renderOutsourceFromCache(){
   let outsourceFiltered=outsourceTasks;
   const q=(document.getElementById('searchOutsource')||{}).value||'';
   if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q.toLowerCase()));

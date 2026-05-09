@@ -54,7 +54,7 @@
       <button class="btn-tab active" onclick="outsourceMode='list';renderOutsource();this.classList.add('active');this.nextElementSibling.classList.remove('active')">看板</button>
       <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsource();this.classList.add('active');this.previousElementSibling.classList.remove('active')">時間軸</button>
     </div>
-    <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsource()"/>
+    <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()"/>
   </div>
   <div id="outsourceContent"></div>
 </div>
