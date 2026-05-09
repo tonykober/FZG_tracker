@@ -489,7 +489,8 @@ async function fetchOutsource(){
         }else{merged.push({...t})}
       }else{merged.push({...t})}
     });
-    outsourceTasks=merged.filter(t=>{const s=(t['開始日']||'').replace(/\//g,'-'),e=(t['截止日']||'').replace(/\//g,'-');if(!s&&!e)return false;const prefix=currentMonth.getFullYear()+'-'+('0'+(currentMonth.getMonth()+1)).slice(-2);return(s&&s.substring(0,7)===prefix)||(e&&e.substring(0,7)===prefix)||(s&&e&&s.substring(0,7)<=prefix&&e.substring(0,7)>=prefix)});outsourceFetchError=false;
+    const cy=currentMonth.getFullYear(),cm=currentMonth.getMonth()+1;
+    outsourceTasks=merged.filter(t=>{const s=(t['開始日']||'').replace(/\//g,'-').split('-'),e=(t['截止日']||'').replace(/\//g,'-').split('-');if(s.length<3&&e.length<3)return false;const sy=+s[0],sm=+s[1],ey=+e[0],em=+e[1];if(sy&&sm&&sy===cy&&sm===cm)return true;if(ey&&em&&ey===cy&&em===cm)return true;if(sy&&sm&&ey&&em){const sv=sy*100+sm,ev=ey*100+em,cv=cy*100+cm;if(sv<=cv&&ev>=cv)return true}return false});outsourceFetchError=false;
   }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
 let _ganttTip=null,_ganttTipTimer=null;
