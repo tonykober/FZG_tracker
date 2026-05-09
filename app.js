@@ -272,7 +272,7 @@ function renderBoard(){
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
     return `<div class="card" draggable="true" ondragstart="drag(event,${idx})" style="${_dbg}">
-      <div style="display:flex;align-items:center;gap:4px"><div class="name" onclick="event.stopPropagation();var b=this.closest('.card').querySelector('.card-body');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('span').textContent=b.style.display==='none'?'▶':'▼'" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl" onclick="event.stopPropagation();openModal(${idx})" style="font-size:0.75rem;background:#4caf50;color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">編輯</span>${canAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.75rem;background:var(--accent);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer">+子任務</span>`:''}<span class="edit-ctrl" onclick="quickDelete(${idx},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:4px;padding:2px 6px">✕</span></div>
+      <div class="card-buttons"><div class="name" onclick="event.stopPropagation();var b=this.closest('.card').querySelector('.card-body');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('span').textContent=b.style.display==='none'?'▶':'▼'" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">▼</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
       <div class="card-body">
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${t['評論']?'<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
@@ -406,7 +406,7 @@ function renderReport(){
 }
 const OUTSOURCE_SHEET_ID='11cuSAO3MZfUmau1pd603685i18d0SlQKN-h--jUrp2s';
 const OUTSOURCE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyuqw9ZXRCGLeOtKyYbv0p7xrdIXHYSUydXNuR2j2tiUYrUwK3JFjK765J4Kh0Pk2_I/exec';
-let outsourceTasks=[],outsourceMode='list',outsourceZones={};
+let outsourceTasks=[],outsourceMode='list',outsourceZones={},outsourceFetchError=false;
 async function loadOutsourceZones(){
   try{
     const url=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=zones`;
@@ -447,8 +447,8 @@ async function fetchOutsource(){
         }else{merged.push({...t})}
       }else{merged.push({...t})}
     });
-    outsourceTasks=merged;
-  }catch(e){outsourceTasks=[];}
+    outsourceTasks=merged;outsourceFetchError=false;
+  }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
 let _ganttTip=null,_ganttTipTimer=null;
 function ganttRowClick(el,name){
@@ -492,7 +492,7 @@ function renderOutsourceFromCache(){
   let outsourceFiltered=outsourceTasks;
   const q=(document.getElementById('searchOutsource')||{}).value||'';
   if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q.toLowerCase()));
-  if(!outsourceFiltered.length){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
+  if(!outsourceFiltered.length){document.getElementById('outsourceContent').innerHTML=outsourceFetchError?'<div style="text-align:center;color:var(--muted);padding:40px">載入失敗<br><button onclick="renderOutsource()" style="margin-top:10px;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer">重試</button></div>':'<div style="text-align:center;color:var(--muted);padding:40px">本月無外包工作項目</div>';return}
   const owners={};
   outsourceFiltered.forEach(t=>{const o=t['負責人']||'未指派';if(!owners[o])owners[o]=[];owners[o].push(t)});
   const zones=outsourceZones;
