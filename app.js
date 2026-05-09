@@ -450,6 +450,7 @@ async function loadOutsourceZones(){
     const rows=json.table.rows||[];
     outsourceZones={};
     rows.forEach(r=>{if(r.c&&r.c[0]&&r.c[1])outsourceZones[String(r.c[0].v||'')]=String(r.c[1].v||'一區')});
+    localStorage.setItem('fzg_outsource_zones',JSON.stringify(outsourceZones));
   }catch(e){outsourceZones=JSON.parse(localStorage.getItem('fzg_outsource_zones')||'{}')}
 }
 async function fetchOutsource(){
@@ -513,7 +514,7 @@ function outsourceDrop(e,zone){
   const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
   outsourceZones[owner]=zone;
   localStorage.setItem('fzg_outsource_zones',JSON.stringify(outsourceZones));
-  fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveZone',owner:owner,zone:zone}),mode:'no-cors'});
+  fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveZone',owner:owner,zone:zone}),mode:'cors'}).then(r=>r.json()).then(d=>{if(d.result!=='ok')alert('區域儲存失敗')}).catch(()=>alert('區域儲存失敗（網路錯誤）'));
   renderOutsource();
 }
 async function renderOutsource(){
@@ -576,5 +577,5 @@ async function renderOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column" data-zone="一區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'一區\')">'+cols[0]+'</div><div class="column" data-zone="二區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'二區\')">'+cols[1]+'</div><div class="column" data-zone="三區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'三區\')">'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
-if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()))}
 
