@@ -353,14 +353,18 @@ function cardDrop(e,targetIdx,el){
   document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));
   if(!unlocked||dragIdx===null||dragIdx===targetIdx)return;
   const src=tasks[dragIdx],tgt=tasks[targetIdx];
-  if(src['狀態']!==tgt['狀態']){drop(e,tgt['狀態']);return}
+  const targetStatus=tgt['狀態'];
+  if(src['狀態']!==targetStatus){
+    src['狀態']=targetStatus;
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:dragIdx,name:src['任務名稱'],owner:src['負責人'],status:targetStatus,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),mode:'no-cors'});
+  }
   const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
-  const sameStatus=tasks.filter(x=>x['狀態']===src['狀態']&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
+  const sameStatus=tasks.filter(x=>x['狀態']===targetStatus&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
   const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
   const toPos=sameStatus.indexOf(tgt);
   sameStatus.splice(above?toPos:toPos+1,0,src);
   sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
-  render();dragIdx=null;
+  render();renderFilterBar();dragIdx=null;
 }
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){if(!unlocked)return;
