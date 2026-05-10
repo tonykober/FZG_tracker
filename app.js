@@ -265,12 +265,14 @@ function moveOwnerGroup(owner,dir,e){
   const groups=[...col.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
   const pos=groups.indexOf(owner);if(pos<0)return;
   const newPos=pos+dir;if(newPos<0||newPos>=groups.length)return;
+  const swappedOwner=groups[newPos];
   groups.splice(pos,1);groups.splice(newPos,0,owner);
   groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
   localStorage.setItem('fzg_owner_sort_'+status,JSON.stringify(ownerSort));
   saveOwnerSort(status,groups);
   render();renderFilterBar();
-  const moved=document.querySelector('#boardView .owner-group[data-owner="'+owner+'"]');if(moved){moved.classList.add('moved');setTimeout(()=>moved.classList.remove('moved'),600)}
+  const moved=document.querySelector('#boardView .column[data-status="'+status+'"] .owner-group[data-owner="'+owner+'"]');if(moved){moved.classList.add('moved');setTimeout(()=>moved.classList.remove('moved'),600)}
+  const swapped=document.querySelector('#boardView .column[data-status="'+status+'"] .owner-group[data-owner="'+swappedOwner+'"]');if(swapped){swapped.classList.add('swapped');setTimeout(()=>swapped.classList.remove('swapped'),600)}
 }
 function render(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport();renderFilterBar()}
 function renderStats(){
