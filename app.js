@@ -312,7 +312,7 @@ function renderBoard(){
     const groups={};
     items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
     const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
-    return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="var d=this.closest('.owner-group').lastElementChild;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
+    return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" ondragover="ownerGroupOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="var d=this.closest('.owner-group').lastElementChild;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardView').innerHTML=`
     <div class="column" data-status="待辦" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
@@ -374,7 +374,39 @@ function ownerDragEnd(){
   _dragOwner=null;
   document.querySelectorAll('.dragging').forEach(e=>e.classList.remove('dragging'));
   document.querySelectorAll('.drop-zone').forEach(dz=>dz.remove());
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));
   document.querySelectorAll('#boardView .column>div[data-orig-display]').forEach(d=>{d.style.display=d.dataset.origDisplay||'';delete d.dataset.origDisplay});
+}
+function ownerGroupOver(e,el){
+  e.preventDefault();if(!_dragOwner)return;
+  if(el.dataset.owner===_dragOwner)return;
+  // Same column: show red indicator
+  const srcCol=document.querySelector('.owner-group.dragging')?.closest('.column');
+  const tgtCol=el.closest('.column');
+  if(srcCol===tgtCol){
+    document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
+    const rect=el.getBoundingClientRect();
+    el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom');
+  }
+}
+function ownerGroupDrop(e,el){
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
+  if(!_dragOwner||el.dataset.owner===_dragOwner)return;
+  const srcCol=document.querySelector('.owner-group[data-owner="'+_dragOwner+'"]')?.closest('.column');
+  const tgtCol=el.closest('.column');
+  if(srcCol===tgtCol){
+    // Same column reorder
+    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+    const groups=[...tgtCol.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
+    const fromPos=groups.indexOf(_dragOwner);if(fromPos>=0)groups.splice(fromPos,1);
+    const toPos=groups.indexOf(el.dataset.owner);
+    const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
+    groups.splice(above?toPos:toPos+1,0,_dragOwner);
+    groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
+    localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+    ownerDragEnd();render();renderFilterBar();
+  }
 }
 function ownerDropZone(e,targetStatus){
   if(!_dragOwner)return;
