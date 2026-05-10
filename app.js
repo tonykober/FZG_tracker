@@ -418,9 +418,12 @@ function ownerDropZone(e,targetStatus){
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
   });
   const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+targetStatus)||'{}');
-  ownerSort[owner]='0';
+  // Get all owners that will be in target status after this move
+  const targetOwners=[...new Set(tasks.filter(t=>t['狀態']===targetStatus&&!t['父任務']).map(t=>t['負責人']||'未指派'))];
+  if(!targetOwners.includes(owner))targetOwners.unshift(owner);else{targetOwners.splice(targetOwners.indexOf(owner),1);targetOwners.unshift(owner)}
+  targetOwners.forEach((o,i)=>{ownerSort[o]=String(i+1)});
   localStorage.setItem('fzg_owner_sort_'+targetStatus,JSON.stringify(ownerSort));
-  saveOwnerSort(targetStatus,[owner]);
+  saveOwnerSort(targetStatus,targetOwners);
   _lastMovedOwner=owner;
   ownerDragEnd();render();renderFilterBar();
 }
