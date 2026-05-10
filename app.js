@@ -258,6 +258,7 @@ function renderStats(){
 }
 function renderBoard(){
   const filtered=getFiltered();
+  if(!filtered.length){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
   const getChildren=name=>filtered.filter(t=>t['父任務']===name);
   const sortFn=(a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999);
