@@ -323,10 +323,21 @@ let dragIdx=null;
 function ownerGroupDrop(e,el){
   e.preventDefault();e.stopPropagation();
   document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
+  if(!unlocked)return;
   const srcOwner=e.dataTransfer.getData('text/owner');if(!srcOwner)return;
   const tgtOwner=el.dataset.owner;if(srcOwner===tgtOwner)return;
-  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
   const column=el.closest('.column');
+  // Determine target column status
+  const colDrop=column.getAttribute('ondrop')||'';
+  const statusMatch=colDrop.match(/'(待辦|進行中|已完成)'/);
+  const targetStatus=statusMatch?statusMatch[1]:null;
+  // Cross-column: change status of all src owner tasks
+  if(targetStatus){
+    const srcTasks=tasks.filter(t=>(t['負責人']||'未指派')===srcOwner&&t['狀態']!==targetStatus);
+    srcTasks.forEach(t=>{t['狀態']=targetStatus;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
+  }
+  // Reorder within target column
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
   const groups=[...column.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
   const fromPos=groups.indexOf(srcOwner);if(fromPos>=0)groups.splice(fromPos,1);
   const toPos=groups.indexOf(tgtOwner);
@@ -334,7 +345,7 @@ function ownerGroupDrop(e,el){
   groups.splice(above?toPos:toPos+1,0,srcOwner);
   groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
   localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
-  render();
+  render();renderFilterBar();
 }
 function cardDragOver(e,el){e.preventDefault();if(el.classList.contains('dragging'))return;var target=el;if(document.querySelector('.owner-group.dragging')&&!el.classList.contains('owner-group')){target=el.closest('.owner-group');if(!target||target.classList.contains('dragging'))return}document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));const rect=target.getBoundingClientRect();target.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
 function cardDrop(e,targetIdx,el){
