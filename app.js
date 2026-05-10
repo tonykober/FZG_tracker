@@ -302,7 +302,7 @@ function renderBoard(){
               <span style="flex:1">${g['任務名稱']}</span>
               <span onclick="inlineEdit(${gi},'負責人',event)" style="color:var(--green);font-size:0.875rem;cursor:pointer;margin-right:4px">${g['負責人']||'未指派'}</span>
               <span onclick="inlineEdit(${gi},'日期',event)" style="color:var(--muted);cursor:pointer">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
-              ${(g['標籤']||'').split(',').filter(Boolean).length?`<span onclick="inlineEdit(${gi},'標籤',event)" style="cursor:pointer">${(g['標籤']||'').split(',').filter(Boolean).map(tg=>'<span class="tag-pill" style="font-size:0.9em">'+tg.trim()+'</span>').join('')}</span>`:''}
+              
               <span class="edit-ctrl" onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
