@@ -187,10 +187,14 @@ function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
-    let noteText='';
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):''}});
+    let noteText='';const ownerSort={};
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach((o,i)=>{ownerSort[o]=String(i+1)})}catch(e){}}}});
+    localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
     document.getElementById('notesArea').value=noteText;var na=document.getElementById('notesArea');na.style.height='auto';na.style.height=na.scrollHeight+'px';}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
+}
+function saveOwnerSort(status,sortArray){
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'owner_sort_'+status,text:JSON.stringify(sortArray)}),mode:'no-cors'});
 }
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
@@ -405,6 +409,7 @@ function ownerGroupDrop(e,el){
     groups.splice(above?toPos:toPos+1,0,_dragOwner);
     groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
     localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+    saveOwnerSort(tgtCol.dataset.status,groups);
     ownerDragEnd();render();renderFilterBar();
   }
 }
@@ -418,6 +423,7 @@ function ownerDropZone(e,targetStatus){
   const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
   ownerSort[owner]='0';
   localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+  saveOwnerSort(targetStatus,[owner]);
   _lastMovedOwner=owner;
   ownerDragEnd();render();renderFilterBar();
 }
