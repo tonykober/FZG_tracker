@@ -346,6 +346,7 @@ function renderBoard(){
   // Restore owner-group collapse states
   const allCollapsed=new Set([...collapsedOwners,..._collapsedOwners]);
   allCollapsed.forEach(owner=>{document.querySelectorAll('#boardView .owner-group[data-owner="'+owner+'"]').forEach(g=>{g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'});_collapsedOwners.add(owner)});
+  _lastMovedOwner=null;
 }
 let dragIdx=null;
 let _dragOwner=null;
