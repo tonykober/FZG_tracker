@@ -331,10 +331,12 @@ function ownerGroupDrop(e,el){
   const colDrop=column.getAttribute('ondrop')||'';
   const statusMatch=colDrop.match(/'(待辦|進行中|已完成)'/);
   const targetStatus=statusMatch?statusMatch[1]:null;
-  // Cross-column: change status of all src owner tasks
-  if(targetStatus){
-    const srcTasks=tasks.filter(t=>(t['負責人']||'未指派')===srcOwner&&t['狀態']!==targetStatus);
-    srcTasks.forEach(t=>{t['狀態']=targetStatus;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
+  // Check if cross-column (src owner has different status)
+  const srcTasks=tasks.filter(t=>(t['負責人']||'未指派')===srcOwner);
+  const srcStatus=srcTasks.length?srcTasks[0]['狀態']:null;
+  if(targetStatus&&srcStatus&&srcStatus!==targetStatus){
+    // Cross-column: change status
+    srcTasks.filter(t=>t['狀態']!==targetStatus).forEach(t=>{t['狀態']=targetStatus;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
   }
   // Reorder within target column
   const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
