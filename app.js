@@ -276,7 +276,7 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" draggable="true" data-idx="${idx}" ondragstart="event.stopPropagation();drag(event,${idx});this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="cardDrop(event,${idx},this)" style="${_dbg}">
+    return `<div class="card" data-idx="${idx}" style="${_dbg}">
       <div class="card-buttons"><div class="name" onclick="event.stopPropagation();toggleCollapse(${idx},this)" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">${t['收合']==='1'?'▶':'▼'}</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
       <div class="card-body"${t['收合']==='1'?' style="display:none"':''}>
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
@@ -312,94 +312,16 @@ function renderBoard(){
     const groups={};
     items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
     const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
-    return Object.entries(groups).sort((a,b)=>(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)).map(([owner,list])=>`<div class="owner-group" draggable="true" data-owner="${owner}" ondragstart="event.dataTransfer.setData('text/owner','${owner.replace(/'/g,"\\'")}');this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.closest('.owner-group').lastElementChild;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
+    return Object.entries(groups).sort((a,b)=>(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.closest('.owner-group').lastElementChild;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})</div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardView').innerHTML=`
-    <div class="column" ondragover="event.preventDefault();this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';drop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
-    <div class="column" ondragover="event.preventDefault();this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';drop(event,'進行中')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
-    <div class="column" ondragover="event.preventDefault();this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';drop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
+    <div class="column"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
+    <div class="column"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
+    <div class="column"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
 }
 let dragIdx=null;
-function ownerGroupDrop(e,el){
-  e.preventDefault();e.stopPropagation();
-  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
-  if(!unlocked)return;
-  const srcOwner=e.dataTransfer.getData('text/owner');if(!srcOwner)return;
-  const tgtOwner=el.dataset.owner;if(srcOwner===tgtOwner)return;
-  const column=el.closest('.column');
-  // Determine target column status
-  const colDrop=column.getAttribute('ondrop')||'';
-  const statusMatch=colDrop.match(/'(待辦|進行中|已完成)'/);
-  const targetStatus=statusMatch?statusMatch[1]:null;
-  // Check if cross-column (src owner has different status)
-  const srcTasks=tasks.filter(t=>(t['負責人']||'未指派')===srcOwner);
-  const srcStatus=srcTasks.length?srcTasks[0]['狀態']:null;
-  if(targetStatus&&srcStatus&&srcStatus!==targetStatus){
-    // Cross-column: change status
-    srcTasks.filter(t=>t['狀態']!==targetStatus).forEach(t=>{t['狀態']=targetStatus;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
-  }
-  // Reorder within target column
-  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
-  const groups=[...column.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
-  const fromPos=groups.indexOf(srcOwner);if(fromPos>=0)groups.splice(fromPos,1);
-  const toPos=groups.indexOf(tgtOwner);
-  const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
-  groups.splice(above?toPos:toPos+1,0,srcOwner);
-  groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
-  localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
-  render();renderFilterBar();
-}
 function cardDragOver(e,el){e.preventDefault();if(el.classList.contains('dragging'))return;var target=el;if(document.querySelector('.owner-group.dragging')&&!el.classList.contains('owner-group')){target=el.closest('.owner-group');if(!target||target.classList.contains('dragging'))return}document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));const rect=target.getBoundingClientRect();target.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
-function cardDrop(e,targetIdx,el){
-  e.preventDefault();e.stopPropagation();
-  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));
-  if(!unlocked||dragIdx===null||dragIdx===targetIdx)return;
-  const src=tasks[dragIdx],tgt=tasks[targetIdx];
-  const targetStatus=tgt['狀態'];
-  if(src['狀態']!==targetStatus){
-    src['狀態']=targetStatus;
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:dragIdx,name:src['任務名稱'],owner:src['負責人'],status:targetStatus,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),mode:'no-cors'});
-  }
-  const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
-  const sameStatus=tasks.filter(x=>x['狀態']===targetStatus&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
-  const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
-  const toPos=sameStatus.indexOf(tgt);
-  sameStatus.splice(above?toPos:toPos+1,0,src);
-  sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
-  render();renderFilterBar();dragIdx=null;
-}
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
-function drop(e,status){if(!unlocked)return;
-  e.preventDefault();
-  // Handle owner-group cross-column drop
-  const ownerData=e.dataTransfer.getData('text/owner');
-  if(ownerData){
-    const ownerTasks=tasks.filter(t=>(t['負責人']||'未指派')===ownerData&&t['狀態']!==status);
-    ownerTasks.forEach(t=>{t['狀態']=status;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
-    if(ownerTasks.length){render();renderFilterBar()}return;
-  }
-  if(dragIdx===null)return;
-  const t=tasks[dragIdx];
-  if(t['狀態']===status){
-    // Same status: reorder within column
-    const sameStatus=tasks.filter(x=>x['狀態']===status&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
-    const fromPos=sameStatus.indexOf(t);
-    if(fromPos>=0){sameStatus.splice(fromPos,1);sameStatus.push(t)}// move to end (simple reorder)
-    sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
-    render();dragIdx=null;return;
-  }
-  const data={action:'update',row:dragIdx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']};
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
-  t['狀態']=status;
-  if(status==='已完成'){
-    const children=tasks.filter(c=>c['父任務']===t['任務名稱']);
-    children.forEach(c=>{const ci=tasks.indexOf(c);c['狀態']='已完成';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:'已完成',progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:c['父任務'],hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
-      const grandChildren=tasks.filter(g=>g['父任務']===c['任務名稱']);
-      grandChildren.forEach(g=>{const gi=tasks.indexOf(g);g['狀態']='已完成';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:gi,name:g['任務名稱'],owner:g['負責人'],status:'已完成',progress:'',startDate:g['開始日'],dueDate:g['截止日'],note:g['備註'],priority:g['優先級'],tags:g['標籤'],parent:g['父任務'],hours:g['工時'],comment:g['評論']}),mode:'no-cors'})});
-    });
-  }
-  render();dragIdx=null;
-}
 function renderTimeline(){
   const filtered=getFiltered();
   if(!filtered.length){document.getElementById('timelineView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
@@ -625,6 +547,5 @@ function renderOutsourceFromCache(){
   document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column" data-zone="一區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'一區\')">'+cols[0]+'</div><div class="column" data-zone="二區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'二區\')">'+cols[1]+'</div><div class="column" data-zone="三區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'三區\')">'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
-document.addEventListener('dragend',()=>{document.querySelectorAll('.column').forEach(c=>c.style.outline='')});
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()))}
 
