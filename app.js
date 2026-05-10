@@ -187,9 +187,8 @@ function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
-    let noteText='';const ownerSort={};
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach((o,i)=>{ownerSort[o]=String(i+1)})}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}}});
-    localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+    let noteText='';
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}}});
     document.getElementById('notesArea').value=noteText;var na=document.getElementById('notesArea');na.style.height='auto';na.style.height=na.scrollHeight+'px';}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
@@ -260,15 +259,16 @@ let _collapsedOwners=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_owne
 function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';var owner=g.dataset.owner;if(collapsed)_collapsedOwners.add(owner);else _collapsedOwners.delete(owner);localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners',text:JSON.stringify([..._collapsedOwners])}),mode:'no-cors'})}
 function moveOwnerGroup(owner,dir,e){
   e.stopPropagation();
-  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
   const col=e.target.closest('.column');
+  const status=col.dataset.status;
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status)||'{}');
   const groups=[...col.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
   const pos=groups.indexOf(owner);if(pos<0)return;
   const newPos=pos+dir;if(newPos<0||newPos>=groups.length)return;
   groups.splice(pos,1);groups.splice(newPos,0,owner);
   groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
-  localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
-  saveOwnerSort(col.dataset.status,groups);
+  localStorage.setItem('fzg_owner_sort_'+status,JSON.stringify(ownerSort));
+  saveOwnerSort(status,groups);
   render();renderFilterBar();
 }
 function render(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport();renderFilterBar()}
@@ -330,16 +330,16 @@ function renderBoard(){
             </div>`}).join('')+'</div>':''}
         </div>`}).join('')+'</div></div>':''}
     </div></div>`}).join('');
-  const groupByOwner=(items)=>{
+  const groupByOwner=(items,status)=>{
     const groups={};
     items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
-    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status)||'{}');
     return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" ondragover="ownerGroupOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="toggleOwnerGroup(this)" style="display:flex;align-items:center;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})<span class="edit-ctrl" style="margin-left:auto;display:flex;gap:2px;flex-shrink:0"><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', -1, event)" style="cursor:pointer;padding:0 4px">▲</span><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', 1, event)" style="cursor:pointer;padding:0 4px">▼</span></span></div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardView').innerHTML=`
-    <div class="column" data-status="待辦" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
-    <div class="column" data-status="進行中" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'進行中')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
-    <div class="column" data-status="已完成" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
+    <div class="column" data-status="待辦" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo,'待辦'):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
+    <div class="column" data-status="進行中" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'進行中')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing,'進行中'):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
+    <div class="column" data-status="已完成" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done,'已完成'):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
   // Restore owner-group collapse states
   const allCollapsed=new Set([...collapsedOwners,..._collapsedOwners]);
   allCollapsed.forEach(owner=>{document.querySelectorAll('#boardView .owner-group[data-owner="'+owner+'"]').forEach(g=>{g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'});_collapsedOwners.add(owner)});
@@ -414,9 +414,9 @@ function ownerDropZone(e,targetStatus){
     t['狀態']=targetStatus;const idx=tasks.indexOf(t);
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
   });
-  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+targetStatus)||'{}');
   ownerSort[owner]='0';
-  localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
+  localStorage.setItem('fzg_owner_sort_'+targetStatus,JSON.stringify(ownerSort));
   saveOwnerSort(targetStatus,[owner]);
   _lastMovedOwner=owner;
   ownerDragEnd();render();renderFilterBar();
