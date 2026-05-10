@@ -78,4 +78,7 @@ body.locked .edit-ctrl{display:none!important}
 body.locked .card{cursor:default}
 body.locked .gantt-bar{cursor:default}
 body.locked .gantt-handle{display:none}
+body.locked [draggable]{-webkit-user-drag:none;cursor:default}
+body.locked .card-btn{display:none!important}
+body.locked #notesArea{pointer-events:none;opacity:0.7}
 
