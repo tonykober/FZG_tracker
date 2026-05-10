@@ -270,6 +270,7 @@ function moveOwnerGroup(owner,dir,e){
   localStorage.setItem('fzg_owner_sort_'+status,JSON.stringify(ownerSort));
   saveOwnerSort(status,groups);
   render();renderFilterBar();
+  const moved=document.querySelector('#boardView .owner-group[data-owner="'+owner+'"]');if(moved){moved.classList.add('moved');setTimeout(()=>moved.classList.remove('moved'),600)}
 }
 function render(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport();renderFilterBar()}
 function renderStats(){
