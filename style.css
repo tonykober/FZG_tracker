@@ -26,6 +26,9 @@ h1{font-size:36px!important;color:var(--accent)}
 .column h3{font-size:1rem;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .owner-title{font-size:0.9375rem}
 .owner-group{background:rgba(100,150,200,0.1);border-radius:8px;padding:8px}
+.owner-group.dragging{opacity:0.5}
+.owner-group.drag-over-top{box-shadow:0 6px 0 0 #e53935 inset}
+.owner-group.drag-over-bottom{box-shadow:0 -6px 0 0 #e53935 inset}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:7px;cursor:pointer;transition:border-color .2s;max-width:100%;overflow:hidden;word-break:break-word}
 .card:hover{outline:2px solid var(--accent);outline-offset:-2px}
 .card .name{font-weight:600;font-size:0.875rem;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis}
