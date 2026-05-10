@@ -353,7 +353,15 @@ function cardDrop(e,targetIdx,el){
 }
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function drop(e,status){if(!unlocked)return;
-  e.preventDefault();if(dragIdx===null)return;
+  e.preventDefault();
+  // Handle owner-group cross-column drop
+  const ownerData=e.dataTransfer.getData('text/owner');
+  if(ownerData){
+    const ownerTasks=tasks.filter(t=>(t['負責人']||'未指派')===ownerData&&t['狀態']!==status);
+    ownerTasks.forEach(t=>{t['狀態']=status;const idx=tasks.indexOf(t);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:status,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})});
+    if(ownerTasks.length){render();renderFilterBar()}return;
+  }
+  if(dragIdx===null)return;
   const t=tasks[dragIdx];
   if(t['狀態']===status){
     // Same status: reorder within column
