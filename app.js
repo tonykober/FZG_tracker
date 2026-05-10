@@ -276,8 +276,8 @@ function renderBoard(){
     const level=getLevel(t);
     const canAddSub=level<2;
     const _dbg=getDeadlineBg(t);
-    return `<div class="card" data-idx="${idx}" style="${_dbg}">
-      <div class="card-buttons"><div class="name" onclick="event.stopPropagation();toggleCollapse(${idx},this)" style="cursor:pointer;flex:1"><span style="font-size:0.7em;margin-right:4px">${t['收合']==='1'?'▶':'▼'}</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
+    return `<div class="card" data-idx="${idx}" ondragover="taskDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="taskDrop(event,${idx},this)" style="${_dbg}">
+      <div class="card-buttons"><div class="name" draggable="true" ondragstart="event.stopPropagation();taskDragStart(event,${idx})" ondragend="taskDragEnd()" onclick="event.stopPropagation();toggleCollapse(${idx},this)" style="cursor:grab;flex:1"><span style="font-size:0.7em;margin-right:4px">${t['收合']==='1'?'▶':'▼'}</span>${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModal(${idx})" style="background:#4caf50">編輯</span>${canAddSub?`<span class="edit-ctrl card-btn" onclick="event.stopPropagation();openModalWithParent('${t['任務名稱'].replace(/'/g,"\\'")}')" style="background:var(--accent)">+子任務</span>`:''}<span class="edit-ctrl card-btn" onclick="quickDelete(${idx},event)" style="background:var(--red)">✕</span></div>
       <div class="card-body"${t['收合']==='1'?' style="display:none"':''}>
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer;display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${t['評論']?'<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
@@ -322,6 +322,30 @@ function renderBoard(){
 let dragIdx=null;
 let _dragOwner=null;
 let _lastMovedOwner=null;
+let _taskDragIdx=null;
+function taskDragStart(e,idx){if(!unlocked){e.preventDefault();return}_taskDragIdx=idx;e.dataTransfer.setData('text/task',String(idx));e.dataTransfer.effectAllowed='move';e.target.closest('.card').classList.add('dragging')}
+function taskDragEnd(){_taskDragIdx=null;document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));document.querySelectorAll('.column').forEach(c=>c.style.outline='')}
+function taskDragOver(e,el){e.preventDefault();if(_taskDragIdx===null)return;const card=el.closest('.card');if(!card||parseInt(card.dataset.idx)===_taskDragIdx)return;document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));const rect=card.getBoundingClientRect();card.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom');const col=card.closest('.column');if(col)col.style.outline='2px dashed var(--accent)'}
+function taskDrop(e,targetIdx,el){
+  e.preventDefault();e.stopPropagation();
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));
+  if(!unlocked||_taskDragIdx===null||_taskDragIdx===targetIdx)return;
+  const src=tasks[_taskDragIdx],tgt=tasks[targetIdx];
+  const targetStatus=tgt['狀態'];
+  // Cross-column: change status (only parent task, not children)
+  if(src['狀態']!==targetStatus){
+    src['狀態']=targetStatus;
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:_taskDragIdx,name:src['任務名稱'],owner:src['負責人'],status:targetStatus,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),mode:'no-cors'});
+  }
+  // Sort within target status
+  const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
+  const sameStatus=tasks.filter(x=>x['狀態']===targetStatus&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
+  const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
+  const toPos=sameStatus.indexOf(tgt);
+  sameStatus.splice(above?toPos:toPos+1,0,src);
+  sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
+  taskDragEnd();render();renderFilterBar();
+}
 function ownerDragStart(e,el){
   if(!unlocked){e.preventDefault();return}
   _dragOwner=el.dataset.owner;
