@@ -600,5 +600,6 @@ function renderOutsourceFromCache(){
   document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column" data-zone="一區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'一區\')">'+cols[0]+'</div><div class="column" data-zone="二區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'二區\')">'+cols[1]+'</div><div class="column" data-zone="三區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'三區\')">'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
+document.addEventListener('dragend',()=>{document.querySelectorAll('.column').forEach(c=>c.style.outline='')});
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()))}
 
