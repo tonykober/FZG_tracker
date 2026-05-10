@@ -27,6 +27,9 @@ h1{font-size:36px!important;color:var(--accent)}
 .owner-title{font-size:0.9375rem}
 .owner-group{background:rgba(100,150,200,0.2);border-radius:8px;padding:8px}
 .outsource-group{background:rgba(100,150,200,0.2);border-radius:8px;padding:8px}
+.outsource-group.dragging{opacity:0.5}
+.outsource-group.drag-over-top{box-shadow:0 6px 0 0 #e53935 inset}
+.outsource-group.drag-over-bottom{box-shadow:0 -6px 0 0 #e53935 inset}
 .owner-group.dragging{opacity:0.5}
 .owner-group.drag-over-top{box-shadow:0 6px 0 0 #e53935 inset}
 .owner-group.drag-over-bottom{box-shadow:0 -6px 0 0 #e53935 inset}
