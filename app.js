@@ -262,6 +262,9 @@ function renderStats(){
   document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num" style="color:var(--yellow)">${total-done}</div><div class="label">未完成</div></div>`;
 }
 function renderBoard(){
+  // Save owner-group collapse states
+  const collapsedOwners=new Set();
+  document.querySelectorAll('#boardView .owner-group').forEach(g=>{const content=g.lastElementChild;if(content&&content.style.display==='none')collapsedOwners.add(g.dataset.owner)});
   const filtered=getFiltered();
   if(!filtered.length){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
@@ -322,6 +325,8 @@ function renderBoard(){
     <div class="column" data-status="待辦" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'待辦')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
     <div class="column" data-status="進行中" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'進行中')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
     <div class="column" data-status="已完成" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
+  // Restore owner-group collapse states
+  collapsedOwners.forEach(owner=>{const g=document.querySelector('#boardView .owner-group[data-owner="'+owner+'"]');if(g){g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'}});
 }
 let dragIdx=null;
 let _dragOwner=null;
