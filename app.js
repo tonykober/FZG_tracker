@@ -326,10 +326,11 @@ function renderBoard(){
     <div class="column" data-status="進行中" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'進行中')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
     <div class="column" data-status="已完成" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'已完成')"><h3 onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--green);cursor:pointer"><span class="tog">▼</span> ✅ 已完成 (${done.length})</h3><div>${done.length?groupByOwner(done):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>`;
   // Restore owner-group collapse states
-  collapsedOwners.forEach(owner=>{const g=document.querySelector('#boardView .owner-group[data-owner="'+owner+'"]');if(g){g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'}});
+  collapsedOwners.forEach(owner=>{document.querySelectorAll('#boardView .owner-group[data-owner="'+owner+'"]').forEach(g=>{g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'})});
 }
 let dragIdx=null;
 let _dragOwner=null;
+let _dragOwnerSrcStatus=null;
 let _lastMovedOwner=null;
 let _taskDragIdx=null;
 function taskDragStart(e,idx){if(!unlocked){e.preventDefault();return}_taskDragIdx=idx;e.dataTransfer.setData('text/task',String(idx));e.dataTransfer.effectAllowed='move';e.target.closest('.card').classList.add('dragging')}
@@ -369,6 +370,7 @@ function ownerDragStart(e,el){
   e.dataTransfer.setData('text/owner',_dragOwner);
   el.classList.add('dragging');
   const srcCol=el.closest('.column');
+  _dragOwnerSrcStatus=srcCol.dataset.status;
   document.querySelectorAll('#boardView .column').forEach(col=>{
     if(col===srcCol)return;
     const content=col.querySelector(':scope>div');
@@ -380,7 +382,7 @@ function ownerDragStart(e,el){
   });
 }
 function ownerDragEnd(){
-  _dragOwner=null;
+  _dragOwner=null;_dragOwnerSrcStatus=null;
   document.querySelectorAll('.dragging').forEach(e=>e.classList.remove('dragging'));
   document.querySelectorAll('.drop-zone').forEach(dz=>dz.remove());
   document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));
@@ -421,7 +423,7 @@ function ownerGroupDrop(e,el){
 function ownerDropZone(e,targetStatus){
   if(!_dragOwner)return;
   const owner=_dragOwner;
-  tasks.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']&&t['狀態']!==targetStatus).forEach(t=>{
+  tasks.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']&&t['狀態']===_dragOwnerSrcStatus).forEach(t=>{
     t['狀態']=targetStatus;const idx=tasks.indexOf(t);
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
   });
