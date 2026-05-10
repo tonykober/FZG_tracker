@@ -350,6 +350,9 @@ function ownerDropZone(e,targetStatus){
     t['狀態']=targetStatus;const idx=tasks.indexOf(t);
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
   });
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort')||'{}');
+  ownerSort[owner]='0';
+  localStorage.setItem('fzg_owner_sort',JSON.stringify(ownerSort));
   ownerDragEnd();render();renderFilterBar();
 }
 function cardDragOver(e,el){e.preventDefault();if(el.classList.contains('dragging'))return;var target=el;if(document.querySelector('.owner-group.dragging')&&!el.classList.contains('owner-group')){target=el.closest('.owner-group');if(!target||target.classList.contains('dragging'))return}document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));const rect=target.getBoundingClientRect();target.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
