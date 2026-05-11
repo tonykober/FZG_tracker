@@ -610,7 +610,6 @@ function outsourceDrop(e,zone){
 async function renderOutsource(){
   outsourceTasks=[];outsourceFetchError=false;
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
-  await new Promise(r=>setTimeout(r,300));
   await fetchOutsource();
   await loadOutsourceZones();
   renderOutsourceFromCache();
