@@ -188,7 +188,7 @@ function loadNotes(){
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
     let noteText='';
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}if(v==='collapsed_timeline_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedTimelineOwners.add(o));localStorage.setItem('fzg_collapsed_timeline_owners',JSON.stringify([..._collapsedTimelineOwners]))}catch(e){}}}});
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}}});
     document.getElementById('notesArea').value=noteText;var na=document.getElementById('notesArea');na.style.height='auto';na.style.height=na.scrollHeight+'px';}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
@@ -256,8 +256,10 @@ function renderFilterBar(){
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
 function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),mode:'no-cors'})}}
 let _collapsedOwners=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_owners')||'[]'));
-let _collapsedTimelineOwners=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_timeline_owners')||'[]'));
-function toggleTimelineGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼';var owner=el.dataset.owner;if(d.style.display==='none')_collapsedTimelineOwners.add(owner);else _collapsedTimelineOwners.delete(owner);localStorage.setItem('fzg_collapsed_timeline_owners',JSON.stringify([..._collapsedTimelineOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_owners',text:JSON.stringify([..._collapsedTimelineOwners])}),mode:'no-cors'})}
+let _collapsedTimelineOwners=new Set();
+function getTimelineCollapseKey(){return 'fzg_collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+function loadTimelineCollapse(){_collapsedTimelineOwners=new Set(JSON.parse(localStorage.getItem(getTimelineCollapseKey())||'[]'))}
+function toggleTimelineGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼';var owner=el.dataset.owner;if(d.style.display==='none')_collapsedTimelineOwners.add(owner);else _collapsedTimelineOwners.delete(owner);localStorage.setItem(getTimelineCollapseKey(),JSON.stringify([..._collapsedTimelineOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineOwners])}),mode:'no-cors'})}
 function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';var owner=g.dataset.owner;if(collapsed)_collapsedOwners.add(owner);else _collapsedOwners.delete(owner);localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners',text:JSON.stringify([..._collapsedOwners])}),mode:'no-cors'})}
 function moveOwnerGroup(owner,dir,e){
   e.stopPropagation();
@@ -433,6 +435,7 @@ function ownerDropZone(e,targetStatus){
 function cardDragOver(e,el){e.preventDefault();if(el.classList.contains('dragging'))return;var target=el;if(document.querySelector('.owner-group.dragging')&&!el.classList.contains('owner-group')){target=el.closest('.owner-group');if(!target||target.classList.contains('dragging'))return}document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'));const rect=target.getBoundingClientRect();target.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
 function drag(e,idx){if(!unlocked){e.preventDefault();return}dragIdx=idx;e.dataTransfer.effectAllowed='move'}
 function renderTimeline(){
+  loadTimelineCollapse();
   const filtered=getFiltered();
   if(!filtered.length){document.getElementById('timelineView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
@@ -624,6 +627,7 @@ function renderOutsourceFromCache(){
     cols[colIdx]+=c;
   });
   if(outsourceMode==='gantt'){
+    loadTimelineCollapse();
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
     const days=new Date(y,m+1,0).getDate();
     const weekdays=['日','一','二','三','四','五','六'];
