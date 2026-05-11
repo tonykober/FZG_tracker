@@ -533,7 +533,7 @@ async function fetchOutsource(){
     const fmtDate=d=>d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
     const diffDays=(a,b)=>Math.round((b-a)/(86400000));
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
-    const isSimilar=(a,b)=>{if(a===b)return true;const na=normalize(a),nb=normalize(b);return na.includes(nb)||nb.includes(na)};
+    const isSimilar=(a,b)=>{if(a===b)return true;const na=normalize(a),nb=normalize(b);if(na.length<4&&nb.length<4)return false;return(na.length>=4&&nb.includes(na))||(nb.length>=4&&na.includes(nb))};
     items.forEach(t=>{
       const existing=merged.find(m=>m['負責人']===t['負責人']&&isSimilar(m['工作項目'],t['工作項目']));
       if(existing){
@@ -542,7 +542,7 @@ async function fetchOutsource(){
           if(tEnd&&tEnd>eEnd)existing['截止日']=fmtDate(tEnd);
           const eStart=toDate(existing['開始日']);if(tStart&&eStart&&tStart<eStart)existing['開始日']=fmtDate(tStart);
           existing['狀態']=t['狀態']||existing['狀態'];
-          if(t['工作項目'].length<existing['工作項目'].length)existing['工作項目']=t['工作項目'];
+          if(t['工作項目'].length>existing['工作項目'].length)existing['工作項目']=t['工作項目'];
         }else{merged.push({...t})}
       }else{merged.push({...t})}
     });
