@@ -238,6 +238,9 @@ async function deleteTask(){
   try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:m.dataset.editIdx}),mode:'no-cors'});alert('✅ 已刪除');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
 }
 async function fetchData(){
+  document.getElementById('boardView').innerHTML='<div class="spinner"></div>';
+  document.getElementById('timelineView').innerHTML='<div class="spinner"></div>';
+  document.getElementById('reportView').innerHTML='<div class="spinner"></div>';
   try{
     const res=await fetch(CSV_URL);const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
