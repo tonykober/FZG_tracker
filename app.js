@@ -609,7 +609,7 @@ function outsourceDrop(e,zone){
 }
 async function renderOutsource(){
   outsourceTasks=[];outsourceFetchError=false;
-  document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入中...</div>';
+  document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   await fetchOutsource();
   await loadOutsourceZones();
   renderOutsourceFromCache();
