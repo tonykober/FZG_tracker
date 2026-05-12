@@ -479,7 +479,7 @@ function renderTimeline(){
       if(startStr){const p=startStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)sd=parseInt(p[2]);else if(parseInt(p[0])>y||(parseInt(p[0])===y&&parseInt(p[1])-1>m))sd=days+1;else sd=1}
       if(endStr){const p=endStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)ed=parseInt(p[2]);else if(parseInt(p[0])<y||(parseInt(p[0])===y&&parseInt(p[1])-1<m))ed=0;else ed=days}else{ed=sd}
       if(sd>days||ed<1)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
-      const color=t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+      const color=t['狀態']==='已完成'?'var(--accent)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
       const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
       const pl=level===0?12:level===1?24:36;const _ti=tasks.indexOf(t);
