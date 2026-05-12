@@ -575,7 +575,7 @@ async function fetchOutsource(){
       const existing=merged.find(m=>m['負責人']===t['負責人']&&isSimilar(m['工作項目'],t['工作項目']));
       if(existing){
         const eEnd=toDate(existing['截止日']),tStart=toDate(t['開始日']),tEnd=toDate(t['截止日']);
-        if(eEnd&&tStart&&diffDays(eEnd,tStart)<=1){
+        if(eEnd&&tStart&&diffDays(eEnd,tStart)<=3){
           if(tEnd&&tEnd>eEnd)existing['截止日']=fmtDate(tEnd);
           const eStart=toDate(existing['開始日']);if(tStart&&eStart&&tStart<eStart)existing['開始日']=fmtDate(tStart);
           existing['狀態']=t['狀態']||existing['狀態'];
