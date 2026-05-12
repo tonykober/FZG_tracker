@@ -639,7 +639,8 @@ async function syncOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   try{
     const m=currentMonth.getMonth()+1;const sheetName=currentMonth.getFullYear()+'/'+('0'+m).slice(-2);
-    const res=await fetch(`https://docs.google.com/spreadsheets/d/${DAILY_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`);
+    const res=await fetch(`https://docs.google.com/spreadsheets/d/${DAILY_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
     const text=await res.text();const json=JSON.parse(text.substring(47).slice(0,-2));
     const rows=json.table.rows;const tasks2=[];let currentDate='';
     rows.forEach(r=>{
@@ -654,9 +655,8 @@ async function syncOutsource(){
       const hourLines=hours?hours.split('\n').map(l=>l.trim()):[];
       items.forEach((item,i)=>{const prog=progLines[i]||'';const hr=hourLines[i]||'';const st=prog==='完成'?'已完成':prog?'進行中':'待辦';tasks2.push({owner:name,task:item,status:st,startDate:date,dueDate:date,note:prog,hours:hr})});
     });
-    // Clear + batch
-    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'clear',month:sheetName}),headers:{'Content-Type':'application/json'}});
-    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'batch',month:sheetName,rows:tasks2}),headers:{'Content-Type':'application/json'}});
+    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'clear',month:sheetName}),redirect:'follow'});
+    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'batch',month:sheetName,rows:tasks2}),redirect:'follow'});
     alert('✅ 同步完成：'+tasks2.length+' 筆');
     renderOutsource();
   }catch(e){alert('❌ 同步失敗：'+e.message);renderOutsource()}
