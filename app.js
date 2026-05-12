@@ -460,7 +460,7 @@ function renderTimeline(){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
   const days=new Date(y,m+1,0).getDate();
   const weekdays=['日','一','二','三','四','五','六'];
-  let h='<div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex;position:relative">';
+  let h='<div style="position:relative"><div style="display:flex;border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex;position:relative">';
   const today=new Date();const isThisMonth=today.getFullYear()===y&&today.getMonth()===m;
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth&&d===today.getDate();const isWeekend=dow===0||dow===6;h+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
   h+='</div></div>';
@@ -468,7 +468,7 @@ function renderTimeline(){
   const groups={};filtered.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
   const tlSort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
   Object.entries(groups).sort((a,b)=>{const ai=tlSort.indexOf(a[0]),bi=tlSort.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
-    h+=`<div style="border-bottom:1px solid var(--border);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
+    h+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
     const parents=items.filter(t=>!t['父任務']);
     const tlTaskSort=JSON.parse(localStorage.getItem(getTlTaskSortKey())||'{}');
     const ownerTaskOrder=tlTaskSort[owner]||[];
@@ -659,14 +659,14 @@ function renderOutsourceFromCache(){
     const y=currentMonth.getFullYear(),m=currentMonth.getMonth();
     const days=new Date(y,m+1,0).getDate();
     const weekdays=['日','一','二','三','四','五','六'];
-    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:1px solid var(--border);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex">';
+    let gh='<div class="timeline"><div style="position:relative"><div style="display:flex;border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0;margin-bottom:6px"><div style="width:150px;flex-shrink:0"></div><div style="flex:1;display:flex">';
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
     const gGroups={};outsourceFiltered.filter(t=>{const s=(t['開始日']||'').replace(/\//g,'-'),e=(t['截止日']||'').replace(/\//g,'-');if(!s&&!e)return false;const sp=s.split('-'),ep=e.split('-');let sd=1,ed=days;if(s){if(+sp[0]===y&&+sp[1]-1===m)sd=+sp[2];else if(+sp[0]>y||(+sp[0]===y&&+sp[1]-1>m))sd=days+1;else sd=1}if(e){if(+ep[0]===y&&+ep[1]-1===m)ed=+ep[2];else if(+ep[0]<y||(+ep[0]===y&&+ep[1]-1<m))ed=0;else ed=days}else ed=sd;return sd<=days&&ed>=1&&sd<=ed}).forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     const tlSort2=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
     Object.entries(gGroups).sort((a,b)=>{const ai=tlSort2.indexOf(a[0]),bi=tlSort2.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
-      gh+=`<div style="border-bottom:1px solid var(--border);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
+      gh+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
       items.forEach(t=>{
       const startStr=(t['開始日']||'').replace(/\//g,'-').substring(0,10);
       const endStr=(t['截止日']||'').replace(/\//g,'-').substring(0,10);
