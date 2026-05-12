@@ -700,18 +700,26 @@ function renderOutsourceFromCache(){
     const tlSort2=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
     Object.entries(gGroups).sort((a,b)=>{const ai=tlSort2.indexOf(a[0]),bi=tlSort2.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
-      items.forEach(t=>{
-      const startStr=(t['開始日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').substring(0,10);
-      const endStr=(t['截止日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').substring(0,10);
-      let sd=1,ed=days;
-      if(startStr){const parts=startStr.split('-');const sy=parseInt(parts[0]),sm=parseInt(parts[1])-1,sday=parseInt(parts[2]);if(sy===y&&sm===m)sd=sday;else if(sy>y||(sy===y&&sm>m))sd=days+1;else sd=1}
-      if(endStr){const parts=endStr.split('-');const ey=parseInt(parts[0]),em=parseInt(parts[1])-1,eday=parseInt(parts[2]);if(ey===y&&em===m)ed=eday;else if(ey<y||(ey===y&&em<m))ed=0;else ed=days}else{ed=sd}
-      if(sd>days||ed<1||sd>ed)return;
-      sd=Math.max(1,sd);ed=Math.min(days,ed);
-      const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
-      const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-      gh+=`<div onclick="ganttRowClick(this,'${(t['工作項目']||'').replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="display:inline-block;width:16px"></span>${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
-    });
+      // Group similar items for gantt
+      const sim=window._isSimilar||(()=>false);
+      const tGroups=[];items.forEach(t=>{const g=tGroups.find(gr=>sim(gr[0]['工作項目'],t['工作項目']));if(g)g.push(t);else tGroups.push([t])});
+      const parseDay=(str)=>{const s=(str||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');if(s.length<3)return null;const sy=+s[0],sm=+s[1]-1,sd=+s[2];if(sy===y&&sm===m)return sd;if(sy>y||(sy===y&&sm>m))return days+1;return sy<y||(sy===y&&sm<m)?0:1};
+      tGroups.forEach(gr=>{
+        if(gr.length===1){
+          const t=gr[0];let sd=parseDay(t['開始日']),ed=parseDay(t['截止日']);if(ed===null)ed=sd;if(sd===null||sd>days||ed<1||sd>ed)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
+          const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+          const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
+          gh+=`<div onclick="ganttRowClick(this,'${(t['工作項目']||'').replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="display:inline-block;width:16px"></span>${t['工作項目']}</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`;
+        }else{
+          const shortest=gr.reduce((a,b)=>a['工作項目'].length<=b['工作項目'].length?a:b)['工作項目'];
+          let gsd=days+1,ged=0;gr.forEach(t=>{const s=parseDay(t['開始日']),e=parseDay(t['截止日'])||s;if(s!==null&&s<gsd)gsd=s;if(e!==null&&e>ged)ged=e});
+          gsd=Math.max(1,gsd);ged=Math.min(days,ged);if(gsd>days||ged<1)return;
+          const gl=((gsd-1)/days*100).toFixed(1),gw=((ged-gsd+1)/days*100).toFixed(1);
+          gh+=`<div style="margin:2px 0"><div onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="display:flex;align-items:center;padding:4px 0;cursor:pointer"><div style="width:150px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px"><span style="display:inline-block;width:16px;text-align:center">▼</span>📁 ${shortest} (${gr.length})</div><div style="flex:1;position:relative;height:16px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${gl}%;width:${gw}%;height:100%;background:var(--accent);border-radius:3px;opacity:0.4"></div></div></div><div>`;
+          gr.forEach(t=>{let sd=parseDay(t['開始日']),ed=parseDay(t['截止日']);if(ed===null)ed=sd;if(sd===null||sd>days||ed<1||sd>ed)return;sd=Math.max(1,sd);ed=Math.min(days,ed);const color=(t['工作項目']||'').includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);gh+=`<div style="display:flex;align-items:center;padding:2px 0"><div style="width:150px;flex-shrink:0;font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:28px;color:var(--muted)">${t['工作項目']}</div><div style="flex:1;position:relative;height:12px;background:var(--bg);border-radius:3px"><div style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8"></div></div></div>`});
+          gh+=`</div></div>`;
+        }
+      });
       gh+=`</div></div>`;
     });
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();if(dow===0||dow===6){const pos=((d-1)/days*100).toFixed(1);gh+=`<div style="position:absolute;top:40px;bottom:0;left:calc(150px + (100% - 150px) * ${pos} / 100);width:calc((100% - 150px) / ${days});background:rgba(56,139,253,0.1);pointer-events:none"></div>`}}
