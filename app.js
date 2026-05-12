@@ -499,7 +499,7 @@ function renderTimeline(){
         const rowCount=1+children.length+children.reduce((s,c)=>s+items.filter(g=>g['父任務']===c['任務名稱']).length,0);
         h+=`<div style="position:relative;margin-bottom:4px">`;renderGanttRow(t,0,true,taskCollapsed);h+=`<div class="tl-children"${taskCollapsed?' style="display:none"':''}>`;
         children.forEach(c=>{renderGanttRow(c,1,false);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,2,false))});
-        h+=`</div><div style="position:absolute;top:0;bottom:0;left:calc(150px + (100% - 150px) * ${gl} / 100);width:calc((100% - 150px) * ${gw} / 100);border:1px solid var(--border);border-radius:4px;pointer-events:none;z-index:0"></div></div>`;
+        h+=`</div><div style="position:absolute;top:0;bottom:0;left:calc(150px + (100% - 150px) * ${gl} / 100 - 4px);width:calc((100% - 150px) * ${gw} / 100 + 8px);border:1px solid var(--border);border-radius:4px;pointer-events:none;z-index:0"></div></div>`;
       }else{renderGanttRow(t,0,false)}
     });
     items.filter(t=>t['父任務']&&!parents.find(p=>p['任務名稱']===t['父任務'])&&!items.find(s=>s['任務名稱']===t['父任務'])).forEach(t=>renderGanttRow(t,0,false));
