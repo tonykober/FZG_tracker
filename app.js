@@ -564,26 +564,12 @@ async function fetchOutsource(){
     if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
-    // Consolidate: merge same owner + similar task name with consecutive dates
-    const merged=[];
-    const toDate=s=>{const p=(s||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');return p.length>=3?new Date(+p[0],+p[1]-1,+p[2]):null};
-    const fmtDate=d=>d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
-    const diffDays=(a,b)=>Math.round((b-a)/(86400000));
+    // Group similar tasks (no merge, keep all items)
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
     const isSimilar=(a,b)=>{if(a===b)return true;const na=normalize(a),nb=normalize(b);if(na.length<4&&nb.length<4)return false;return(na.length>=4&&nb.includes(na))||(nb.length>=4&&na.includes(nb))};
-    items.forEach(t=>{
-      const existing=merged.find(m=>m['負責人']===t['負責人']&&isSimilar(m['工作項目'],t['工作項目']));
-      if(existing){
-        const eEnd=toDate(existing['截止日']),tStart=toDate(t['開始日']),tEnd=toDate(t['截止日']);
-        if(eEnd&&tStart&&diffDays(eEnd,tStart)<=3){
-          if(tEnd&&tEnd>eEnd)existing['截止日']=fmtDate(tEnd);
-          const eStart=toDate(existing['開始日']);if(tStart&&eStart&&tStart<eStart)existing['開始日']=fmtDate(tStart);
-          existing['狀態']=t['狀態']||existing['狀態'];
-          if(t['工作項目'].length>existing['工作項目'].length)existing['工作項目']=t['工作項目'];
-        }else{merged.push({...t})}
-      }else{merged.push({...t})}
-    });
-    outsourceTasks=merged;outsourceFetchError=false;
+    // Store isSimilar for use in rendering
+    window._isSimilar=isSimilar;
+    outsourceTasks=items;outsourceFetchError=false;
   }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
 let _ganttTip=null,_ganttTipTimer=null;
@@ -683,10 +669,20 @@ function renderOutsourceFromCache(){
     const zi=zoneNames.indexOf(zone);const colIdx=zi>=0?zi:(i%3);
     const done=items.filter(t=>t['狀態']==='已完成').length;
     let c=`<div class="outsource-group" draggable="true" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" ondragstart="event.dataTransfer.setData('text/plain','${owner.replace(/'/g,"\\'")}');event.dataTransfer.effectAllowed='move';this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
-    items.forEach(t=>{
-      const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';
-      const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
-      c+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}${t['備註']?' '+t['備註']:''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div></div>`;
+    // Group similar items
+    const sim=window._isSimilar||(()=>false);
+    const groups2=[];
+    items.forEach(t=>{const g=groups2.find(gr=>sim(gr[0]['工作項目'],t['工作項目']));if(g)g.push(t);else groups2.push([t])});
+    groups2.forEach(gr=>{
+      if(gr.length===1){
+        const t=gr[0];const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
+        c+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}${t['備註']?' '+t['備註']:''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div></div>`;
+      }else{
+        const shortest=gr.reduce((a,b)=>a['工作項目'].length<=b['工作項目'].length?a:b)['工作項目'];
+        c+=`<div class="card" style="cursor:default"><div class="name" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer"><span>▼</span> 📁 ${shortest} (${gr.length})</div><div>`;
+        gr.forEach(t=>{const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';c+=`<div style="padding:2px 0;font-size:0.85em;color:${statusColor}">${statusIcon} ${t['工作項目']} <span style="color:var(--muted)">${t['開始日']?t['開始日'].substring(0,10):''}</span></div>`});
+        c+=`</div></div>`;
+      }
     });
     c+=`</div></div>`;
     cols[colIdx]+=c;
