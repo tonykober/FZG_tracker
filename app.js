@@ -584,7 +584,7 @@ function ganttRowClick(el,name){
   document.querySelectorAll('.gantt-row-hl').forEach(e=>e.classList.remove('gantt-row-hl'));
   el.classList.add('gantt-row-hl');
   const nameEl=el.firstElementChild;if(nameEl){nameEl.style.visibility='hidden';nameEl.setAttribute('data-name-hidden','1')}
-  const tip=document.createElement('div');tip.className='gantt-tooltip';tip.textContent=name;
+  const tip=document.createElement('div');tip.className='gantt-tooltip'+(el.closest('[data-group]')?' red':'');tip.textContent=name;
   el.style.position='relative';el.appendChild(tip);
   _ganttTip=tip;
   _ganttTipTimer=setTimeout(()=>{if(tip.parentNode)tip.remove();_ganttTip=null;if(nameEl){nameEl.style.visibility='visible';nameEl.removeAttribute('data-name-hidden')}},3000);
