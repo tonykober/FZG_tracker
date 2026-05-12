@@ -566,7 +566,7 @@ async function fetchOutsource(){
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
     // Consolidate: merge same owner + similar task name with consecutive dates
     const merged=[];
-    const toDate=s=>{const p=(s||'').replace(/\//g,'-').split('-');return p.length===3?new Date(+p[0],+p[1]-1,+p[2]):null};
+    const toDate=s=>{const p=(s||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');return p.length>=3?new Date(+p[0],+p[1]-1,+p[2]):null};
     const fmtDate=d=>d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
     const diffDays=(a,b)=>Math.round((b-a)/(86400000));
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
@@ -700,13 +700,13 @@ function renderOutsourceFromCache(){
     const today2=new Date();const isThisMonth2=today2.getFullYear()===y&&today2.getMonth()===m;
     for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth2&&d===today2.getDate();const isWeekend=dow===0||dow===6;gh+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
     gh+='</div></div>';
-    const gGroups={};outsourceFiltered.filter(t=>{const s=(t['開始日']||'').replace(/\//g,'-'),e=(t['截止日']||'').replace(/\//g,'-');if(!s&&!e)return false;const sp=s.split('-'),ep=e.split('-');let sd=1,ed=days;if(s){if(+sp[0]===y&&+sp[1]-1===m)sd=+sp[2];else if(+sp[0]>y||(+sp[0]===y&&+sp[1]-1>m))sd=days+1;else sd=1}if(e){if(+ep[0]===y&&+ep[1]-1===m)ed=+ep[2];else if(+ep[0]<y||(+ep[0]===y&&+ep[1]-1<m))ed=0;else ed=days}else ed=sd;return sd<=days&&ed>=1&&sd<=ed}).forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
+    const gGroups={};outsourceFiltered.filter(t=>{const s=(t['開始日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-'),e=(t['截止日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-');if(!s&&!e)return false;const sp=s.split('-'),ep=e.split('-');let sd=1,ed=days;if(s){if(+sp[0]===y&&+sp[1]-1===m)sd=+sp[2];else if(+sp[0]>y||(+sp[0]===y&&+sp[1]-1>m))sd=days+1;else sd=1}if(e){if(+ep[0]===y&&+ep[1]-1===m)ed=+ep[2];else if(+ep[0]<y||(+ep[0]===y&&+ep[1]-1<m))ed=0;else ed=days}else ed=sd;return sd<=days&&ed>=1&&sd<=ed}).forEach(t=>{const o=t['負責人']||'未指派';if(!gGroups[o])gGroups[o]=[];gGroups[o].push(t)});
     const tlSort2=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
     Object.entries(gGroups).sort((a,b)=>{const ai=tlSort2.indexOf(a[0]),bi=tlSort2.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
       items.forEach(t=>{
-      const startStr=(t['開始日']||'').replace(/\//g,'-').substring(0,10);
-      const endStr=(t['截止日']||'').replace(/\//g,'-').substring(0,10);
+      const startStr=(t['開始日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').substring(0,10);
+      const endStr=(t['截止日']||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').substring(0,10);
       let sd=1,ed=days;
       if(startStr){const parts=startStr.split('-');const sy=parseInt(parts[0]),sm=parseInt(parts[1])-1,sday=parseInt(parts[2]);if(sy===y&&sm===m)sd=sday;else if(sy>y||(sy===y&&sm>m))sd=days+1;else sd=1}
       if(endStr){const parts=endStr.split('-');const ey=parseInt(parts[0]),em=parseInt(parts[1])-1,eday=parseInt(parts[2]);if(ey===y&&em===m)ed=eday;else if(ey<y||(ey===y&&em<m))ed=0;else ed=days}else{ed=sd}
