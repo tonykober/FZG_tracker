@@ -569,7 +569,8 @@ async function fetchOutsource(){
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
     // Group similar tasks (no merge, keep all items)
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
-    const isSimilar=(a,b)=>{if(a===b)return true;const na=normalize(a),nb=normalize(b);if(na.length<4&&nb.length<4)return false;return(na.length>=4&&nb.includes(na))||(nb.length>=4&&na.includes(nb))};
+    const similarity=(a,b)=>{const na=normalize(a),nb=normalize(b);if(!na||!nb)return 0;const longer=na.length>nb.length?na:nb,shorter=na.length>nb.length?nb:na;let matches=0;const used=[];for(let i=0;i<shorter.length;i++){const idx=longer.indexOf(shorter[i],0);if(idx!==-1&&!used.includes(idx)){matches++;used.push(idx)}}return matches/longer.length};
+    const isSimilar=(a,b)=>{if(a===b)return true;return similarity(a,b)>=0.7};
     // Store isSimilar for use in rendering
     window._isSimilar=isSimilar;
     outsourceTasks=items;outsourceFetchError=false;
