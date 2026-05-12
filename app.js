@@ -490,9 +490,16 @@ function renderTimeline(){
       const children=items.filter(c=>c['父任務']===t['任務名稱']);
       if(children.length){
         const taskCollapsed=_collapsedTimelineTasks.has(t['任務名稱']);
-        h+=`<div style="border:1px solid var(--border);border-radius:6px;padding:2px;margin-bottom:4px">`;renderGanttRow(t,0,true,taskCollapsed);h+=`<div class="tl-children"${taskCollapsed?' style="display:none"':''}>`;
+        // Calculate group date range
+        const allGroup=[t,...children,...children.flatMap(c=>items.filter(g=>g['父任務']===c['任務名稱']))];
+        let gsd=days+1,ged=0;
+        allGroup.forEach(g=>{const s=(g['開始日']||'').substring(0,10),e=(g['截止日']||'').substring(0,10);if(s){const p=s.split('-');if(+p[0]===y&&+p[1]-1===m)gsd=Math.min(gsd,+p[2]);else if(+p[0]<y||(+p[0]===y&&+p[1]-1<m))gsd=1}if(e){const p=e.split('-');if(+p[0]===y&&+p[1]-1===m)ged=Math.max(ged,+p[2]);else if(+p[0]>y||(+p[0]===y&&+p[1]-1>m))ged=days}});
+        if(gsd>days||ged<1){gsd=1;ged=days}
+        const gl=((gsd-1)/days*100).toFixed(1),gw=((ged-gsd+1)/days*100).toFixed(1);
+        const rowCount=1+children.length+children.reduce((s,c)=>s+items.filter(g=>g['父任務']===c['任務名稱']).length,0);
+        h+=`<div style="position:relative;margin-bottom:4px">`;renderGanttRow(t,0,true,taskCollapsed);h+=`<div class="tl-children"${taskCollapsed?' style="display:none"':''}>`;
         children.forEach(c=>{renderGanttRow(c,1,false);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,2,false))});
-        h+=`</div></div>`;
+        h+=`</div><div style="position:absolute;top:0;bottom:0;left:calc(150px + (100% - 150px) * ${gl} / 100);width:calc((100% - 150px) * ${gw} / 100);border:1px solid var(--border);border-radius:4px;pointer-events:none;z-index:0"></div></div>`;
       }else{renderGanttRow(t,0,false)}
     });
     items.filter(t=>t['父任務']&&!parents.find(p=>p['任務名稱']===t['父任務'])&&!items.find(s=>s['任務名稱']===t['父任務'])).forEach(t=>renderGanttRow(t,0,false));
