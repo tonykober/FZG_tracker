@@ -224,7 +224,9 @@ async function submitTask(){
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
     if(data.action==='update'){
       const t=tasks[parseInt(m.dataset.editIdx)];
+      const oldName=t['任務名稱'];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
+      if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;const ci=tasks.indexOf(c);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']}),mode:'no-cors'})})}
     }else{
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
