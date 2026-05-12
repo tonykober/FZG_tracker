@@ -51,8 +51,8 @@
 <div id="outsourceSection" class="hidden">
   <div style="max-width:1200px;margin:24px auto 8px;display:flex;gap:6px;align-items:center;justify-content:space-between">
     <div style="display:flex;gap:6px">
-      <button class="btn-tab active" onclick="outsourceMode='list';renderOutsource();this.classList.add('active');this.nextElementSibling.classList.remove('active')">看板</button>
-      <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsource();this.classList.add('active');this.previousElementSibling.classList.remove('active')">時間軸</button>
+      <button class="btn-tab active" onclick="outsourceMode='list';renderOutsourceFromCache();this.classList.add('active');this.nextElementSibling.classList.remove('active')">看板</button>
+      <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsourceFromCache();this.classList.add('active');this.previousElementSibling.classList.remove('active')">時間軸</button>
       <button class="btn edit-ctrl" onclick="syncOutsource()" style="background:var(--accent);color:#fff">🔄 同步</button>
     </div>
     <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()"/>

@@ -584,7 +584,7 @@ async function fetchOutsource(){
       }else{merged.push({...t})}
     });
     const cy=currentMonth.getFullYear(),cm=currentMonth.getMonth()+1;
-    if(merged.length){const firstDate=(merged[0]['開始日']||'').replace(/\//g,'-').split('-');if(firstDate.length>=2&&+firstDate[0]&&+firstDate[1]&&(+firstDate[0]!==cy||+firstDate[1]!==cm)){merged.length=0}}
+    if(merged.length){const firstWithDate=merged.find(t=>t['開始日']||t['截止日']);if(firstWithDate){const fd=(firstWithDate['開始日']||firstWithDate['截止日']||'').replace(/\//g,'-').split('-');if(fd.length>=2&&+fd[0]&&+fd[1]&&(+fd[0]!==cy||+fd[1]!==cm)){merged.length=0}}}
     outsourceTasks=merged;outsourceFetchError=false;
   }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
