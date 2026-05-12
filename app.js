@@ -188,7 +188,7 @@ function loadNotes(){
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
     let noteText='';
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}}});
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v===month)noteText=r.c[1]?(r.c[1].v||''):'';if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}}});
     document.getElementById('notesArea').value=noteText;var na=document.getElementById('notesArea');na.style.height='auto';na.style.height=na.scrollHeight+'px';}catch(e){document.getElementById('notesArea').value=''}
   }).catch(()=>{document.getElementById('notesArea').value=''});
 }
@@ -269,7 +269,10 @@ function getTimelineTaskCollapseKey(){return 'fzg_collapsed_timeline_tasks_'+cur
 let _collapsedTimelineTasks=new Set();
 let _collapsedOutsourceGroups=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_outsource_groups_'+new Date().getFullYear()+'_'+(new Date().getMonth()+1))||'[]'));
 function getOutsourceGroupCollapseKey(){return 'fzg_collapsed_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+function getOutsourceBoardGroupCollapseKey(){return 'fzg_collapsed_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+let _collapsedOutsourceBoardGroups=new Set();
 function toggleOutsourceGroup(el){var wrapper=el.closest('[data-group]');var d=wrapper.lastElementChild;d.style.display=d.style.display==='none'?'block':'none';el.textContent=d.style.display==='none'?'▶':'▼';var name=wrapper.dataset.group;if(!name)return;if(d.style.display==='none')_collapsedOutsourceGroups.add(name);else _collapsedOutsourceGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceGroups])}),mode:'no-cors'})}
+function toggleOutsourceBoardGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('span').textContent=d.style.display==='none'?'▶':'▼';var name=el.dataset.boardGroup;if(!name)return;if(d.style.display==='none')_collapsedOutsourceBoardGroups.add(name);else _collapsedOutsourceBoardGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceBoardGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceBoardGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceBoardGroups])}),mode:'no-cors'})}
 let _tlTaskDrag=null;
 function getTlTaskSortKey(){return 'fzg_timeline_task_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function tlTaskDragStart(e,el){if(!unlocked){e.preventDefault();return}_tlTaskDrag=el.dataset.task;e.dataTransfer.setData('text/tl-task',_tlTaskDrag);el.classList.add('dragging')}
@@ -660,6 +663,7 @@ async function renderOutsource(){
   renderOutsourceFromCache();
 }
 function renderOutsourceFromCache(){
+  _collapsedOutsourceBoardGroups=new Set(JSON.parse(localStorage.getItem(getOutsourceBoardGroupCollapseKey())||'[]'));
   let outsourceFiltered=outsourceTasks;
   const q=(document.getElementById('searchOutsource')||{}).value||'';
   if(q)outsourceFiltered=outsourceFiltered.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q.toLowerCase()));
@@ -684,7 +688,7 @@ function renderOutsourceFromCache(){
         c+=`<div class="card" style="cursor:default"><div class="name" style="color:${statusColor}">${statusIcon} ${t['工作項目']}</div><div class="meta"><span>${t['狀態']}${t['備註']?' '+t['備註']:''}</span><span>${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']&&t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div></div>`;
       }else{
         const shortest=gr.reduce((a,b)=>a['工作項目'].length<=b['工作項目'].length?a:b)['工作項目'];
-        c+=`<div class="card" style="cursor:default"><div class="name" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span').textContent=d.style.display==='none'?'▶':'▼'" style="cursor:pointer"><span>▼</span> 📁 ${shortest} (${gr.length})</div><div>`;
+        c+=`<div class="card" style="cursor:default"><div class="name" data-board-group="${shortest.replace(/"/g,'&quot;')}" onclick="toggleOutsourceBoardGroup(this)" style="cursor:pointer"><span>${_collapsedOutsourceBoardGroups.has(shortest)?'▶':'▼'}</span> 📁 ${shortest} (${gr.length})</div><div${_collapsedOutsourceBoardGroups.has(shortest)?' style="display:none"':''}>`;
         gr.forEach(t=>{const statusIcon=t['狀態']==='已完成'?'✅':t['狀態']==='進行中'?'🔄':'📝';const statusColor=t['工作項目'].includes('請假')?'var(--red)':t['狀態']==='已完成'?'var(--green)':t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';c+=`<div style="padding:2px 0;font-size:0.85em;color:${statusColor}">${statusIcon} ${t['工作項目']} <span style="color:var(--muted)">${t['開始日']?t['開始日'].substring(0,10):''}</span></div>`});
         c+=`</div></div>`;
       }
