@@ -570,7 +570,7 @@ async function fetchOutsource(){
     // Group similar tasks (no merge, keep all items)
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
     const similarity=(a,b)=>{const na=normalize(a),nb=normalize(b);if(!na||!nb)return 0;const longer=na.length>nb.length?na:nb,shorter=na.length>nb.length?nb:na;let matches=0;const used=[];for(let i=0;i<shorter.length;i++){const idx=longer.indexOf(shorter[i],0);if(idx!==-1&&!used.includes(idx)){matches++;used.push(idx)}}return matches/longer.length};
-    const isSimilar=(a,b)=>{if(a===b)return true;return similarity(a,b)>=0.7};
+    const isSimilar=(a,b)=>{if(a===b)return true;return similarity(a,b)>=0.5};
     // Store isSimilar for use in rendering
     window._isSimilar=isSimilar;
     outsourceTasks=items;outsourceFetchError=false;
