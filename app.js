@@ -490,7 +490,7 @@ function renderTimeline(){
       const children=items.filter(c=>c['父任務']===t['任務名稱']);
       if(children.length){
         const taskCollapsed=_collapsedTimelineTasks.has(t['任務名稱']);
-        h+=`<div>`;renderGanttRow(t,0,true,taskCollapsed);h+=`<div class="tl-children"${taskCollapsed?' style="display:none"':''}>`;
+        h+=`<div style="border:1px solid var(--border);border-radius:6px;padding:2px;margin-bottom:4px">`;renderGanttRow(t,0,true,taskCollapsed);h+=`<div class="tl-children"${taskCollapsed?' style="display:none"':''}>`;
         children.forEach(c=>{renderGanttRow(c,1,false);const gc=items.filter(g=>g['父任務']===c['任務名稱']);gc.forEach(g=>renderGanttRow(g,2,false))});
         h+=`</div></div>`;
       }else{renderGanttRow(t,0,false)}
