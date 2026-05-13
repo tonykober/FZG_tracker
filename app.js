@@ -354,7 +354,7 @@ function renderBoard(){
             ${cpClass?'<span class="priority-dot '+cpClass+'"></span>':''}
             <span onclick="event.stopPropagation();openModal(${ci})" style="flex:1;cursor:pointer">${c['任務名稱']}</span>
             <span onclick="inlineEdit(${ci},'負責人',event)" style="color:var(--green);font-size:0.875rem;cursor:pointer;margin-right:4px">${c['負責人']||'未指派'}</span>
-            <span onclick="inlineEdit(${ci},'日期',event)" style="color:var(--muted);font-size:0.9em;cursor:pointer">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
+            <span onclick="inlineEdit(${ci},'日期',event)" style="color:${getDeadlineColor(c)||'var(--muted)'};font-size:0.9em;cursor:pointer">${c['開始日']?c['開始日'].substring(5,10):''}${c['開始日']||c['截止日']?'~':''}${c['截止日']?c['截止日'].substring(5,10):''}</span>
             ${cCanAddSub?`<span class="edit-ctrl" onclick="event.stopPropagation();openModalWithParent('${c['任務名稱'].replace(/'/g,"\\'")}')" style="font-size:0.85em;background:var(--accent);color:#fff;border-radius:3px;padding:1px 4px;cursor:pointer;margin-left:4px">+</span>`:''}
             <span class="edit-ctrl" onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
           </div>
@@ -365,7 +365,7 @@ function renderBoard(){
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
               <span style="flex:1">${g['任務名稱']}</span>
               <span onclick="inlineEdit(${gi},'負責人',event)" style="color:var(--green);font-size:0.875rem;cursor:pointer;margin-right:4px">${g['負責人']||'未指派'}</span>
-              <span onclick="inlineEdit(${gi},'日期',event)" style="color:var(--muted);cursor:pointer">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
+              <span onclick="inlineEdit(${gi},'日期',event)" style="color:${getDeadlineColor(g)||'var(--muted)'};cursor:pointer">${g['開始日']?g['開始日'].substring(5,10):''}${g['開始日']||g['截止日']?'~':''}${g['截止日']?g['截止日'].substring(5,10):''}</span>
               
               <span class="edit-ctrl" onclick="quickDelete(${gi},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
             </div>`}).join('')+'</div>':''}
