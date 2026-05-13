@@ -84,6 +84,8 @@ h1{font-size:36px!important;color:var(--accent)}
 .gantt-tooltip{position:absolute;background:#1f2937!important;border:1px solid var(--accent);border-radius:6px;padding:4px 8px;font-size:0.875rem;color:#fff;z-index:50;white-space:nowrap;pointer-events:none}
 .gantt-tooltip.red{background:#dc3545!important;border-color:#dc3545}
 body.locked .edit-ctrl{display:none!important}
+body.locked .view-ctrl{display:inline!important}
+.view-ctrl{display:none!important}
 body.locked .card{cursor:default}
 body.locked .gantt-bar{cursor:default}
 body.locked .gantt-handle{display:none}
