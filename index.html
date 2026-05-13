@@ -54,7 +54,7 @@
       <button class="btn-tab active" onclick="outsourceMode='list';renderOutsourceFromCache();this.classList.add('active');this.nextElementSibling.classList.remove('active')">看板</button>
       <button class="btn-tab" onclick="outsourceMode='gantt';renderOutsourceFromCache();this.classList.add('active');this.previousElementSibling.classList.remove('active')">時間軸</button>
       <button class="btn edit-ctrl" onclick="syncOutsource()" style="background:var(--accent);color:#fff">🔄 同步</button>
-      <span style="font-size:0.875rem;color:var(--muted);display:flex;gap:8px;margin-left:8px">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
+      <span style="font-size:1rem;color:var(--muted);display:flex;gap:8px;margin-left:8px;align-items:center">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
     </div>
     <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()"/>
   </div>
