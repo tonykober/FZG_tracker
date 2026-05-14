@@ -622,6 +622,30 @@ function ganttRowClick(el,name){
     if(container){container.addEventListener('scroll',updatePos);setTimeout(()=>container.removeEventListener('scroll',updatePos),10000)}
   }
 }
+let _outsourceDragOwner=null;
+function outsourceOwnerDragStart(e,el){
+  if(!unlocked){e.preventDefault();return}
+  _outsourceDragOwner=el.dataset.owner;
+  e.dataTransfer.setData('text/plain',_outsourceDragOwner);
+  el.classList.add('dragging');
+  const srcCol=el.closest('.column');
+  document.querySelectorAll('#outsourceContent .column').forEach(col=>{
+    if(col===srcCol)return;
+    const content=col.querySelector(':scope>div:not(.drop-zone)');
+    if(content){content.dataset.origDisplay=content.style.display||'';content.style.display='none'}
+    const dz=document.createElement('div');dz.className='drop-zone';dz.dataset.zone=col.dataset.zone;
+    dz.ondragover=ev=>ev.preventDefault();
+    dz.ondrop=ev=>{ev.preventDefault();outsourceDrop(ev,col.dataset.zone)};
+    col.appendChild(dz);
+  });
+}
+function outsourceOwnerDragEnd(){
+  _outsourceDragOwner=null;
+  document.querySelectorAll('.dragging').forEach(x=>x.classList.remove('dragging'));
+  document.querySelectorAll('#outsourceContent .drop-zone').forEach(dz=>dz.remove());
+  document.querySelectorAll('#outsourceContent .column>div[data-orig-display]').forEach(d=>{d.style.display=d.dataset.origDisplay||'';delete d.dataset.origDisplay});
+}
+
 function outsourceDrop(e,zone){
   const owner=e.dataTransfer.getData('text/plain');if(!owner)return;
   document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
@@ -695,7 +719,7 @@ function renderOutsourceFromCache(){
     const zone=zones[owner]||'一區';
     const zi=zoneNames.indexOf(zone);const colIdx=zi>=0?zi:(i%3);
     const done=items.filter(t=>t['狀態']==='已完成').length;
-    let c=`<div class="outsource-group" draggable="true" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" ondragstart="event.dataTransfer.setData('text/plain','${owner.replace(/'/g,"\\'")}');event.dataTransfer.effectAllowed='move';this.classList.add('dragging')" ondragend="this.classList.remove('dragging');document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(e=>e.classList.remove('drag-over-top','drag-over-bottom'))" ondragover="cardDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
+    let c=`<div class="outsource-group" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="outsourceOwnerDragStart(event,this.closest('.outsource-group'))" ondragend="outsourceOwnerDragEnd()" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
     // Group similar items with manual board overrides
     const sim=window._isSimilar||(()=>false);
     const groups2=[];
