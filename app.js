@@ -758,10 +758,12 @@ function renderOutsourceFromCache(){
     const tlSort2=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
     Object.entries(gGroups).sort((a,b)=>{const ai=tlSort2.indexOf(a[0]),bi=tlSort2.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
-      // Group similar items for gantt
+      // Group items for gantt (same as board)
       const sim=window._isSimilar||(()=>false);
-      const tGroups=[];items.forEach(t=>{const g=tGroups.find(gr=>sim(gr[0]['工作項目'],t['工作項目']));if(g)g.push(t);else tGroups.push([t])});
+      const tGroups=[];items.forEach(t=>{const mk=_manualBoardGroups[t['工作項目']];if(mk){const g=tGroups.find(gr=>(gr.key||gr[0]['工作項目'])===mk);if(g){g.push(t)}else{const ng=[t];ng.key=mk;tGroups.push(ng)}}else{const g=tGroups.find(gr=>!gr.key&&sim(gr[0]['工作項目'],t['工作項目']));if(g)g.push(t);else tGroups.push([t])}});
       const parseDay=(str)=>{const s=(str||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');if(s.length<3)return null;const sy=+s[0],sm=+s[1]-1,sd=+s[2];if(sy===y&&sm===m)return sd;if(sy>y||(sy===y&&sm>m))return days+1;return sy<y||(sy===y&&sm<m)?0:1};
+      const boardSort2=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');const ownerOrder2=boardSort2[owner]||[];
+      tGroups.sort((a,b)=>{const ak=a.key||a[0]['工作項目'],bk=b.key||b[0]['工作項目'];const ai=ownerOrder2.indexOf(ak),bi=ownerOrder2.indexOf(bk);return(ai<0?999:ai)-(bi<0?999:bi)});
       tGroups.forEach(gr=>{
         if(gr.length===1){
           const t=gr[0];let sd=parseDay(t['開始日']),ed=parseDay(t['截止日']);if(ed===null)ed=sd;if(sd===null||sd>days||ed<1||sd>ed)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
