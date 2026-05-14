@@ -764,7 +764,7 @@ function renderOutsourceFromCache(){
       const tGroups=[];items.forEach(t=>{const id=gid(t);const mk=_manualBoardGroups[id];if(mk==='__independent__'){tGroups.push([t]);return}if(mk){const g=tGroups.find(gr=>gr.key===mk);if(g){g.push(t)}else{const ng=[t];ng.key=mk;tGroups.push(ng)}}else{const g=tGroups.find(gr=>!gr.key&&sim(gr[0]['工作項目'],t['工作項目'])&&_manualBoardGroups[gid(gr[0])]!=='__independent__');if(g)g.push(t);else tGroups.push([t])}});
       const parseDay=(str)=>{const s=(str||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');if(s.length<3)return null;const sy=+s[0],sm=+s[1]-1,sd=+s[2];if(sy===y&&sm===m)return sd;if(sy>y||(sy===y&&sm>m))return days+1;return sy<y||(sy===y&&sm<m)?0:1};
       const boardSort2=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');const ownerOrder2=boardSort2[owner]||[];
-      tGroups.sort((a,b)=>{const ak=a.key||a[0]['工作項目'],bk=b.key||b[0]['工作項目'];const ai=ownerOrder2.indexOf(ak),bi=ownerOrder2.indexOf(bk);return(ai<0?999:ai)-(bi<0?999:bi)});
+      tGroups.sort((a,b)=>{const ak=a.key||gid(a[0]),bk=b.key||gid(b[0]);const ai=ownerOrder2.indexOf(ak),bi=ownerOrder2.indexOf(bk);return(ai<0?999:ai)-(bi<0?999:bi)});
       tGroups.forEach(gr=>{
         if(gr.length===1){
           const t=gr[0];let sd=parseDay(t['開始日']),ed=parseDay(t['截止日']);if(ed===null)ed=sd;if(sd===null||sd>days||ed<1||sd>ed)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
