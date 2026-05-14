@@ -76,7 +76,6 @@ h1{font-size:36px!important;color:var(--accent)}
 .card-btn{font-size:0.75rem;color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer}
 .card.dragging,.outsource-group.dragging,.owner-group.dragging{opacity:0.5}
 .drop-zone{flex:1;min-height:100px;background:var(--bg);border:2px dashed var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-top:8px}
-.drag-target{outline:2px dashed var(--accent)!important;outline-offset:-2px}
 .card.drag-over-top,.outsource-group.drag-over-top,.owner-group.drag-over-top,.drag-over-top{box-shadow:0 6px 0 0 #e53935 inset}
 .card.drag-over-bottom,.outsource-group.drag-over-bottom,.owner-group.drag-over-bottom,.drag-over-bottom{box-shadow:0 -6px 0 0 #e53935 inset}
 .gantt-row-hl{background:rgba(66,133,244,0.3)!important}
