@@ -177,7 +177,7 @@ function quickDelete(idx,e){
   tasks.splice(idx,1);render();
 }
 function updateMonthLabel(){const lbl=document.getElementById('monthLabel');lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
-function jumpToMonth(v){if(!v)return;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadData()}
+function jumpToMonth(v){if(!v)return;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();render();loadNotes();renderOutsource()}
 function saveNotes(){
   const month='month_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1);
   const text=document.getElementById('notesArea').value;
