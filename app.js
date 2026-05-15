@@ -217,10 +217,12 @@ function getFiltered(){
 }
 async function submitTask(){
   const m=document.getElementById('addModal');
-  const oe=document.getElementById('owner-err');if(oe)oe.remove();document.getElementById('f-owner').style.border='';
+  const oe=document.getElementById('owner-err');if(oe)oe.remove();document.getElementById('f-owner').style.border='';document.getElementById('f-name').style.border='';
   const data={name:document.getElementById('f-name').value,owner:document.getElementById('f-owner').value,status:document.getElementById('f-status').value,progress:'',startDate:document.getElementById('f-start').value,dueDate:document.getElementById('f-due').value,note:document.getElementById('f-note').value,priority:document.getElementById('f-priority').value,tags:document.getElementById('f-tags').value,parent:document.getElementById('f-parent').value,hours:document.getElementById('f-hours').value,comment:document.getElementById('f-comment').value};
-  if(!data.name){let n=1;while(tasks.some(t=>t['任務名稱']==='未命名'+n))n++;data.name='未命名'+n}
-  if(!data.owner){document.getElementById('f-owner').style.border='2px solid var(--red)';document.getElementById('f-owner').insertAdjacentHTML('afterend','<span id="owner-err" style="color:var(--red);font-size:0.8em">請填寫負責人</span>');return}
+  let valid=true;
+  if(!data.name){document.getElementById('f-name').style.border='2px solid var(--red)';valid=false}
+  if(!data.owner){document.getElementById('f-owner').style.border='2px solid var(--red)';valid=false}
+  if(!valid)return;
   const dupIdx=tasks.findIndex(t=>t['任務名稱']===data.name);
   if(dupIdx!==-1&&(m.dataset.editIdx===undefined||dupIdx!==parseInt(m.dataset.editIdx))){alert('任務名稱已存在，請使用不同名稱');return}
   if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
@@ -337,7 +339,7 @@ function renderBoard(){
   const filtered=getFiltered();
   const unassigned=filtered.filter(t=>!t['負責人']);
   const unTodo=unassigned.filter(t=>t['狀態']==='待辦'),unDoing=unassigned.filter(t=>t['狀態']==='進行中'),unDone=unassigned.filter(t=>t['狀態']==='已完成');
-  const unGroup=(list)=>{if(!list.length)return '';return `<div class="owner-group" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--red);padding:4px 0;border-bottom:1px solid var(--red);margin-bottom:4px;cursor:pointer"><span class="tog">▶</span> ⚠️ 有 ${list.length} 筆任務資訊不全</div><div style="display:none">${list.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" style="display:flex;align-items:center;gap:8px"><span>${t['任務名稱']}</span><span class="edit-ctrl" onclick="deleteTask(${idx})" style="cursor:pointer;color:var(--red);margin-left:auto">🗑️</span></div>`}).join('')}</div></div>`};
+  const unGroup=(list)=>{if(!list.length)return '';return `<div class="owner-group" style="margin-bottom:8px"><div class="owner-title" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--red);padding:4px 0;border-bottom:1px solid var(--red);margin-bottom:4px;cursor:pointer"><span class="tog">▶</span> ⚠️ 有 ${list.length} 筆任務資訊不全</div><div style="display:none">${list.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" style="display:flex;align-items:center;gap:8px"><span>${t['任務名稱']}</span><span class="edit-ctrl" style="margin-left:auto;display:flex;gap:4px"><span onclick="openEdit(${idx})" style="cursor:pointer">✏️</span><span onclick="deleteTask(${idx})" style="cursor:pointer;color:var(--red)">🗑️</span></span></div>`}).join('')}</div></div>`};
   if(!filtered.length){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
   const getChildren=name=>filtered.filter(t=>t['父任務']===name);

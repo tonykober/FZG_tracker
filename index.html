@@ -65,10 +65,10 @@
 <div id="addModal" class="modal hidden">
   <div class="modal-content">
     <h3 id="modalTitle">➕ 新增任務</h3>
-    <label style="font-size:0.75em;color:var(--muted)">任務名稱</label>
-    <input id="f-name" />
-    <label style="font-size:0.75em;color:var(--muted)">負責人</label>
-    <div style="display:flex;gap:4px"><input id="f-owner" style="flex:1"/><select id="f-owner-select" onchange="onOwnerSelect()" style="width:auto"></select></div>
+    <label style="font-size:0.75em;color:var(--muted)">任務名稱 <span style="color:var(--red)">(必填)</span></label>
+    <input id="f-name" oninput="this.style.border=''" />
+    <label style="font-size:0.75em;color:var(--muted)">負責人 <span style="color:var(--red)">(必填)</span></label>
+    <div style="display:flex;gap:4px"><input id="f-owner" style="flex:1" oninput="this.style.border=''" /><select id="f-owner-select" onchange="onOwnerSelect()" style="width:auto"></select></div>
     <label style="font-size:0.75em;color:var(--muted)">狀態</label>
     <select id="f-status"><option>待辦</option><option>進行中</option><option>已完成</option></select>
     <label style="font-size:0.75em;color:var(--muted)">優先級</label>
