@@ -240,12 +240,13 @@ async function submitTask(){
     closeModal();render();renderFilterBar();
   }catch(e){alert('❌ 失敗：'+e.message)}
 }
-async function deleteTask(idx){
+function deleteTask(idx){
   const m=document.getElementById('addModal');
   const row=idx!==undefined?idx:m.dataset.editIdx;
   if(row===undefined)return;
   if(!confirm('確定刪除？'))return;
-  try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:row}),mode:'no-cors'});tasks.splice(parseInt(row),1);if(idx===undefined)closeModal();render()}catch(e){alert('❌ 失敗')}
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:row}),mode:'no-cors'});
+  tasks.splice(parseInt(row),1);if(idx===undefined)closeModal();render();
 }
 async function fetchData(){
   document.getElementById('boardView').innerHTML='<div class="spinner"></div>';
