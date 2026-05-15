@@ -240,10 +240,11 @@ async function submitTask(){
     closeModal();render();renderFilterBar();
   }catch(e){alert('❌ 失敗：'+e.message)}
 }
-async function deleteTask(){
+async function deleteTask(idx){
   const m=document.getElementById('addModal');
+  const row=idx!==undefined?idx:m.dataset.editIdx;
   if(!confirm('確定刪除？'))return;
-  try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:m.dataset.editIdx}),mode:'no-cors'});alert('✅ 已刪除');closeModal();setTimeout(()=>location.reload(),2000)}catch(e){alert('❌ 失敗')}
+  try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:row}),mode:'no-cors'});tasks.splice(parseInt(row),1);closeModal();render()}catch(e){alert('❌ 失敗')}
 }
 async function fetchData(){
   document.getElementById('boardView').innerHTML='<div class="spinner"></div>';
