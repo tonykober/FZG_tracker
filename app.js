@@ -683,7 +683,8 @@ function outsourceDrop(e,zone){
 const DAILY_SHEET_ID='1gppJhZkxQYGNNM1-hk3v12Hp-qzV8VnJdCLCNrf-cog';
 async function syncOutsource(){
   if(!unlocked)return;
-  document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
+  const el=document.getElementById('outsourceContent');
+  el.innerHTML='<div class="spinner"></div>';
   try{
     const m=currentMonth.getMonth()+1;const sheetName=currentMonth.getFullYear()+'/'+('0'+m).slice(-2);
     const res=await fetch(`https://docs.google.com/spreadsheets/d/${DAILY_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
@@ -703,8 +704,16 @@ async function syncOutsource(){
       items.forEach((item,i)=>{const prog=progLines[i]||'';const hr=hourLines[i]||'';const st=prog==='完成'?'已完成':prog?'進行中':'待辦';tasks2.push({owner:name,task:item,status:st,startDate:date,dueDate:date,note:prog,hours:hr})});
     });
     await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'clear',month:sheetName}),redirect:'follow'});
-    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'batch',month:sheetName,rows:tasks2}),redirect:'follow'});
-    alert('✅ 同步完成：'+tasks2.length+' 筆');
+    const total=tasks2.length;
+    for(let i=0;i<total;i++){
+      el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--accent)"><div class="spinner"></div><div style="margin-top:12px">同步中 (${i+1}/${total})</div></div>`;
+      await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'add',month:sheetName,...tasks2[i]}),redirect:'follow'});
+      if(i<total-1)await new Promise(r=>setTimeout(r,300));
+    }
+    const vRes=await fetch(`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
+    const vText=await vRes.text();const vJson=JSON.parse(vText.substring(47).slice(0,-2));
+    const actual=vJson.table.rows.length;
+    alert(`✅ 同步完成：寫入 ${total} 筆，驗證 ${actual} 筆`);
     renderOutsource();
   }catch(e){alert('❌ 同步失敗：'+e.message);renderOutsource()}
 }
