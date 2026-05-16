@@ -439,7 +439,7 @@ function taskDrop(e,targetIdx,el){
   }
   // Sort within target status
   const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
-  const sameStatus=tasks.filter(x=>x['狀態']===targetStatus&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
+  const sameStatus=filterByMonth(tasks).filter(x=>x['狀態']===targetStatus&&!x['父任務']).sort((a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999));
   const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
   const toPos=sameStatus.indexOf(tgt);
   sameStatus.splice(above?toPos:toPos+1,0,src);
@@ -476,7 +476,8 @@ function ownerGroupDrop(e,el){e.preventDefault();e.stopPropagation()}
 function ownerDropZone(e,targetStatus){
   if(!_dragOwner)return;
   const owner=_dragOwner;
-  tasks.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']&&t['狀態']===_dragOwnerSrcStatus).forEach(t=>{
+  const filtered=filterByMonth(tasks);
+  filtered.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']&&t['狀態']===_dragOwnerSrcStatus).forEach(t=>{
     t['狀態']=targetStatus;const idx=tasks.indexOf(t);
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
   });
