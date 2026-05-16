@@ -8,7 +8,7 @@
 </head>
 <body>
 <header style="max-width:1200px;margin:0 auto 16px;display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-  <h1 onclick="location.reload()" style="cursor:pointer;font-size:1.4em" title="點擊刷新頁面">📋 FZG 專案追蹤器</h1>
+  <h1 onclick="if(confirm('確定清除快取並重新載入？')){Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));document.body.innerHTML='<div style=&quot;position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999&quot;><div class=&quot;spinner&quot;></div></div>';location.reload()}" style="cursor:pointer;font-size:1.4em" title="點擊清除快取並重新載入">📋 FZG 專案追蹤器</h1>
   <div style="display:flex;gap:6px;align-items:center;margin:0 auto">
     <button class="btn-tab active" id="mainTabInternal" onclick="switchMainTab('internal')">內部</button>
     <button class="btn-tab" id="mainTabOutsource" onclick="switchMainTab('outsource')">外包</button>
