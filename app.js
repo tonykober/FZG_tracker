@@ -406,6 +406,8 @@ function renderBoard(){
   // Restore owner-group collapse states
   const allCollapsed=new Set([...collapsedOwners,..._collapsedOwners]);
   allCollapsed.forEach(owner=>{document.querySelectorAll('#boardView .owner-group[data-owner="'+owner+'"]').forEach(g=>{g.lastElementChild.style.display='none';const tog=g.querySelector('.tog');if(tog)tog.textContent='▶'});_collapsedOwners.add(owner)});
+  // Auto-collapse empty columns
+  document.querySelectorAll('#boardView .column[data-status]').forEach(col=>{const h3=col.querySelector('h3');const content=h3?.nextElementSibling;if(content&&col.querySelector('.owner-group')===null){content.style.display='none';const tog=h3.querySelector('.tog');if(tog)tog.textContent='▶'}});
   _lastMovedOwner=null;
 }
 let dragIdx=null;
@@ -413,8 +415,8 @@ let _dragOwner=null;
 let _dragOwnerSrcStatus=null;
 let _lastMovedOwner=null;
 let _taskDragIdx=null;
-function taskDragStart(e,idx){if(!unlocked){e.preventDefault();return}_taskDragIdx=idx;e.dataTransfer.setData('text/task',String(idx));e.dataTransfer.effectAllowed='move';e.target.closest('.card').classList.add('dragging')}
-function taskDragEnd(){_taskDragIdx=null;document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));document.querySelectorAll('.column').forEach(c=>c.style.outline='')}
+function taskDragStart(e,idx){if(!unlocked){e.preventDefault();return}_taskDragIdx=idx;e.dataTransfer.setData('text/task',String(idx));e.dataTransfer.effectAllowed='move';e.target.closest('.card').classList.add('dragging');document.querySelectorAll('#boardView .column[data-status]').forEach(col=>{const h3=col.querySelector('h3');const content=h3?.nextElementSibling;if(content&&content.style.display==='none'){content.style.display='';const tog=h3.querySelector('.tog');if(tog)tog.textContent='▼'}})}
+function taskDragEnd(){_taskDragIdx=null;document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));document.querySelectorAll('.column').forEach(c=>c.style.outline='');document.querySelectorAll('#boardView .column[data-status]').forEach(col=>{const h3=col.querySelector('h3');const content=h3?.nextElementSibling;if(content&&col.querySelector('.owner-group')===null){content.style.display='none';const tog=h3.querySelector('.tog');if(tog)tog.textContent='▶'}})}
 function colTaskDrop(e,status){
   if(_taskDragIdx!==null){
     e.preventDefault();
