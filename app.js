@@ -107,7 +107,7 @@ function onOwnerSelect(){
   if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();render();loadNotes();renderOutsource()}
+function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();loadCollapsedOwners();render();loadNotes();renderOutsource()}
 function toggleStatus(idx,e){
   e.stopPropagation();if(!unlocked)return;
   const t=tasks[idx];
@@ -177,17 +177,17 @@ function quickDelete(idx,e){
   tasks.splice(idx,1);render();
 }
 function updateMonthLabel(){const lbl=document.getElementById('monthLabel');lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
-function jumpToMonth(v){if(!v)return;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();render();loadNotes();renderOutsource()}
+function jumpToMonth(v){if(!v)return;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadCollapsedOwners();render();loadNotes();renderOutsource()}
 function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v==='collapsed_owners'){try{const arr=JSON.parse(r.c[1].v||'[]');arr.forEach(o=>_collapsedOwners.add(o));localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')||v.startsWith('expanded_outsource_board_groups_')||v.startsWith('expanded_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('group_names_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('manual_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('board_item_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}}});
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v.startsWith('collapsed_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')||v.startsWith('expanded_outsource_board_groups_')||v.startsWith('expanded_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('group_names_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('manual_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('board_item_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}}});
     }catch(e){}
   }).catch(()=>{});
 }
 function saveOwnerSort(status,sortArray){
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'owner_sort_'+status,text:JSON.stringify(sortArray)}),mode:'no-cors'});
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sortArray)}),mode:'no-cors'});
 }
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
@@ -264,7 +264,9 @@ function renderFilterBar(){
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
 function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),mode:'no-cors'})}}
-let _collapsedOwners=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_owners')||'[]'));
+let _collapsedOwners=new Set();
+function getCollapsedOwnersKey(){return 'fzg_collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+function loadCollapsedOwners(){_collapsedOwners=new Set(JSON.parse(localStorage.getItem(getCollapsedOwnersKey())||'[]'))}
 let _collapsedTimelineOwners=new Set();
 function getTimelineCollapseKey(){return 'fzg_collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function getTimelineSortKey(){return 'fzg_timeline_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
@@ -306,20 +308,20 @@ function timelineDragEnd(){_timelineDragOwner=null;document.querySelectorAll('.d
 function timelineDragOver(e,el){e.preventDefault();if(!_timelineDragOwner)return;const owner=el.querySelector('[data-owner]')?.dataset.owner;if(owner===_timelineDragOwner)return;document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));const rect=el.getBoundingClientRect();el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
 function timelineDrop(e,el){e.preventDefault();document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));if(!_timelineDragOwner||!unlocked)return;const tgtOwner=el.querySelector('[data-owner]')?.dataset.owner;if(!tgtOwner||tgtOwner===_timelineDragOwner)return;const sort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');const container=el.closest('.timeline')?.querySelector('[style*="position:relative"]')||el.parentNode;const groups=[...container.querySelectorAll('[data-owner]')].map(s=>s.dataset.owner);const from=groups.indexOf(_timelineDragOwner);if(from>=0)groups.splice(from,1);const to=groups.indexOf(tgtOwner);const rect=el.getBoundingClientRect();groups.splice(e.clientY<rect.top+rect.height/2?to:to+1,0,_timelineDragOwner);localStorage.setItem(getTimelineSortKey(),JSON.stringify(groups));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'timeline_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(groups)}),mode:'no-cors'});timelineDragEnd();render();if(!document.getElementById('outsourceSection').classList.contains('hidden'))renderOutsourceFromCache()}
 function toggleTimelineGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼';if(!unlocked)return;var owner=el.dataset.owner;if(d.style.display==='none')_collapsedTimelineOwners.add(owner);else _collapsedTimelineOwners.delete(owner);localStorage.setItem(getTimelineCollapseKey(),JSON.stringify([..._collapsedTimelineOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineOwners])}),mode:'no-cors'})}
-function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(!unlocked)return;var owner=g.dataset.owner;if(collapsed)_collapsedOwners.add(owner);else _collapsedOwners.delete(owner);localStorage.setItem('fzg_collapsed_owners',JSON.stringify([..._collapsedOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners',text:JSON.stringify([..._collapsedOwners])}),mode:'no-cors'})}
+function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(!unlocked)return;var owner=g.dataset.owner;if(collapsed)_collapsedOwners.add(owner);else _collapsedOwners.delete(owner);localStorage.setItem(getCollapsedOwnersKey(),JSON.stringify([..._collapsedOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOwners])}),mode:'no-cors'})}
 function moveOwnerGroup(owner,dir,e){
   e.stopPropagation();
   if(!unlocked)return;
   const col=e.target.closest('.column');
   const status=col.dataset.status;
-  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status)||'{}');
+  const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'{}');
   const groups=[...col.querySelectorAll('.owner-group')].map(g=>g.dataset.owner);
   const pos=groups.indexOf(owner);if(pos<0)return;
   const newPos=pos+dir;if(newPos<0||newPos>=groups.length)return;
   const swappedOwner=groups[newPos];
   groups.splice(pos,1);groups.splice(newPos,0,owner);
   groups.forEach((o,i)=>{ownerSort[o]=String(i+1)});
-  localStorage.setItem('fzg_owner_sort_'+status,JSON.stringify(ownerSort));
+  localStorage.setItem('fzg_owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),JSON.stringify(ownerSort));
   saveOwnerSort(status,groups);
   render();renderFilterBar();
   const moved=document.querySelector('#boardView .column[data-status="'+status+'"] .owner-group[data-owner="'+owner+'"]');if(moved){moved.classList.add('moved');setTimeout(()=>moved.classList.remove('moved'),600)}
@@ -390,7 +392,7 @@ function renderBoard(){
   const groupByOwner=(items,status)=>{
     const groups={};
     items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
-    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status)||'{}');
+    const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'{}');
     return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" ondragover="ownerGroupOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="toggleOwnerGroup(this)" style="display:flex;align-items:center;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})<span class="edit-ctrl" style="margin-left:auto;display:flex;gap:2px;flex-shrink:0"><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', -1, event)" style="cursor:pointer;padding:0 4px">▲</span><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', 1, event)" style="cursor:pointer;padding:0 4px">▼</span></span></div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardWarn').innerHTML='';
@@ -482,7 +484,7 @@ function ownerDropZone(e,targetStatus){
   const targetOwners=[...new Set(tasks.filter(t=>t['狀態']===targetStatus&&!t['父任務']).map(t=>t['負責人']||'未指派'))];
   if(!targetOwners.includes(owner))targetOwners.unshift(owner);else{targetOwners.splice(targetOwners.indexOf(owner),1);targetOwners.unshift(owner)}
   targetOwners.forEach((o,i)=>{ownerSort[o]=String(i+1)});
-  localStorage.setItem('fzg_owner_sort_'+targetStatus,JSON.stringify(ownerSort));
+  localStorage.setItem('fzg_owner_sort_'+targetStatus+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),JSON.stringify(ownerSort));
   saveOwnerSort(targetStatus,targetOwners);
   _lastMovedOwner=owner;
   ownerDragEnd();render();renderFilterBar();
