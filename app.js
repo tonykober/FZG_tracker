@@ -257,7 +257,7 @@ function renderFilterBar(){
   if(!allTags.size){document.getElementById('filterBar').innerHTML='';return}
   let html=`<span class="filter-tag ${!activeFilter?'active':''}" onclick="activeFilter='';render();renderFilterBar()">全部</span>`;
   allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
-  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="width:150px;margin-left:auto"/>`;
+  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="searchRender()" style="width:150px;margin-left:auto"/>`;
   const oldVal=(document.getElementById('search')||{}).value||'';
   document.getElementById('filterBar').innerHTML=html;
   document.getElementById('search').value=oldVal;
@@ -326,6 +326,7 @@ function moveOwnerGroup(owner,dir,e){
   const swapped=document.querySelector('#boardView .column[data-status="'+status+'"] .owner-group[data-owner="'+swappedOwner+'"]');if(swapped){swapped.classList.add('swapped');setTimeout(()=>swapped.classList.remove('swapped'),600)}
 }
 function render(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport();renderFilterBar()}
+function searchRender(){renderStats();const bv=document.getElementById('boardView'),tv=document.getElementById('timelineView'),rv=document.getElementById('reportView');if(!bv.classList.contains('hidden'))renderBoard();if(!tv.classList.contains('hidden'))renderTimeline();if(!rv.classList.contains('hidden'))renderReport()}
 function renderStats(){
   const f=getFiltered(),total=f.length,done=f.filter(t=>t['狀態']==='已完成').length;
   document.getElementById('stats').innerHTML=`<div class="stat"><div class="num">${total}</div><div class="label">任務</div></div><div class="stat"><div class="num" style="color:var(--green)">${done}</div><div class="label">完成</div></div><div class="stat"><div class="num" style="color:var(--yellow)">${total-done}</div><div class="label">未完成</div></div>`;
