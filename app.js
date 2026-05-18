@@ -202,8 +202,8 @@ function filterByMonth(list){
 }
 function getFiltered(){
   let list=filterByMonth(tasks);
-  const q=document.getElementById('search').value.toLowerCase();
-  if(q)list=list.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q));
+  const q=(document.getElementById('search')||{}).value||'';const ql=q.toLowerCase();
+  if(ql)list=list.filter(t=>Object.values(t).join(' ').toLowerCase().includes(ql));
   if(activeFilter)list=list.filter(t=>(t['標籤']||'').includes(activeFilter));
   return list;
 }
