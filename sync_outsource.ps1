@@ -29,6 +29,9 @@ try {
       $lines1 = $col1 -split "`n"
       $owner = ($lines1[0] -replace 'NAME[：:]','').Trim()
       $taskLines = @($lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' })
+      if(($lines1 | Select-Object -Skip 1) -match '請假'){
+        $results += [PSCustomObject]@{owner=$owner;task='請假';status='已完成';startDate=$currentDate;dueDate=$currentDate;note='';hours=''}
+      }
       $progLines = @(($col2 -split "`n") | Where-Object { $_.Trim() -ne '' })
       $hrLines = @(($col3 -split "`n") | Where-Object { $_.Trim() -ne '' })
       for($i=0;$i -lt $taskLines.Count;$i++){
@@ -60,6 +63,9 @@ try {
         $lines1 = $col1 -split "`n"
         $owner = ($lines1[0] -replace 'NAME[：:]','').Trim()
         $taskLines = @($lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' })
+        if(($lines1 | Select-Object -Skip 1) -match '請假'){
+          $results += [PSCustomObject]@{owner=$owner;task='請假';status='已完成';startDate=$currentDate;dueDate=$currentDate;note='';hours=''}
+        }
         $progLines = @(($col2 -split "`n") | Where-Object { $_.Trim() -ne '' })
         $hrLines = @(($col3 -split "`n") | Where-Object { $_.Trim() -ne '' })
         for($i=0;$i -lt $taskLines.Count;$i++){
