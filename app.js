@@ -257,7 +257,7 @@ function renderFilterBar(){
   if(!allTags.size){document.getElementById('filterBar').innerHTML='';return}
   let html=`<span class="filter-tag ${!activeFilter?'active':''}" onclick="activeFilter='';render();renderFilterBar()">全部</span>`;
   allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
-  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="min-width:80px;flex:1"/>`;
+  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="width:150px"/>`;
   document.getElementById('filterBar').innerHTML=html;
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
