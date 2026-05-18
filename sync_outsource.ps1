@@ -28,9 +28,9 @@ try {
     if($col1 -match 'NAME[：:](.+)'){
       $lines1 = $col1 -split "`n"
       $owner = ($lines1[0] -replace 'NAME[：:]','').Trim()
-      $taskLines = $lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' }
-      $progLines = ($col2 -split "`n") | Where-Object { $_.Trim() -ne '' }
-      $hrLines = ($col3 -split "`n") | Where-Object { $_.Trim() -ne '' }
+      $taskLines = @($lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' })
+      $progLines = @(($col2 -split "`n") | Where-Object { $_.Trim() -ne '' })
+      $hrLines = @(($col3 -split "`n") | Where-Object { $_.Trim() -ne '' })
       for($i=0;$i -lt $taskLines.Count;$i++){
         $taskName = ($taskLines[$i] -replace '^\s*\d+[\.\s、]+','').Trim()
         if($taskName.Length -le 2 -and $taskName -ne '請假'){ continue }
@@ -59,9 +59,9 @@ try {
       if($col1 -match 'NAME[：:](.+)'){
         $lines1 = $col1 -split "`n"
         $owner = ($lines1[0] -replace 'NAME[：:]','').Trim()
-        $taskLines = $lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' }
-        $progLines = ($col2 -split "`n") | Where-Object { $_.Trim() -ne '' }
-        $hrLines = ($col3 -split "`n") | Where-Object { $_.Trim() -ne '' }
+        $taskLines = @($lines1 | Select-Object -Skip 1 | Where-Object { $_ -match '^\s*\d+' })
+        $progLines = @(($col2 -split "`n") | Where-Object { $_.Trim() -ne '' })
+        $hrLines = @(($col3 -split "`n") | Where-Object { $_.Trim() -ne '' })
         for($i=0;$i -lt $taskLines.Count;$i++){
           $taskName = ($taskLines[$i] -replace '^\s*\d+[\.\s、]+','').Trim()
           if($taskName.Length -le 2 -and $taskName -ne '請假'){ continue }
