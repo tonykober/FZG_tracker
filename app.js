@@ -182,7 +182,7 @@ function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
-    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v.startsWith('collapsed_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')||v.startsWith('expanded_outsource_board_groups_')||v.startsWith('expanded_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('group_names_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('manual_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('board_item_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}}});
+    rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v.startsWith('collapsed_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')||v.startsWith('expanded_outsource_board_groups_')||v.startsWith('expanded_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('group_names_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('manual_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('board_item_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_owners_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}}});
     }catch(e){}
   }).catch(()=>{});
 }
@@ -276,6 +276,9 @@ let _collapsedTimelineTasks=new Set();
 let _collapsedOutsourceGroups=new Set(JSON.parse(localStorage.getItem('fzg_collapsed_outsource_groups_'+new Date().getFullYear()+'_'+(new Date().getMonth()+1))||'[]'));
 function getOutsourceGroupCollapseKey(){return 'fzg_expanded_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function getOutsourceBoardGroupCollapseKey(){return 'fzg_expanded_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+function getOutsourceOwnerCollapseKey(){return 'fzg_collapsed_outsource_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
+let _collapsedOutsourceOwners=new Set();
+function toggleOutsourceOwner(el,owner){var d=el.nextElementSibling;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(collapsed)_collapsedOutsourceOwners.add(owner);else _collapsedOutsourceOwners.delete(owner);localStorage.setItem(getOutsourceOwnerCollapseKey(),JSON.stringify([..._collapsedOutsourceOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_outsource_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceOwners])}),mode:'no-cors'})}
 function getGroupNamesKey(){return 'fzg_group_names_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function getManualBoardGroupsKey(){return 'fzg_manual_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 let _groupNames={};
@@ -725,6 +728,7 @@ async function renderOutsource(){
 }
 function renderOutsourceFromCache(){
   _collapsedOutsourceBoardGroups=new Set(JSON.parse(localStorage.getItem(getOutsourceBoardGroupCollapseKey())||'[]'));
+  _collapsedOutsourceOwners=new Set(JSON.parse(localStorage.getItem(getOutsourceOwnerCollapseKey())||'[]'));
   loadGroupNames();
   let outsourceFiltered=outsourceTasks;
   const q=(document.getElementById('searchOutsource')||{}).value||'';
@@ -739,7 +743,7 @@ function renderOutsourceFromCache(){
     const zone=zones[owner]||'一區';
     const zi=zoneNames.indexOf(zone);const colIdx=zi>=0?zi:(i%3);
     const done=items.filter(t=>t['狀態']==='已完成').length;
-    let c=`<div class="outsource-group" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="outsourceOwnerDragStart(event,this.closest('.outsource-group'))" ondragend="outsourceOwnerDragEnd()" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';this.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼'" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">▼</span> 👤 ${owner} (${items.length})</div><div>`;
+    let c=`<div class="outsource-group" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="outsourceOwnerDragStart(event,this.closest('.outsource-group'))" ondragend="outsourceOwnerDragEnd()" onclick="toggleOutsourceOwner(this,'${owner.replace(/'/g,"\\'")}')" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">${_collapsedOutsourceOwners.has(owner)?'▶':'▼'}</span> 👤 ${owner} (${items.length})</div><div${_collapsedOutsourceOwners.has(owner)?' style="display:none"':''}>`;
     // Group similar items with manual board overrides (using unique IDs)
     const sim=window._isSimilar||(()=>false);const gid=window._getTaskId||(t=>t['工作項目']);
     const groups2=[];
