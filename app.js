@@ -257,7 +257,7 @@ function renderFilterBar(){
   if(!allTags.size){document.getElementById('filterBar').innerHTML='';return}
   let html=`<span class="filter-tag ${!activeFilter?'active':''}" onclick="activeFilter='';render();renderFilterBar()">全部</span>`;
   allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
-  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="searchRender()" style="width:150px;margin-left:auto"/>`;
+  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="searchRender()" style="margin-left:auto"/>`;
   const oldVal=(document.getElementById('search')||{}).value||'';
   document.getElementById('filterBar').innerHTML=html;
   document.getElementById('search').value=oldVal;
