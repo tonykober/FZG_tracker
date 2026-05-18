@@ -32,13 +32,11 @@
         <button class="btn-tab active" data-view="board" onclick="switchView(this)" style="white-space:nowrap">看板</button>
         <button class="btn-tab" data-view="timeline" onclick="switchView(this)" style="white-space:nowrap">時間軸</button>
         <button class="btn-tab" data-view="report" onclick="switchView(this)" style="white-space:nowrap">報告</button>
+        <button class="btn btn-green edit-ctrl" onclick="openModal()" style="white-space:nowrap">➕ 新增</button>
         <input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="margin-left:auto"/>
       </div>
       <div class="filter-bar" id="filterBar" style="margin:0"></div>
     </div>
-  </div>
-  <div style="max-width:1200px;margin:0 auto 8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
-    <button class="btn btn-green edit-ctrl" onclick="openModal()">➕ 新增任務</button>
   </div>
 <div id="boardWarn"></div>
 <div id="boardView" class="board"></div>
