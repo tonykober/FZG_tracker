@@ -45,14 +45,14 @@
 <div id="reportView" class="report hidden"></div>
 </div>
 <div id="outsourceSection" class="hidden">
-  <div style="max-width:1200px;margin:24px auto 8px;display:flex;gap:6px;align-items:center;justify-content:space-between">
+  <div id="outsourceToolbar" style="max-width:1200px;margin:24px auto 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
     <div style="display:flex;gap:6px;align-items:center">
       <button class="btn-tab active" style="white-space:nowrap" onclick="outsourceMode='list';renderOutsourceFromCache();this.classList.add('active');this.parentElement.querySelector('.btn-tab:nth-child(2)').classList.remove('active')">看板</button>
       <button class="btn-tab" style="white-space:nowrap" onclick="outsourceMode='gantt';renderOutsourceFromCache();this.classList.add('active');this.parentElement.querySelector('.btn-tab:nth-child(1)').classList.remove('active')">時間軸</button>
       <button class="btn edit-ctrl" onclick="syncOutsource()" style="background:var(--accent);color:#fff;white-space:nowrap">🔄 同步</button>
-      <span style="font-size:0.85rem;color:var(--muted);white-space:nowrap;margin-left:auto">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
     </div>
-    <input class="search-box" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()"/>
+    <span class="outsource-legend" style="font-size:0.85rem;color:var(--muted);white-space:nowrap;margin-left:auto">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
+    <input class="search-box outsource-search" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()" style="order:3"/>
   </div>
   <div id="outsourceContent"></div>
 </div>
