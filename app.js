@@ -257,8 +257,10 @@ function renderFilterBar(){
   if(!allTags.size){document.getElementById('filterBar').innerHTML='';return}
   let html=`<span class="filter-tag ${!activeFilter?'active':''}" onclick="activeFilter='';render();renderFilterBar()">全部</span>`;
   allTags.forEach(tag=>{html+=`<span class="filter-tag ${activeFilter===tag?'active':''}" onclick="activeFilter='${tag}';render();renderFilterBar()">${tag}</span>`});
-  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="width:150px"/>`;
+  html+=`<input class="search-box" id="search" placeholder="🔍 搜尋..." oninput="render()" style="width:150px;margin-left:auto"/>`;
+  const oldVal=(document.getElementById('search')||{}).value||'';
   document.getElementById('filterBar').innerHTML=html;
+  document.getElementById('search').value=oldVal;
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
 function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),mode:'no-cors'})}}
