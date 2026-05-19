@@ -1,4 +1,4 @@
-﻿
+
 const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
@@ -113,7 +113,7 @@ function toggleStatus(idx,e){
   const t=tasks[idx];
   const next=t['狀態']==='待辦'?'進行中':t['狀態']==='進行中'?'已完成':'待辦';
   t['狀態']=next;
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:next,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:next,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),redirect:'follow'});
   render();
 }
 function inlineEdit(idx,field,e){
@@ -146,7 +146,7 @@ function inlineEdit(idx,field,e){
     if(field==='負責人'){const sel=m.querySelector('#ie-owner');const inp=m.querySelector('#ie-owner-new');t['負責人']=sel.value==='__new'||!sel.value?inp.value:sel.value}
     else if(field==='日期'){t['開始日']=m.querySelector('#ie-start').value;t['截止日']=m.querySelector('#ie-due').value}
     else if(field==='標籤'){t['標籤']=m.querySelector('#ie-tags').value}
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),redirect:'follow'});
     m.remove();render();
   };
   if(m.querySelector('#ie-owner'))m.querySelector('#ie-owner').onchange=function(){if(this.value&&this.value!=='__new')m.querySelector('#ie-owner-new').value=this.value};
@@ -162,10 +162,10 @@ function quickDelete(idx,e){
     const grandChildren=tasks.filter(g=>g['父任務']===c['任務名稱']);
     if(!parentOfDeleted){
       c['父任務']='';
-      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:'',hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
+      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:'',hours:c['工時'],comment:c['評論']}),redirect:'follow'});
     } else {
       c['父任務']=parentOfDeleted;
-      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:parentOfDeleted,hours:c['工時'],comment:c['評論']}),mode:'no-cors'});
+      fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:parentOfDeleted,hours:c['工時'],comment:c['評論']}),redirect:'follow'});
     }
     grandChildren.forEach(g=>{
       const gi=tasks.indexOf(g);
@@ -173,7 +173,7 @@ function quickDelete(idx,e){
       if(!parentOfDeleted){g['父任務']=c['任務名稱']}
     });
   });
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:idx}),mode:'no-cors'});
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:idx}),redirect:'follow'});
   tasks.splice(idx,1);render();
 }
 function updateMonthLabel(){const lbl=document.getElementById('monthLabel');lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
@@ -188,7 +188,7 @@ function loadNotes(){
   }).catch(()=>{});
 }
 function saveOwnerSort(status,sortArray){
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sortArray)}),mode:'no-cors'});
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sortArray)}),redirect:'follow'});
 }
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
@@ -220,12 +220,12 @@ async function submitTask(){
   if(dupIdx!==-1&&(m.dataset.editIdx===undefined||dupIdx!==parseInt(m.dataset.editIdx))){alert('任務名稱已存在，請使用不同名稱');return}
   if(m.dataset.editIdx!==undefined){data.action='update';data.row=m.dataset.editIdx}
   try{
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),mode:'no-cors'});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(data),redirect:'follow'});
     if(data.action==='update'){
       const t=tasks[parseInt(m.dataset.editIdx)];
       const oldName=t['任務名稱'];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
-      if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;const ci=tasks.indexOf(c);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']}),mode:'no-cors'})})}
+      if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;const ci=tasks.indexOf(c);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']}),redirect:'follow'})})}
     }else{
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
@@ -238,7 +238,7 @@ function deleteTask(idx){
   const row=idx!==undefined?idx:m.dataset.editIdx;
   if(row===undefined)return;
   if(!confirm('確定刪除？'))return;
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:row}),mode:'no-cors'});
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'delete',row:row}),redirect:'follow'});
   tasks.splice(parseInt(row),1);if(idx===undefined)closeModal();render();
 }
 async function fetchData(){
@@ -264,7 +264,7 @@ function renderFilterBar(){
   document.getElementById('search').value=oldVal;
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
-function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),mode:'no-cors'})}}
+function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),redirect:'follow'})}}
 let _collapsedOwners=new Set();
 function getCollapsedOwnersKey(){return 'fzg_collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function loadCollapsedOwners(){_collapsedOwners=new Set(JSON.parse(localStorage.getItem(getCollapsedOwnersKey())||'[]'))}
@@ -279,7 +279,7 @@ function getOutsourceGroupCollapseKey(){return 'fzg_expanded_outsource_groups_'+
 function getOutsourceBoardGroupCollapseKey(){return 'fzg_expanded_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function getOutsourceOwnerCollapseKey(){return 'fzg_collapsed_outsource_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 let _collapsedOutsourceOwners=new Set();
-function toggleOutsourceOwner(el,owner){var d=el.nextElementSibling;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(collapsed)_collapsedOutsourceOwners.add(owner);else _collapsedOutsourceOwners.delete(owner);localStorage.setItem(getOutsourceOwnerCollapseKey(),JSON.stringify([..._collapsedOutsourceOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_outsource_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceOwners])}),mode:'no-cors'})}
+function toggleOutsourceOwner(el,owner){var d=el.nextElementSibling;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(collapsed)_collapsedOutsourceOwners.add(owner);else _collapsedOutsourceOwners.delete(owner);localStorage.setItem(getOutsourceOwnerCollapseKey(),JSON.stringify([..._collapsedOutsourceOwners]));if(unlocked)fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_outsource_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceOwners])}),redirect:'follow'})}
 function updateSyncTimestamp(){const el=document.getElementById('syncTimestamp');if(!el)return;const ts=localStorage.getItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1));el.textContent=ts?'🕐 更新：'+ts:''}
 function getGroupNamesKey(){return 'fzg_group_names_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function getManualBoardGroupsKey(){return 'fzg_manual_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
@@ -288,32 +288,32 @@ let _manualBoardGroups={};
 function loadGroupNames(){_groupNames=JSON.parse(localStorage.getItem(getGroupNamesKey())||'{}');_manualBoardGroups=JSON.parse(localStorage.getItem(getManualBoardGroupsKey())||'{}')}
 function simplifyGroupName(items){const names=items.map(t=>t['工作項目']||'');if(!names.length)return'';const shortest=names.reduce((a,b)=>a.length<=b.length?a:b);return shortest.length<=10?shortest:shortest.substring(0,10)}
 function getGroupDisplayName(key,items){if(_groupNames[key])return _groupNames[key];return simplifyGroupName(items)}
-function editGroupName(el,key){if(!unlocked)return;const current=_groupNames[key]||key;const v=prompt('修改群組名稱：',current);if(v&&v.trim()){_groupNames[key]=v.trim();localStorage.setItem(getGroupNamesKey(),JSON.stringify(_groupNames));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'group_names_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(_groupNames)}),mode:'no-cors'});renderOutsourceFromCache()}}
-function saveBoardGroups(){localStorage.setItem(getManualBoardGroupsKey(),JSON.stringify(_manualBoardGroups));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'manual_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(_manualBoardGroups)}),mode:'no-cors'})}
+function editGroupName(el,key){if(!unlocked)return;const current=_groupNames[key]||key;const v=prompt('修改群組名稱：',current);if(v&&v.trim()){_groupNames[key]=v.trim();localStorage.setItem(getGroupNamesKey(),JSON.stringify(_groupNames));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'group_names_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(_groupNames)}),redirect:'follow'});renderOutsourceFromCache()}}
+function saveBoardGroups(){localStorage.setItem(getManualBoardGroupsKey(),JSON.stringify(_manualBoardGroups));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'manual_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(_manualBoardGroups)}),redirect:'follow'})}
 function getBoardItemSortKey(){return 'fzg_board_item_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
-function moveBoardItem(owner,key,dir,e){e.stopPropagation();if(!unlocked)return;const sort=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');let list=sort[owner]||[];if(!list.length||list.indexOf(key)<0){const col=e.target.closest('.column');if(col){const items=[...col.querySelectorAll('[data-board-item],[data-board-group]')];list=items.map(el=>el.dataset.boardItem||el.dataset.boardGroup).filter(Boolean);list=[...new Set(list)]}sort[owner]=list}const pos=list.indexOf(key);if(pos<0)return;const np=pos+dir;if(np<0||np>=list.length)return;list.splice(pos,1);list.splice(np,0,key);const swappedKey=list[pos];sort[owner]=list;localStorage.setItem(getBoardItemSortKey(),JSON.stringify(sort));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'board_item_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sort)}),mode:'no-cors'});renderOutsourceFromCache();[key,swappedKey].forEach(k=>{if(!k)return;const el2=document.querySelector(`[data-board-item="${k}"],[data-board-group="${k}"]`);if(el2){el2.classList.add('moved');setTimeout(()=>el2.classList.remove('moved'),600)}})}
+function moveBoardItem(owner,key,dir,e){e.stopPropagation();if(!unlocked)return;const sort=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');let list=sort[owner]||[];if(!list.length||list.indexOf(key)<0){const col=e.target.closest('.column');if(col){const items=[...col.querySelectorAll('[data-board-item],[data-board-group]')];list=items.map(el=>el.dataset.boardItem||el.dataset.boardGroup).filter(Boolean);list=[...new Set(list)]}sort[owner]=list}const pos=list.indexOf(key);if(pos<0)return;const np=pos+dir;if(np<0||np>=list.length)return;list.splice(pos,1);list.splice(np,0,key);const swappedKey=list[pos];sort[owner]=list;localStorage.setItem(getBoardItemSortKey(),JSON.stringify(sort));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'board_item_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sort)}),redirect:'follow'});renderOutsourceFromCache();[key,swappedKey].forEach(k=>{if(!k)return;const el2=document.querySelector(`[data-board-item="${k}"],[data-board-group="${k}"]`);if(el2){el2.classList.add('moved');setTimeout(()=>el2.classList.remove('moved'),600)}})}
 function boardCardDragStart(e,el){if(!unlocked){e.preventDefault();return}e.stopPropagation();e.dataTransfer.setData('text/board-item',el.dataset.boardItem);el.classList.add('dragging')}
 function boardCardDragEnd(){document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('dragging','drag-over-top','drag-over-bottom'));document.querySelectorAll('[style*="outline: 2px dashed"]').forEach(x=>x.style.outline='')}
 function boardCardDragOver(e,el){e.preventDefault();const item=e.dataTransfer.types.includes('text/board-item');if(!item)return;document.querySelectorAll('[style*="outline: 2px dashed"]').forEach(x=>x.style.outline='');const target=el.closest('[data-board-group]')||el;target.style.outline='2px dashed var(--accent)'}
 function boardCardDrop(e,el){e.preventDefault();e.stopPropagation();el.style.outline='';const src=e.dataTransfer.getData('text/board-item');if(!src||!unlocked)return;const groupEl=el.closest('[data-board-group]');const targetGroup=groupEl?.dataset.boardGroup||el.dataset.boardGroup;const target=el.dataset.boardItem;if(!targetGroup&&!target)return;if(targetGroup){if(targetGroup===src)return;_manualBoardGroups[src]=targetGroup;if(!_manualBoardGroups[targetGroup])_manualBoardGroups[targetGroup]=targetGroup}else if(target){if(target===src)return;_manualBoardGroups[src]=target;_manualBoardGroups[target]=target}saveBoardGroups();boardCardDragEnd();renderOutsourceFromCache()}
 function moveOutOfGroup(e,itemId){e.stopPropagation();if(!unlocked)return;_manualBoardGroups[itemId]='__independent__';saveBoardGroups();renderOutsourceFromCache()}
 let _collapsedOutsourceBoardGroups=new Set();
-function toggleOutsourceGroup(el){var wrapper=el.closest('[data-group]');var d=wrapper.children[1];d.style.display=d.style.display==='none'?'block':'none';el.textContent=d.style.display==='none'?'▶':'▼';var name=wrapper.dataset.group;if(!name)return;if(d.style.display!=='none')_collapsedOutsourceGroups.add(name);else _collapsedOutsourceGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'expanded_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceGroups])}),mode:'no-cors'})}
-function toggleOutsourceBoardGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('span').textContent=d.style.display==='none'?'▶':'▼';var name=el.dataset.boardGroup;if(!name)return;if(d.style.display!=='none')_collapsedOutsourceBoardGroups.add(name);else _collapsedOutsourceBoardGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceBoardGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceBoardGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'expanded_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceBoardGroups])}),mode:'no-cors'})}
+function toggleOutsourceGroup(el){var wrapper=el.closest('[data-group]');var d=wrapper.children[1];d.style.display=d.style.display==='none'?'block':'none';el.textContent=d.style.display==='none'?'▶':'▼';var name=wrapper.dataset.group;if(!name)return;if(d.style.display!=='none')_collapsedOutsourceGroups.add(name);else _collapsedOutsourceGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'expanded_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceGroups])}),redirect:'follow'})}
+function toggleOutsourceBoardGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('span').textContent=d.style.display==='none'?'▶':'▼';var name=el.dataset.boardGroup;if(!name)return;if(d.style.display!=='none')_collapsedOutsourceBoardGroups.add(name);else _collapsedOutsourceBoardGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceBoardGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceBoardGroups]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'expanded_outsource_board_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOutsourceBoardGroups])}),redirect:'follow'})}
 let _tlTaskDrag=null;
 function getTlTaskSortKey(){return 'fzg_timeline_task_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function tlTaskDragStart(e,el){if(!unlocked){e.preventDefault();return}_tlTaskDrag=el.dataset.task;e.dataTransfer.setData('text/tl-task',_tlTaskDrag);el.classList.add('dragging')}
 function tlTaskDragEnd(){_tlTaskDrag=null;document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('dragging','drag-over-top','drag-over-bottom'))}
 function tlTaskDragOver(e,el){e.preventDefault();if(!_tlTaskDrag||el.dataset.task===_tlTaskDrag)return;document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));const rect=el.getBoundingClientRect();el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
-function tlTaskDrop(e,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));if(!_tlTaskDrag||!unlocked||el.dataset.task===_tlTaskDrag)return;const sort=JSON.parse(localStorage.getItem(getTlTaskSortKey())||'{}');const src=_tlTaskDrag,tgt=el.dataset.task;const srcTask=tasks.find(t=>t['任務名稱']===src),tgtTask=tasks.find(t=>t['任務名稱']===tgt);if(!srcTask||!tgtTask||(srcTask['負責人']||'')!==(tgtTask['負責人']||''))return;const owner=srcTask['負責人']||'未指派';const allNames=tasks.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']).map(t=>t['任務名稱']);const existing=sort[owner]||allNames;const ownerTasks=[...existing.filter(n=>allNames.includes(n)),...allNames.filter(n=>!existing.includes(n))];const from=ownerTasks.indexOf(src);if(from>=0)ownerTasks.splice(from,1);const to=ownerTasks.indexOf(tgt);const rect=el.getBoundingClientRect();ownerTasks.splice(e.clientY<rect.top+rect.height/2?to:to+1,0,src);sort[owner]=ownerTasks;localStorage.setItem(getTlTaskSortKey(),JSON.stringify(sort));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'timeline_task_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sort)}),mode:'no-cors'});tlTaskDragEnd();render()}
-function toggleTlChildren(el){var row=el.closest('[data-task]');var wrapper=row.parentNode;var c=wrapper.querySelector('.tl-children');if(c){c.style.display=c.style.display==='none'?'block':'none';el.textContent=c.style.display==='none'?'▶':'▼';var name=row.dataset.task;if(!name||!unlocked)return;if(c.style.display==='none')_collapsedTimelineTasks.add(name);else _collapsedTimelineTasks.delete(name);localStorage.setItem(getTimelineTaskCollapseKey(),JSON.stringify([..._collapsedTimelineTasks]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_tasks_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineTasks])}),mode:'no-cors'})}}
+function tlTaskDrop(e,el){e.preventDefault();e.stopPropagation();document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));if(!_tlTaskDrag||!unlocked||el.dataset.task===_tlTaskDrag)return;const sort=JSON.parse(localStorage.getItem(getTlTaskSortKey())||'{}');const src=_tlTaskDrag,tgt=el.dataset.task;const srcTask=tasks.find(t=>t['任務名稱']===src),tgtTask=tasks.find(t=>t['任務名稱']===tgt);if(!srcTask||!tgtTask||(srcTask['負責人']||'')!==(tgtTask['負責人']||''))return;const owner=srcTask['負責人']||'未指派';const allNames=tasks.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']).map(t=>t['任務名稱']);const existing=sort[owner]||allNames;const ownerTasks=[...existing.filter(n=>allNames.includes(n)),...allNames.filter(n=>!existing.includes(n))];const from=ownerTasks.indexOf(src);if(from>=0)ownerTasks.splice(from,1);const to=ownerTasks.indexOf(tgt);const rect=el.getBoundingClientRect();ownerTasks.splice(e.clientY<rect.top+rect.height/2?to:to+1,0,src);sort[owner]=ownerTasks;localStorage.setItem(getTlTaskSortKey(),JSON.stringify(sort));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'timeline_task_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(sort)}),redirect:'follow'});tlTaskDragEnd();render()}
+function toggleTlChildren(el){var row=el.closest('[data-task]');var wrapper=row.parentNode;var c=wrapper.querySelector('.tl-children');if(c){c.style.display=c.style.display==='none'?'block':'none';el.textContent=c.style.display==='none'?'▶':'▼';var name=row.dataset.task;if(!name||!unlocked)return;if(c.style.display==='none')_collapsedTimelineTasks.add(name);else _collapsedTimelineTasks.delete(name);localStorage.setItem(getTimelineTaskCollapseKey(),JSON.stringify([..._collapsedTimelineTasks]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_tasks_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineTasks])}),redirect:'follow'})}}
 let _timelineDragOwner=null;
 function timelineDragStart(e,el){if(!unlocked){e.preventDefault();return}_timelineDragOwner=el.dataset.owner;e.dataTransfer.setData('text/tl-owner',_timelineDragOwner);el.closest('[style*="border-bottom"]').classList.add('dragging')}
 function timelineDragEnd(){_timelineDragOwner=null;document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('dragging','drag-over-top','drag-over-bottom'))}
 function timelineDragOver(e,el){e.preventDefault();if(!_timelineDragOwner)return;const owner=el.querySelector('[data-owner]')?.dataset.owner;if(owner===_timelineDragOwner)return;document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));const rect=el.getBoundingClientRect();el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bottom')}
-function timelineDrop(e,el){e.preventDefault();document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));if(!_timelineDragOwner||!unlocked)return;const tgtOwner=el.querySelector('[data-owner]')?.dataset.owner;if(!tgtOwner||tgtOwner===_timelineDragOwner)return;const sort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');const container=el.closest('.timeline')?.querySelector('[style*="position:relative"]')||el.parentNode;const groups=[...container.querySelectorAll('[data-owner]')].map(s=>s.dataset.owner);const from=groups.indexOf(_timelineDragOwner);if(from>=0)groups.splice(from,1);const to=groups.indexOf(tgtOwner);const rect=el.getBoundingClientRect();groups.splice(e.clientY<rect.top+rect.height/2?to:to+1,0,_timelineDragOwner);localStorage.setItem(getTimelineSortKey(),JSON.stringify(groups));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'timeline_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(groups)}),mode:'no-cors'});timelineDragEnd();render();if(!document.getElementById('outsourceSection').classList.contains('hidden'))renderOutsourceFromCache()}
-function toggleTimelineGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼';if(!unlocked)return;var owner=el.dataset.owner;if(d.style.display==='none')_collapsedTimelineOwners.add(owner);else _collapsedTimelineOwners.delete(owner);localStorage.setItem(getTimelineCollapseKey(),JSON.stringify([..._collapsedTimelineOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineOwners])}),mode:'no-cors'})}
-function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(!unlocked)return;var owner=g.dataset.owner;var status=g.closest('.column')?.dataset.status||'';var key=owner+'::'+status;if(collapsed)_collapsedOwners.add(key);else _collapsedOwners.delete(key);localStorage.setItem(getCollapsedOwnersKey(),JSON.stringify([..._collapsedOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOwners])}),mode:'no-cors'})}
+function timelineDrop(e,el){e.preventDefault();document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('drag-over-top','drag-over-bottom'));if(!_timelineDragOwner||!unlocked)return;const tgtOwner=el.querySelector('[data-owner]')?.dataset.owner;if(!tgtOwner||tgtOwner===_timelineDragOwner)return;const sort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');const container=el.closest('.timeline')?.querySelector('[style*="position:relative"]')||el.parentNode;const groups=[...container.querySelectorAll('[data-owner]')].map(s=>s.dataset.owner);const from=groups.indexOf(_timelineDragOwner);if(from>=0)groups.splice(from,1);const to=groups.indexOf(tgtOwner);const rect=el.getBoundingClientRect();groups.splice(e.clientY<rect.top+rect.height/2?to:to+1,0,_timelineDragOwner);localStorage.setItem(getTimelineSortKey(),JSON.stringify(groups));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'timeline_sort_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify(groups)}),redirect:'follow'});timelineDragEnd();render();if(!document.getElementById('outsourceSection').classList.contains('hidden'))renderOutsourceFromCache()}
+function toggleTimelineGroup(el){var d=el.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none';el.querySelector('.tog').textContent=d.style.display==='none'?'▶':'▼';if(!unlocked)return;var owner=el.dataset.owner;if(d.style.display==='none')_collapsedTimelineOwners.add(owner);else _collapsedTimelineOwners.delete(owner);localStorage.setItem(getTimelineCollapseKey(),JSON.stringify([..._collapsedTimelineOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_timeline_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedTimelineOwners])}),redirect:'follow'})}
+function toggleOwnerGroup(el){var g=el.closest('.owner-group');var d=g.lastElementChild;var collapsed=d.style.display!=='none';d.style.display=collapsed?'none':'block';el.querySelector('.tog').textContent=collapsed?'▶':'▼';if(!unlocked)return;var owner=g.dataset.owner;var status=g.closest('.column')?.dataset.status||'';var key=owner+'::'+status;if(collapsed)_collapsedOwners.add(key);else _collapsedOwners.delete(key);localStorage.setItem(getCollapsedOwnersKey(),JSON.stringify([..._collapsedOwners]));fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:JSON.stringify([..._collapsedOwners])}),redirect:'follow'})}
 function moveOwnerGroup(owner,dir,e){
   e.stopPropagation();
   if(!unlocked)return;
@@ -421,7 +421,7 @@ function colTaskDrop(e,status){
   if(_taskDragIdx!==null){
     e.preventDefault();
     const src=tasks[_taskDragIdx];
-    if(src['狀態']!==status){src['狀態']=status;fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:_taskDragIdx,name:src['任務名稱'],owner:src['負責人'],status:status,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),mode:'no-cors'})}
+    if(src['狀態']!==status){src['狀態']=status;fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:_taskDragIdx,name:src['任務名稱'],owner:src['負責人'],status:status,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),redirect:'follow'})}
     taskDragEnd();render();renderFilterBar();
   }
 }
@@ -435,7 +435,7 @@ function taskDrop(e,targetIdx,el){
   // Cross-column: change status (only parent task, not children)
   if(src['狀態']!==targetStatus){
     src['狀態']=targetStatus;
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:_taskDragIdx,name:src['任務名稱'],owner:src['負責人'],status:targetStatus,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),mode:'no-cors'});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:_taskDragIdx,name:src['任務名稱'],owner:src['負責人'],status:targetStatus,progress:'',startDate:src['開始日'],dueDate:src['截止日'],note:src['備註'],priority:src['優先級'],tags:src['標籤'],parent:src['父任務'],hours:src['工時'],comment:src['評論']}),redirect:'follow'});
   }
   // Sort within target status
   const rect=el.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;
@@ -443,7 +443,7 @@ function taskDrop(e,targetIdx,el){
   const fromPos=sameStatus.indexOf(src);if(fromPos>=0)sameStatus.splice(fromPos,1);
   const toPos=sameStatus.indexOf(tgt);
   sameStatus.splice(above?toPos:toPos+1,0,src);
-  sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),mode:'no-cors'})});
+  sameStatus.forEach((item,i)=>{item['排序']=String(i+1);const idx=tasks.indexOf(item);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'updateSort',row:idx,sort:i+1}),redirect:'follow'})});
   taskDragEnd();render();renderFilterBar();
 }
 function ownerDragStart(e,el){
@@ -479,7 +479,7 @@ function ownerDropZone(e,targetStatus){
   const filtered=filterByMonth(tasks);
   filtered.filter(t=>(t['負責人']||'未指派')===owner&&!t['父任務']&&t['狀態']===_dragOwnerSrcStatus).forEach(t=>{
     t['狀態']=targetStatus;const idx=tasks.indexOf(t);
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:targetStatus,progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),redirect:'follow'});
   });
   const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+targetStatus)||'{}');
   // Get all owners that will be in target status after this move
@@ -560,7 +560,7 @@ function renderTimeline(){
       const track=handle.closest('.gantt-track');
       const trackRect=track.getBoundingClientRect();const trackW=trackRect.width;
       const onMove=ev=>{const x=Math.max(0,Math.min(trackW,ev.clientX-trackRect.left));const day=Math.max(1,Math.min(days,Math.round(x/trackW*days)+1));const t=tasks[idx];const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;if(side==='l'){if(dateStr<=((t['截止日']||'').substring(0,10)||dateStr))t['開始日']=dateStr}else{if(dateStr>=((t['開始日']||'').substring(0,10)||dateStr))t['截止日']=dateStr}render()};
-      const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);const t=tasks[idx];fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),mode:'no-cors'})};
+      const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);const t=tasks[idx];fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']}),redirect:'follow'})};
       document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
     }
   })}
