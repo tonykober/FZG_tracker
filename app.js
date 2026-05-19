@@ -11,7 +11,7 @@ async function syncAndReload(){
   let ok=true;
   for(const k of keys){
     const month=k.replace('fzg_','');const val=localStorage.getItem(k);
-    try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:val})})}catch(e){ok=false;break}
+    try{await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'saveNote',month:month,text:val})});await new Promise(r=>setTimeout(r,300))}catch(e){ok=false;break}
   }
   if(ok){Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()}
   else{alert('❌ 同步失敗，未清除快取。請檢查網路後重試。');location.reload()}
