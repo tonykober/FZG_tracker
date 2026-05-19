@@ -685,41 +685,8 @@ function outsourceDrop(e,zone){
 }
 const DAILY_SHEET_ID='1gppJhZkxQYGNNM1-hk3v12Hp-qzV8VnJdCLCNrf-cog';
 async function syncOutsource(){
-  if(!unlocked)return;
-  const el=document.getElementById('outsourceContent');
-  el.innerHTML='<div class="spinner"></div>';
-  try{
-    const m=currentMonth.getMonth()+1;const sheetName=currentMonth.getFullYear()+'/'+('0'+m).slice(-2);
-    const res=await fetch(`https://docs.google.com/spreadsheets/d/${DAILY_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const text=await res.text();const json=JSON.parse(text.substring(47).slice(0,-2));
-    const rows=json.table.rows;const tasks2=[];let currentDate='';
-    rows.forEach(r=>{
-      if(r.c[0]&&r.c[0].v)currentDate=r.c[0].v;
-      const content=r.c[1]?r.c[1].v:'';const progress=r.c[2]?r.c[2].v:'';const hours=r.c[3]?r.c[3].v:'';
-      if(!content||content==='NAME：')return;
-      const lines=content.split('\n');let name='';const m2=lines[0].match(/NAME：(.+)/);if(m2)name=m2[1].trim();if(!name)return;
-      const date=currentDate.replace(/\(.+\)$/,'');
-      if(content.includes('請假')){tasks2.push({owner:name,task:'請假',status:'已完成',startDate:date,dueDate:date,note:'',hours:''});return}
-      const items=lines.filter(l=>/^\s*\d+\./.test(l)).map(l=>l.replace(/^\s*\d+\.\s*/,'').trim());
-      const progLines=progress?progress.split('\n').map(l=>l.replace(/^\s*\d+\.\s*/,'').trim()):[];
-      const hourLines=hours?hours.split('\n').map(l=>l.trim()):[];
-      items.forEach((item,i)=>{const prog=progLines[i]||'';const hr=hourLines[i]||'';const st=prog==='完成'?'已完成':prog?'進行中':'待辦';tasks2.push({owner:name,task:item,status:st,startDate:date,dueDate:date,note:prog,hours:hr})});
-    });
-    await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'clear',month:sheetName}),redirect:'follow'});
-    const total=tasks2.length;
-    for(let i=0;i<total;i++){
-      el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--accent)"><div class="spinner"></div><div style="margin-top:12px">同步中 (${i+1}/${total})</div></div>`;
-      await fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'add',month:sheetName,...tasks2[i]}),redirect:'follow'});
-      if(i<total-1)await new Promise(r=>setTimeout(r,300));
-    }
-    const vRes=await fetch(`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
-    const vText=await vRes.text();const vJson=JSON.parse(vText.substring(47).slice(0,-2));
-    const actual=vJson.table.rows.length;
-    const ts=new Date().toLocaleString('zh-TW');localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),ts);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:ts}),mode:'no-cors'});updateSyncTimestamp();
-    alert(`✅ 同步完成：寫入 ${total} 筆，驗證 ${actual} 筆`);
-    renderOutsource();
-  }catch(e){alert('❌ 同步失敗：'+e.message);renderOutsource()}
+  document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
+  renderOutsource();
 }
 
 async function renderOutsource(){
