@@ -4,6 +4,18 @@ const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQ
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
+async function syncAndReload(){
+  if(!confirm('確定同步設定並重新載入？'))return;
+  document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:var(--muted)">正在同步設定...</div></div>';
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
+  let ok=true;
+  for(const k of keys){
+    const month=k.replace('fzg_','');const val=localStorage.getItem(k);
+    try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:val})})}catch(e){ok=false;break}
+  }
+  if(ok){Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()}
+  else{alert('❌ 同步失敗，未清除快取。請檢查網路後重試。');location.reload()}
+}
 function toggleAdmin(){
   if(unlocked){unlocked=false;sessionStorage.removeItem('fzg_unlocked')}
   else{if(document.getElementById('adminPw').value!=='fzg'){alert('密碼錯誤');return}unlocked=true;sessionStorage.setItem('fzg_unlocked','1')}
