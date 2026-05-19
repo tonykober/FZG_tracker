@@ -8,7 +8,6 @@ async function syncAndReload(){
   const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
   if(!confirm('確定執行以下操作？\n\n1. 上傳本機設定到雲端（'+keys.length+' 筆）\n2. 清除本機快取\n3. 重新載入頁面'))return;
   document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:var(--muted)">正在同步設定...</div></div>';
-  const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
   let ok=true;
   for(const k of keys){
     const month=k.replace('fzg_','');const val=localStorage.getItem(k);
