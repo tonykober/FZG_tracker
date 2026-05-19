@@ -52,6 +52,7 @@
       <button class="btn edit-ctrl" onclick="syncOutsource()" style="background:var(--accent);color:#fff;white-space:nowrap">🔄 同步</button>
     </div>
     <span class="outsource-legend" style="font-size:0.85rem;color:var(--muted);white-space:nowrap;margin-left:auto">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
+    <span id="syncTimestamp" style="font-size:0.75rem;color:var(--muted);white-space:nowrap"></span>
     <input class="search-box outsource-search" id="searchOutsource" placeholder="🔍 搜尋..." oninput="renderOutsourceFromCache()" style="order:3"/>
   </div>
   <div id="outsourceContent"></div>
