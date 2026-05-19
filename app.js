@@ -184,6 +184,7 @@ function loadNotes(){
     try{const json=JSON.parse(text.substring(47).slice(0,-2));const rows=json.table.rows||[];
     rows.forEach(r=>{if(r.c&&r.c[0]){const v=String(r.c[0].v||'');if(v.startsWith('owner_sort_')){try{const arr=JSON.parse(r.c[1].v||'[]');const sortObj={};arr.forEach((o,i)=>{sortObj[o]=String(i+1)});localStorage.setItem('fzg_'+v,JSON.stringify(sortObj))}catch(e){}}if(v.startsWith('collapsed_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_owners_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('collapsed_timeline_tasks_')){try{const arr=JSON.parse(r.c[1].v||'[]');localStorage.setItem('fzg_'+v,JSON.stringify(arr))}catch(e){}}if(v.startsWith('timeline_task_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_groups_')||v.startsWith('collapsed_outsource_board_groups_')||v.startsWith('expanded_outsource_board_groups_')||v.startsWith('expanded_outsource_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('group_names_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('manual_board_groups_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('board_item_sort_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'{}')}catch(e){}}if(v.startsWith('collapsed_outsource_owners_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'[]')}catch(e){}}if(v.startsWith('sync_time_')){try{localStorage.setItem('fzg_'+v,r.c[1].v||'')}catch(e){}}}});
     }catch(e){}
+    updateSyncTimestamp();
   }).catch(()=>{});
 }
 function saveOwnerSort(status,sortArray){
@@ -715,7 +716,7 @@ async function syncOutsource(){
     const vRes=await fetch(`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`,{redirect:'follow'});
     const vText=await vRes.text();const vJson=JSON.parse(vText.substring(47).slice(0,-2));
     const actual=vJson.table.rows.length;
-    const ts=new Date().toLocaleString('zh-TW');localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),ts);updateSyncTimestamp();
+    const ts=new Date().toLocaleString('zh-TW');localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),ts);fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:'sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),text:ts}),mode:'no-cors'});updateSyncTimestamp();
     alert(`✅ 同步完成：寫入 ${total} 筆，驗證 ${actual} 筆`);
     renderOutsource();
   }catch(e){alert('❌ 同步失敗：'+e.message);renderOutsource()}
