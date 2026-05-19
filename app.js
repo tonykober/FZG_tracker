@@ -5,7 +5,8 @@ const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=ou
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
 async function syncAndReload(){
-  if(!confirm('確定同步設定並重新載入？'))return;
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
+  if(!confirm('確定執行以下操作？\n\n1. 上傳本機設定到雲端（'+keys.length+' 筆）\n2. 清除本機快取\n3. 重新載入頁面'))return;
   document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:var(--muted)">正在同步設定...</div></div>';
   const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
   let ok=true;
@@ -697,6 +698,7 @@ function outsourceDrop(e,zone){
 }
 const DAILY_SHEET_ID='1gppJhZkxQYGNNM1-hk3v12Hp-qzV8VnJdCLCNrf-cog';
 async function syncOutsource(){
+  if(!confirm('確定執行以下操作？\n\n1. 從雲端重新讀取外包工作項目\n2. 重新渲染看板/時間軸'))return;
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   renderOutsource();
 }
