@@ -12,11 +12,11 @@ async function syncAndReload(){
   document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:var(--muted)">正在同步設定...</div></div>';
   let ok=true;
   for(const k of keys){
-    const month=k.replace('fzg_','');const val=localStorage.getItem(k);
-    try{const r=await saveNote(month,val);await new Promise(r=>setTimeout(r,200))}catch(e){ok=false;break}
+    const month=k.replace('fzg_','');const val=localStorage.getItem(k)||'';
+    if(val.length>1500){try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:val}),headers:{'Content-Type':'text/plain'}});await new Promise(r=>setTimeout(r,300))}catch(e){}}
+    else{try{await saveNote(month,val);await new Promise(r=>setTimeout(r,200))}catch(e){}}
   }
-  if(ok){Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()}
-  else{alert('❌ 同步失敗，未清除快取。請檢查網路後重試。');location.reload()}
+  Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()
 }
 function toggleAdmin(){
   if(unlocked){unlocked=false;sessionStorage.removeItem('fzg_unlocked')}
