@@ -1,6 +1,6 @@
 
 const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
-function saveNote(month,text){return fetch(SCRIPT_URL+'?action=saveNote&month='+encodeURIComponent(month)+'&text='+encodeURIComponent(text))}
+function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+encodeURIComponent(month)+'&text='+encodeURIComponent(text);if(url.length<2000)return fetch(url);navigator.sendBeacon(SCRIPT_URL,JSON.stringify({action:'saveNote',month:month,text:text}));return Promise.resolve()}
 
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
