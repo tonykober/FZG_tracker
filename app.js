@@ -8,14 +8,8 @@ let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
 async function syncAndReload(){
   const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
-  if(!confirm('確定執行以下操作？\n\n1. 上傳本機設定到雲端（'+keys.length+' 筆）\n2. 清除本機快取\n3. 重新載入頁面'))return;
-  document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:12px"><div class="spinner"></div><div style="color:var(--muted)">正在同步設定...</div></div>';
-  let ok=true;
-  for(const k of keys){
-    const month=k.replace('fzg_','');const val=localStorage.getItem(k)||'';
-    if(val.length>1500){try{await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveNote',month:month,text:val}),headers:{'Content-Type':'text/plain'}});await new Promise(r=>setTimeout(r,300))}catch(e){}}
-    else{try{await saveNote(month,val);await new Promise(r=>setTimeout(r,200))}catch(e){}}
-  }
+  if(!confirm('確定執行以下操作？\n\n1. 清除本機快取（'+keys.length+' 筆）\n2. 重新載入頁面（從雲端讀取設定）\n\n※ 所有操作已即時同步到雲端'))return;
+  document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999"><div class="spinner"></div></div>';
   Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()
 }
 function toggleAdmin(){
