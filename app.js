@@ -272,7 +272,7 @@ function renderFilterBar(){
   document.getElementById('search').value=oldVal;
 }
 function toggleSub(el,e){e.stopPropagation();var d=el.lastElementChild,s=el.firstElementChild;if(d.style.display==='none'){d.style.display='block';s.textContent='▼'}else{d.style.display='none';s.textContent='▶'}}
-function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'updateCollapse',row:idx,collapsed:collapsed?'1':''}),})}}
+function toggleCollapse(idx,el){var b=el.closest('.card').querySelector('.card-body');var collapsed=b.style.display!=='none';b.style.display=collapsed?'none':'block';el.querySelector('span').textContent=collapsed?'▶':'▼';if(unlocked){tasks[idx]['收合']=collapsed?'1':'';fetch(SCRIPT_URL+'?action=saveNote&month=task_collapse_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)+'_'+idx+'&text='+(collapsed?'1':'')).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'))}}
 let _collapsedOwners=new Set();
 function getCollapsedOwnersKey(){return 'fzg_collapsed_owners_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)}
 function loadCollapsedOwners(){_collapsedOwners=new Set(JSON.parse(localStorage.getItem(getCollapsedOwnersKey())||'[]'))}
