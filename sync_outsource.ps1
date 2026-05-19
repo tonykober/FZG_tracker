@@ -102,3 +102,20 @@ Write-Output "Write: $success ok, $fail fail"
 $vRaw = (Invoke-WebRequest -Uri "https://docs.google.com/spreadsheets/d/$OUTSOURCE_SHEET_ID/gviz/tq?tqx=out:json&headers=1&sheet=$([uri]::EscapeDataString($month))" -UseBasicParsing).Content
 $vJson = ($vRaw -replace '^[^{]*','' -replace '[^}]*$','') | ConvertFrom-Json
 Write-Output "Verified: $($vJson.table.rows.Count) rows"
+
+# Also sync raw Excel rows to 唯晶日報 Google Sheet
+$DAILY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9rjF3pdXD0dgvjkpBmd0dGHoz0EBmKgDFYH2qc27dLz7WDf8cnOCQUlZRrI7NDaIA/exec'
+try {
+  $excel2 = New-Object -ComObject Excel.Application; $excel2.Visible = $false; $excel2.DisplayAlerts = $false
+  $wb2 = $excel2.Workbooks.Open($excelPath, $false, $true); $ws2 = $wb2.Sheets.Item($sheetName)
+  $lastRow2 = $ws2.UsedRange.Rows.Count
+  Invoke-RestMethod -Uri $DAILY_SCRIPT_URL -Method POST -Body ([System.Text.Encoding]::UTF8.GetBytes((@{action='clear';month=$month} | ConvertTo-Json))) -ContentType 'application/json; charset=utf-8' | Out-Null
+  $ds = 0
+  for($r=2;$r -le $lastRow2;$r++){
+    $body2 = @{action='add';month=$month;date=[string]($ws2.Cells.Item($r,1).Text);content=[string]($ws2.Cells.Item($r,2).Text);progress=[string]($ws2.Cells.Item($r,3).Text);hours=[string]($ws2.Cells.Item($r,4).Text)} | ConvertTo-Json -Depth 5
+    try{ Invoke-RestMethod -Uri $DAILY_SCRIPT_URL -Method POST -Body ([System.Text.Encoding]::UTF8.GetBytes($body2)) -ContentType 'application/json; charset=utf-8' | Out-Null; $ds++ } catch {}
+    Start-Sleep -Milliseconds 300
+  }
+  $wb2.Close($false); $excel2.Quit(); [System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel2) | Out-Null
+  Write-Output "唯晶日報: $ds rows synced"
+} catch { Write-Output "唯晶日報 sync failed: $_" }
