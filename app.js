@@ -690,7 +690,7 @@ function outsourceDrop(e,zone){
     outsourceZones[owner]=zone;
   }
   localStorage.setItem('fzg_outsource_zones',JSON.stringify(outsourceZones));
-  saveNote('outsource_zones',JSON.stringify(outsourceZones));
+  setSyncStatus('🔄 同步中...','var(--yellow)');fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveZone',owner:owner,zone:outsourceZones[owner]||zone,sort:outsourceZones['_sort_'+owner]||''})}).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'));
   renderOutsourceFromCache();
 }
 const DAILY_SHEET_ID='1gppJhZkxQYGNNM1-hk3v12Hp-qzV8VnJdCLCNrf-cog';
