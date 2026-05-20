@@ -690,7 +690,7 @@ function outsourceDrop(e,zone){
     outsourceZones[owner]=zone;
   }
   localStorage.setItem('fzg_outsource_zones',JSON.stringify(outsourceZones));
-  fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveZone',owner:owner,zone:outsourceZones[owner]||zone,sort:outsourceZones['_sort_'+owner]||''}),mode:'cors'}).catch(()=>{});
+  saveNote('outsource_zones',JSON.stringify(outsourceZones));
   renderOutsourceFromCache();
 }
 const DAILY_SHEET_ID='PROG_DAILY_PLACEHOLDER';
