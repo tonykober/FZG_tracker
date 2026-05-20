@@ -703,18 +703,18 @@ function requestCloudSync(){
   if(!confirm('確定通知秘書執行雲端資料更新？\n\n同步期間可繼續操作，完成後頁面會顯示通知。'))return;
   const ts=Date.now();
   saveNote('sync_request_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),String(ts));
-  setSyncStatus('☁️ 已通知，同步中...','var(--yellow)');
+  const el=document.getElementById('cloudSyncStatus');
+  el.style.display='block';el.style.color='var(--yellow)';el.textContent='☁️ 已通知秘書，同步中...';
   const origTime=localStorage.getItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'';
   const poll=setInterval(()=>{
-    fetch(SCRIPT_URL+'?action=saveNote&month=_ping&text=').catch(()=>{});
     const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes&headers=0`;
     fetch(notesUrl).then(r=>r.text()).then(text=>{
       try{const json=JSON.parse(text.substring(47).slice(0,-2));
-      json.table.rows.forEach(r=>{if(r.c&&r.c[0]&&r.c[0].v==='sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)){const newTime=r.c[1]?r.c[1].v:'';if(newTime&&newTime!==origTime){clearInterval(poll);localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),newTime);setSyncStatus('✅ 雲端資料已更新，請重新載入','var(--green)')}}})
+      json.table.rows.forEach(r=>{if(r.c&&r.c[0]&&r.c[0].v==='sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)){const newTime=r.c[1]?r.c[1].v:'';if(newTime&&newTime!==origTime){clearInterval(poll);localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),newTime);el.style.color='var(--green)';el.textContent='✅ 雲端資料已更新，請重新載入'}}})
       }catch(e){}
     }).catch(()=>{});
   },10000);
-  setTimeout(()=>clearInterval(poll),300000);
+  setTimeout(()=>{clearInterval(poll);if(el.textContent.includes('同步中')){el.style.color='var(--red)';el.textContent='❌ 同步逾時，請稍後再試'}},300000);
 }
 
 async function renderOutsource(){
