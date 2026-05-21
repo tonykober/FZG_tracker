@@ -15,7 +15,7 @@ async function syncAndReload(){
 }
 function toggleAdmin(){
   if(unlocked){unlocked=false;sessionStorage.removeItem('fzg_unlocked')}
-  else{if(document.getElementById('adminPw').value!=='fzg'){alert('密碼錯誤');return}unlocked=true;sessionStorage.setItem('fzg_unlocked','1')}
+  else{if(document.getElementById('adminPw').value!==(CONFIG.password||'fzg')){alert('密碼錯誤');return}unlocked=true;sessionStorage.setItem('fzg_unlocked','1')}
   document.getElementById('adminPw').value='';
   applyLock();render();renderFilterBar();
 }
