@@ -708,7 +708,7 @@ function activateOutsource(){
   var status=document.getElementById('setupStatus');
   var btn=document.getElementById('setupBtn');
   if(!id||!url){status.innerHTML='<span style="color:var(--red)">請填寫兩個欄位</span>';return}
-  btn.disabled=true;
+  btn.disabled=true;btn.style.opacity='0.5';btn.style.cursor='not-allowed';
   status.innerHTML='<span style="color:var(--yellow)">⏳ 驗證 Sheet ID...</span>';
   fetch('https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
     status.innerHTML='<span style="color:var(--yellow)">⏳ 送出啟用請求...</span>';
@@ -717,8 +717,8 @@ function activateOutsource(){
   }).then(function(){
     status.innerHTML='<span style="color:var(--green)">✅ 請求已送出，等待啟用中...</span>';
     var poll=setInterval(function(){fetch(location.href+'config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){if(t.indexOf(id)>=0){clearInterval(poll);status.innerHTML='<span style="color:var(--green)">✅ 外包功能已啟用！請重新整理頁面。</span>';btn.disabled=false}}).catch(function(){})},10000);
-    setTimeout(function(){clearInterval(poll);if(btn.disabled){status.innerHTML='<span style="color:var(--muted)">⏳ 仍在處理中，請稍後重新整理確認</span>';btn.disabled=false}},300000);
-  }).catch(function(){status.innerHTML='<span style="color:var(--red)">❌ Sheet ID 無效或未設為公開</span>';btn.disabled=false});
+    setTimeout(function(){clearInterval(poll);if(btn.disabled){status.innerHTML='<span style="color:var(--muted)">⏳ 仍在處理中，請稍後重新整理確認</span>';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'}},300000);
+  }).catch(function(){status.innerHTML='<span style="color:var(--red)">❌ Sheet ID 無效或未設為公開</span>';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'});
 }
 function requestCloudSync(){
   if(!confirm('確定通知秘書執行雲端資料更新？\n\n同步期間可繼續操作，完成後頁面會顯示通知。'))return;
