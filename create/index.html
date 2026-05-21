@@ -36,14 +36,14 @@ pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;paddin
 <ol>
 <li>Google Drive → 新增 → Google 試算表</li>
 <li>命名為「FZG_[版本名]_內部工作項目」</li>
-<li>第一個分頁重新命名為「2026/5」</li>
+<li>第一個分頁重新命名為「2026/05」（年/月，月份補零）</li>
 <li>A1~N1 填入：任務名稱、負責人、狀態、進度、開始日、截止日、備註、優先級、標籤、父任務、工時、評論、排序、收合</li>
 <li>新增分頁「notes」（空白）</li>
 <li>共用 → 知道連結的任何人 → 檢視者</li>
-<li>擴充功能 → Apps Script → 貼上程式碼（見下方）→ 部署</li>
+<li>擴充功能 → Apps Script → 全選刪除預設程式碼 → 貼上下方程式碼 → 按「儲存」→ 點「部署」→「新增部署」→ 類型選「網頁應用程式」→ 存取權限選「所有人」→ 按「部署」→ 複製產生的網址</li>
 </ol>
 <details style="margin-top:8px">
-<summary style="cursor:pointer;color:var(--accent)">📋 內部 Sheet Apps Script 程式碼</summary>
+<summary style="cursor:pointer;color:var(--accent)">📋 內部 Sheet Apps Script 程式碼</summary><button onclick="copyCode(this)" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.8rem;cursor:pointer;margin:8px 0">📋 複製程式碼</button>
 <pre>function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -102,10 +102,10 @@ function saveNoteHandler(ss, month, text) {
 <li>第一個分頁命名「2026/05」，A1~G1：負責人、工作項目、狀態、開始日、截止日、備註、工時</li>
 <li>新增分頁「zones」，A1~C1：負責人、區域、排序</li>
 <li>共用 → 知道連結的任何人 → 檢視者</li>
-<li>Apps Script → 貼上程式碼 → 部署</li>
+<li>擴充功能 → Apps Script → 全選刪除預設程式碼 → 貼上下方程式碼 → 按「儲存」→ 點「部署」→「新增部署」→ 類型選「網頁應用程式」→ 存取權限選「所有人」→ 按「部署」→ 複製產生的網址</li>
 </ol>
 <details style="margin-top:8px">
-<summary style="cursor:pointer;color:var(--accent)">📋 外包 Sheet Apps Script 程式碼</summary>
+<summary style="cursor:pointer;color:var(--accent)">📋 外包 Sheet Apps Script 程式碼</summary><button onclick="copyCode(this)" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.8rem;cursor:pointer;margin:8px 0">📋 複製程式碼</button>
 <pre>function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -183,6 +183,6 @@ function createVersion(){
       document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
     }).catch(()=>alert('送出失敗，請檢查網路'));
 }
-</script>
+function copyCode(btn){const pre=btn.parentElement.querySelector("pre");navigator.clipboard.writeText(pre.textContent).then(()=>{btn.textContent="✅ 已複製";setTimeout(()=>btn.textContent="📋 複製程式碼",2000)})}</script>
 </body>
 </html>
