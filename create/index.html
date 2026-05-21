@@ -180,8 +180,8 @@ function createVersion(){
   if(!/^[a-z0-9_-]+$/.test(folder)){alert('版本名稱只能使用英文小寫、數字、底線、連字號');return}
   btn.disabled=true;
   setLog('⏳ 檢查版本名稱是否重複...','var(--yellow)');
-  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/',{mode:'no-cors'}).then(function(r){
-    if(r.type==='opaque'){setLog('❌ 版本名稱「'+folder+'」已存在','var(--red)');resetBtn();return}
+  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/config.js').then(function(r){
+    if(r.ok){setLog('❌ 版本名稱「'+folder+'」已存在','var(--red)');resetBtn();return}
     doValidate();
   }).catch(function(){doValidate()});
   function doValidate(){
@@ -195,20 +195,19 @@ function createVersion(){
         document.getElementById('result').style.display='block';
         document.getElementById('resultLink').href='https://tonykober.github.io/FZG_tracker/'+folder+'/';
         document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
-        pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/');
-        resetBtn();
+        pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/',resetBtn);
       }).catch(function(){setLog('❌ 送出失敗，請檢查網路','var(--red)');resetBtn()});
     }).catch(function(){setLog('❌ 內部 Sheet ID 無效或未設為公開','var(--red)');resetBtn()});
   }
 }
-function pollOnline(url){
+function pollOnline(url,onDone){
   var status=document.getElementById('resultStatus');
   var poll=setInterval(function(){
-    fetch(url,{mode:'no-cors'}).then(function(r){
-      if(r.type==='opaque'||r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>'}
+    fetch(url+'/config.js').then(function(r){
+      if(r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>';if(onDone)onDone()}
     }).catch(function(){});
   },10000);
-  setTimeout(function(){clearInterval(poll);if(status.textContent.indexOf('建立中')>=0)status.innerHTML='<span style="color:#8b949e">⏳ 仍在建立中，請稍後手動確認連結</span>'},300000);
+  setTimeout(function(){clearInterval(poll);if(status.textContent.indexOf('建立中')>=0){status.innerHTML='<span style="color:#8b949e">⏳ 仍在建立中，請稍後手動確認連結</span>';if(onDone)onDone()}},300000);
 }
 function copyCode(btn){const pre=btn.parentElement.querySelector("pre");navigator.clipboard.writeText(pre.textContent).then(()=>{btn.textContent="✅ 已複製";setTimeout(()=>btn.textContent="📋 複製程式碼",2000)})}</script>
 </body>
