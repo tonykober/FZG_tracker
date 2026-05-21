@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>建立新版本 — FZG 專案追蹤器</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--accent:#58a6ff;--green:#3fb950;--muted:#8b949e;--red:#f85149}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:20px;line-height:1.6;max-width:700px;margin:0 auto}
+h1{color:var(--accent);margin-bottom:20px;font-size:1.5rem}
+h2{color:var(--green);margin:24px 0 12px;font-size:1.1rem}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0}
+.step-num{background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px}
+label{display:block;font-size:0.85rem;color:var(--muted);margin:12px 0 4px}
+input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem}
+input:focus{outline:none;border-color:var(--accent)}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:1rem;cursor:pointer;margin-top:16px}
+.btn:hover{opacity:0.9}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+code{background:var(--bg);padding:2px 6px;border-radius:3px;font-size:0.85em;color:var(--green)}
+pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;overflow-x:auto;margin:8px 0;font-size:0.8rem}
+.result{background:var(--surface);border:2px solid var(--green);border-radius:8px;padding:16px;margin-top:20px;display:none}
+.sop{font-size:0.85rem;color:var(--muted);margin:8px 0}
+.sop ol{padding-left:20px}
+.sop li{margin:4px 0}
+</style>
+</head>
+<body>
+<h1>🛠️ 建立新版本 — FZG 專案追蹤器</h1>
+
+<div class="step">
+<h2><span class="step-num">1</span>建立 Google Sheet</h2>
+<div class="sop">
+<p><strong>內部工作項目 Sheet：</strong></p>
+<ol>
+<li>Google Drive → 新增 → Google 試算表</li>
+<li>命名為「FZG_[版本名]_內部工作項目」</li>
+<li>第一個分頁重新命名為「2026/5」</li>
+<li>A1~N1 填入：任務名稱、負責人、狀態、進度、開始日、截止日、備註、優先級、標籤、父任務、工時、評論、排序、收合</li>
+<li>新增分頁「notes」（空白）</li>
+<li>共用 → 知道連結的任何人 → 檢視者</li>
+<li>擴充功能 → Apps Script → 貼上程式碼（見下方）→ 部署</li>
+</ol>
+<details style="margin-top:8px">
+<summary style="cursor:pointer;color:var(--accent)">📋 內部 Sheet Apps Script 程式碼</summary>
+<pre>function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (data.action === 'saveNote') { return saveNoteHandler(ss, data.month, data.text); }
+  if (data.action === 'update') {
+    const ws = ss.getSheets()[0]; const row = parseInt(data.row) + 2;
+    ws.getRange(row,1).setValue(data.name); ws.getRange(row,2).setValue(data.owner);
+    ws.getRange(row,3).setValue(data.status); ws.getRange(row,5).setValue(data.startDate);
+    ws.getRange(row,6).setValue(data.dueDate); ws.getRange(row,7).setValue(data.note);
+    ws.getRange(row,8).setValue(data.priority); ws.getRange(row,9).setValue(data.tags);
+    ws.getRange(row,10).setValue(data.parent); ws.getRange(row,11).setValue(data.hours);
+    ws.getRange(row,12).setValue(data.comment);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'updateSort') {
+    ss.getSheets()[0].getRange(parseInt(data.row)+2, 13).setValue(data.sort);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'delete') {
+    ss.getSheets()[0].deleteRow(parseInt(data.row)+2);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'add' || !data.action) {
+    const ws = ss.getSheets()[0];
+    const maxSort = Math.max(0, ...ws.getRange(2,13,Math.max(ws.getLastRow()-1,1),1).getValues().flat().map(Number).filter(n=>!isNaN(n)));
+    ws.appendRow([data.name,data.owner,data.status,'',data.startDate,data.dueDate,data.note,data.priority,data.tags,data.parent,data.hours,data.comment,maxSort+1]);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({result:'unknown'})).setMimeType(ContentService.MimeType.JSON);
+}
+function doGet(e) {
+  if (e.parameter.action === 'saveNote') {
+    return saveNoteHandler(SpreadsheetApp.getActiveSpreadsheet(), e.parameter.month, e.parameter.text);
+  }
+  return ContentService.createTextOutput(JSON.stringify({result:'unknown'})).setMimeType(ContentService.MimeType.JSON);
+}
+function saveNoteHandler(ss, month, text) {
+  let ws = ss.getSheetByName('notes');
+  if (!ws) { ws = ss.insertSheet('notes'); }
+  const rows = ws.getDataRange().getValues();
+  let found = false;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i][0] === month) {
+      if (!found) { ws.getRange(i+1, 2).setValue(text); found = true; }
+      else { ws.deleteRow(i+1); }
+    }
+  }
+  if (!found) ws.appendRow([month, text]);
+  return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+</details>
+
+<p style="margin-top:12px"><strong>外包工作項目 Sheet：</strong></p>
+<ol class="sop">
+<li>新增 Google 試算表，命名「FZG_[版本名]_外包工作項目」</li>
+<li>第一個分頁命名「2026/05」，A1~G1：負責人、工作項目、狀態、開始日、截止日、備註、工時</li>
+<li>新增分頁「zones」，A1~C1：負責人、區域、排序</li>
+<li>共用 → 知道連結的任何人 → 檢視者</li>
+<li>Apps Script → 貼上程式碼 → 部署</li>
+</ol>
+<details style="margin-top:8px">
+<summary style="cursor:pointer;color:var(--accent)">📋 外包 Sheet Apps Script 程式碼</summary>
+<pre>function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (data.action === 'clear') {
+    const ws = ss.getSheetByName(data.month);
+    if (ws && ws.getLastRow() > 1) ws.getRange(2, 1, ws.getLastRow()-1, 7).clearContent();
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'add') {
+    let ws = ss.getSheetByName(data.month);
+    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,7).setValues([['負責人','工作項目','狀態','開始日','截止日','備註','工時']]); }
+    ws.appendRow([data.owner, data.task, data.status, data.startDate, data.dueDate, data.note, data.hours]);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'saveZone') {
+    let ws = ss.getSheetByName('zones');
+    if (!ws) { ws = ss.insertSheet('zones'); ws.getRange(1,1,1,3).setValues([['負責人','區域','排序']]); }
+    const rows = ws.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][0] === data.owner) { ws.getRange(i+1,2).setValue(data.zone); ws.getRange(i+1,3).setValue(data.sort); found = true; break; }
+    }
+    if (!found) ws.appendRow([data.owner, data.zone, data.sort]);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({result:'unknown'})).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+</details>
+</div>
+</div>
+
+<div class="step">
+<h2><span class="step-num">2</span>填寫設定</h2>
+<label>版本名稱（資料夾名，英文小寫）</label>
+<input id="f-folder" placeholder="如：design">
+<label>副標題（顯示在頁面標題）</label>
+<input id="f-subtitle" placeholder="如：設計">
+<label>內部 Sheet ID</label>
+<input id="f-sheetId" placeholder="從 Sheet 網址 /d/ 和 /edit 之間複製">
+<label>內部 Apps Script URL</label>
+<input id="f-scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+<label>外包 Sheet ID</label>
+<input id="f-outsourceSheetId" placeholder="從 Sheet 網址複製">
+<label>外包 Apps Script URL</label>
+<input id="f-outsourceScriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+<label>密碼（預設 fzg）</label>
+<input id="f-password" value="fzg">
+</div>
+
+<div class="step">
+<h2><span class="step-num">3</span>建立</h2>
+<p style="font-size:0.85rem;color:var(--muted)">點擊後會通知秘書建立新版本（約 1 分鐘內完成）</p>
+<button class="btn" onclick="createVersion()">🚀 建立新版本</button>
+</div>
+
+<div class="result" id="result">
+<h2 style="color:var(--green)">✅ 建立請求已送出</h2>
+<p>秘書收到後會自動建立，完成後新版本連結：</p>
+<p><a id="resultLink" href="#" style="color:var(--accent)" target="_blank"></a></p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:8px">請等待 1-2 分鐘讓 GitHub Pages 部署完成。</p>
+</div>
+
+<script>
+function createVersion(){
+  const folder=document.getElementById('f-folder').value.trim();
+  const subtitle=document.getElementById('f-subtitle').value.trim();
+  const sheetId=document.getElementById('f-sheetId').value.trim();
+  const scriptUrl=document.getElementById('f-scriptUrl').value.trim();
+  const outsourceSheetId=document.getElementById('f-outsourceSheetId').value.trim();
+  const outsourceScriptUrl=document.getElementById('f-outsourceScriptUrl').value.trim();
+  const password=document.getElementById('f-password').value.trim();
+  if(!folder||!sheetId||!scriptUrl||!outsourceSheetId||!outsourceScriptUrl){alert('請填寫所有必填欄位');return}
+  const config=JSON.stringify({folder,subtitle,sheetId,scriptUrl,outsourceSheetId,outsourceScriptUrl,password});
+  // Save request to main Sheet notes for the agent to pick up
+  const mainScript='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
+  fetch(mainScript+'?action=saveNote&month=create_request&text='+encodeURIComponent(config))
+    .then(()=>{
+      document.getElementById('result').style.display='block';
+      document.getElementById('resultLink').href='https://tonykober.github.io/FZG_tracker/'+folder+'/';
+      document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
+    }).catch(()=>alert('送出失敗，請檢查網路'));
+}
+</script>
+</body>
+</html>
