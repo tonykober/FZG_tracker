@@ -24,7 +24,7 @@ pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;paddin
 .sop{font-size:0.85rem;color:var(--muted);margin:8px 0}
 .sop ol{padding-left:20px}
 .sop li{margin:4px 0}
-</style>
+@keyframes spin{to{transform:rotate(360deg)}}</style>
 </head>
 <body>
 <h1>🛠️ 建立新版本 — FZG 專案追蹤器</h1>
@@ -157,10 +157,9 @@ function saveNoteHandler(ss, month, text) {
 </div>
 
 <div class="result" id="result">
-<h2 style="color:var(--green)">✅ 建立請求已送出</h2>
-<p>秘書收到後會自動建立，完成後新版本連結：</p>
-<p><a id="resultLink" href="#" style="color:var(--accent)" target="_blank"></a></p>
-<p style="font-size:0.85rem;color:var(--muted);margin-top:8px">請等待 1-2 分鐘讓 GitHub Pages 部署完成。</p>
+<div id="resultStatus" style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;display:inline-block"></span><span style="color:var(--yellow)">🔄 建立中，請稍候...</span></div>
+<p style="margin-top:12px">新版本連結：<a id="resultLink" href="#" style="color:var(--accent)" target="_blank"></a></p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:4px">頁面會自動偵測是否上線</p>
 </div>
 
 <script>
@@ -181,7 +180,17 @@ function createVersion(){
       document.getElementById('result').style.display='block';
       document.getElementById('resultLink').href='https://tonykober.github.io/FZG_tracker/'+folder+'/';
       document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
+      pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/');
     }).catch(()=>alert('送出失敗，請檢查網路'));
+}
+function pollOnline(url){
+  var status=document.getElementById('resultStatus');
+  var poll=setInterval(function(){
+    fetch(url,{mode:'no-cors'}).then(function(r){
+      if(r.type==='opaque'||r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>'}
+    }).catch(function(){});
+  },10000);
+  setTimeout(function(){clearInterval(poll);if(status.textContent.indexOf('建立中')>=0)status.innerHTML='<span style="color:#8b949e">⏳ 仍在建立中，請稍後手動確認連結</span>'},300000);
 }
 function copyCode(btn){const pre=btn.parentElement.querySelector("pre");navigator.clipboard.writeText(pre.textContent).then(()=>{btn.textContent="✅ 已複製";setTimeout(()=>btn.textContent="📋 複製程式碼",2000)})}</script>
 </body>
