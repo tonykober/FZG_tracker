@@ -180,7 +180,7 @@ function createVersion(){
   if(!/^[a-z0-9_-]+$/.test(folder)){alert('版本名稱只能使用英文小寫、數字、底線、連字號');return}
   btn.disabled=true;
   setLog('⏳ 檢查版本名稱是否重複...','var(--yellow)');
-  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/config.js').then(function(r){
+  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){
     if(r.ok){setLog('❌ 版本名稱「'+folder+'」已存在','var(--red)');resetBtn();return}
     doValidate();
   }).catch(function(){doValidate()});
@@ -203,7 +203,7 @@ function createVersion(){
 function pollOnline(url,onDone){
   var status=document.getElementById('resultStatus');
   var poll=setInterval(function(){
-    fetch(url+'/config.js').then(function(r){
+    fetch(url+'/config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){
       if(r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>';if(onDone)onDone()}
     }).catch(function(){});
   },10000);
