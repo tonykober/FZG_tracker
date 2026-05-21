@@ -1,9 +1,9 @@
 
-const SHEET_ID='142VCJ65sgkzmELIy6ImUFD8z2RXQRwVs-YvkWnPCF2s';
+const SHEET_ID=CONFIG.sheetId;
 function setSyncStatus(msg,color){const el=document.getElementById('syncStatus');if(el){el.textContent=msg;el.style.color=color||'var(--muted)'}}
 function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+encodeURIComponent(month)+'&text='+encodeURIComponent(text);setSyncStatus('🔄 同步中...','var(--yellow)');if(url.length<2000)return fetch(url).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'));navigator.sendBeacon(SCRIPT_URL,JSON.stringify({action:'saveNote',month:month,text:text}));setSyncStatus('📤 已送出','var(--green)');setTimeout(()=>setSyncStatus(''),3000);return Promise.resolve()}
 
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
+const SCRIPT_URL=CONFIG.scriptUrl;
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
@@ -591,8 +591,8 @@ function renderReport(){
   if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
 }
-const OUTSOURCE_SHEET_ID='11cuSAO3MZfUmau1pd603685i18d0SlQKN-h--jUrp2s';
-const OUTSOURCE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyuqw9ZXRCGLeOtKyYbv0p7xrdIXHYSUydXNuR2j2tiUYrUwK3JFjK765J4Kh0Pk2_I/exec';
+const OUTSOURCE_SHEET_ID=CONFIG.outsourceSheetId;
+const OUTSOURCE_SCRIPT_URL=CONFIG.outsourceScriptUrl;
 let outsourceTasks=[],outsourceMode='list',outsourceZones={},outsourceFetchError=false;
 async function loadOutsourceZones(){
   try{
@@ -696,7 +696,7 @@ function outsourceDrop(e,zone){
   setSyncStatus('🔄 同步中...','var(--yellow)');fetch(OUTSOURCE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveZone',owner:owner,zone:outsourceZones[owner]||zone,sort:outsourceZones['_sort_'+owner]||''})}).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'));
   renderOutsourceFromCache();
 }
-const DAILY_SHEET_ID='1gppJhZkxQYGNNM1-hk3v12Hp-qzV8VnJdCLCNrf-cog';
+const DAILY_SHEET_ID=CONFIG.dailySheetId||'';
 async function syncOutsource(){
   if(!confirm('確定執行以下操作？\n\n1. 從雲端重新讀取外包工作項目\n2. 重新渲染看板/時間軸'))return;
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
