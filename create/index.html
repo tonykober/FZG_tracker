@@ -172,7 +172,11 @@ function createVersion(){
   const outsourceScriptUrl=document.getElementById('f-outsourceScriptUrl').value.trim();
   const password=document.getElementById('f-password').value.trim()||'0000';
   if(!folder||!sheetId||!scriptUrl){alert('請填寫所有必填欄位');return}
-  const config=JSON.stringify({folder,subtitle,sheetId,scriptUrl,outsourceSheetId,outsourceScriptUrl,password});
+  // Validate Sheet ID
+  const btn=document.querySelector('.btn');btn.disabled=true;btn.textContent='驗證中...';
+  fetch('https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json&headers=1').then(r=>{if(!r.ok)throw new Error();return r.text()}).then(()=>{
+    btn.textContent='建立中...';
+    const config=JSON.stringify({folder,subtitle,sheetId,scriptUrl,outsourceSheetId,outsourceScriptUrl,password});
   // Save request to main Sheet notes for the agent to pick up
   const mainScript='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
   fetch(mainScript+'?action=saveNote&month=create_request&text='+encodeURIComponent(config))
@@ -182,6 +186,7 @@ function createVersion(){
       document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
       pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/');
     }).catch(()=>alert('送出失敗，請檢查網路'));
+  }).catch(()=>{alert('內部 Sheet ID 無效或未設為公開，請確認後重試');btn.disabled=false;btn.textContent='🚀 建立新版本'});
 }
 function pollOnline(url){
   var status=document.getElementById('resultStatus');
