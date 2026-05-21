@@ -152,8 +152,9 @@ function saveNoteHandler(ss, month, text) {
 
 <div class="step">
 <h2><span class="step-num">3</span>建立</h2>
-<p style="font-size:0.85rem;color:var(--muted)">點擊後會通知秘書建立新版本（約 1 分鐘內完成）</p>
-<button class="btn" onclick="createVersion()">🚀 建立新版本</button>
+<p style="font-size:0.85rem;color:var(--muted)">點擊後會依序驗證並建立新版本</p>
+<div id="createLog" style="font-size:0.85rem;margin:8px 0;min-height:20px"></div>
+<button class="btn" id="createBtn" onclick="createVersion()">🚀 建立新版本</button>
 </div>
 
 <div class="result" id="result">
@@ -171,29 +172,33 @@ function createVersion(){
   const outsourceSheetId=document.getElementById('f-outsourceSheetId').value.trim();
   const outsourceScriptUrl=document.getElementById('f-outsourceScriptUrl').value.trim();
   const password=document.getElementById('f-password').value.trim()||'0000';
+  const log=document.getElementById('createLog');
+  const btn=document.getElementById('createBtn');
+  function setLog(msg,color){log.innerHTML='<span style="color:'+(color||'var(--muted)')+'">'+msg+'</span>'}
+  function resetBtn(){btn.disabled=false;btn.textContent='🚀 建立新版本'}
   if(!folder||!sheetId||!scriptUrl){alert('請填寫所有必填欄位');return}
   if(!/^[a-z0-9_-]+$/.test(folder)){alert('版本名稱只能使用英文小寫、數字、底線、連字號');return}
-  // Check duplicate folder name
-  const btn=document.querySelector('.btn');btn.disabled=true;btn.textContent='檢查中...';
-  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/',{mode:'no-cors'}).then(r=>{
-    if(r.type==='opaque'){alert('版本名稱「'+folder+'」已存在，請使用其他名稱');btn.disabled=false;btn.textContent='🚀 建立新版本';return}
+  btn.disabled=true;
+  setLog('⏳ 檢查版本名稱是否重複...','var(--yellow)');
+  fetch('https://tonykober.github.io/FZG_tracker/'+folder+'/',{mode:'no-cors'}).then(function(r){
+    if(r.type==='opaque'){setLog('❌ 版本名稱「'+folder+'」已存在','var(--red)');resetBtn();return}
     doValidate();
-  }).catch(()=>doValidate());
+  }).catch(function(){doValidate()});
   function doValidate(){
-  btn.textContent='驗證中...';
-  fetch('https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json&headers=1').then(r=>{if(!r.ok)throw new Error();return r.text()}).then(()=>{
-    btn.textContent='建立中...';
-    const config=JSON.stringify({folder,subtitle,sheetId,scriptUrl,outsourceSheetId,outsourceScriptUrl,password});
-  // Save request to main Sheet notes for the agent to pick up
-  const mainScript='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
-  fetch(mainScript+'?action=saveNote&month=create_request&text='+encodeURIComponent(config))
-    .then(()=>{
-      document.getElementById('result').style.display='block';
-      document.getElementById('resultLink').href='https://tonykober.github.io/FZG_tracker/'+folder+'/';
-      document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
-      pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/');
-    }).catch(()=>alert('送出失敗，請檢查網路'));
-  }).catch(()=>{alert('內部 Sheet ID 無效或未設為公開，請確認後重試');btn.disabled=false;btn.textContent='🚀 建立新版本'});
+    setLog('⏳ 驗證內部 Sheet ID...','var(--yellow)');
+    fetch('https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
+      setLog('⏳ 送出建立請求...','var(--yellow)');
+      var config=JSON.stringify({folder:folder,subtitle:subtitle,sheetId:sheetId,scriptUrl:scriptUrl,outsourceSheetId:outsourceSheetId,outsourceScriptUrl:outsourceScriptUrl,password:password});
+      var mainScript='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
+      fetch(mainScript+'?action=saveNote&month=create_request&text='+encodeURIComponent(config)).then(function(){
+        setLog('✅ 請求已送出，等待建立完成...','var(--green)');
+        document.getElementById('result').style.display='block';
+        document.getElementById('resultLink').href='https://tonykober.github.io/FZG_tracker/'+folder+'/';
+        document.getElementById('resultLink').textContent='https://tonykober.github.io/FZG_tracker/'+folder+'/';
+        pollOnline('https://tonykober.github.io/FZG_tracker/'+folder+'/');
+        resetBtn();
+      }).catch(function(){setLog('❌ 送出失敗，請檢查網路','var(--red)');resetBtn()});
+    }).catch(function(){setLog('❌ 內部 Sheet ID 無效或未設為公開','var(--red)');resetBtn()});
   }
 }
 function pollOnline(url){
