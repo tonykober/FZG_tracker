@@ -705,6 +705,7 @@ async function syncOutsource(){
 function activateOutsource(){
   var id=document.getElementById('setupOutsourceId').value.trim();
   var url=document.getElementById('setupOutsourceUrl').value.trim();
+  var excelPath=(document.getElementById('setupExcelPath')||{}).value||'';
   var status=document.getElementById('setupStatus');
   var btn=document.getElementById('setupBtn');
   if(!id||!url){status.innerHTML='<span style="color:var(--red)">請填寫兩個欄位</span>';return}
@@ -712,7 +713,7 @@ function activateOutsource(){
   status.innerHTML='<span style="color:var(--yellow)">⏳ 驗證 Sheet ID...</span>';
   fetch('https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
     status.innerHTML='<span style="color:var(--yellow)">⏳ 送出啟用請求...</span>';
-    var req=JSON.stringify({action:'activate_outsource',folder:location.pathname.split('/').filter(Boolean).pop(),outsourceSheetId:id,outsourceScriptUrl:url});
+    var req=JSON.stringify({action:'activate_outsource',folder:location.pathname.split('/').filter(Boolean).pop(),outsourceSheetId:id,outsourceScriptUrl:url,excelPath:excelPath.trim()});
     return fetch(SCRIPT_URL+'?action=saveNote&month=activate_outsource_request&text='+encodeURIComponent(req));
   }).then(function(){
     status.innerHTML='<span style="color:var(--green)">✅ 請求已送出，等待啟用中...</span>';
@@ -785,6 +786,7 @@ async function renderOutsource(){
 }</pre></details>
 <div style="margin-bottom:8px"><label style="font-size:0.8rem;color:var(--muted)">外包 Sheet ID（從網址 /d/ 和 /edit 之間複製）</label><input id="setupOutsourceId" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-top:4px"></div>
 <div style="margin-bottom:12px"><label style="font-size:0.8rem;color:var(--muted)">外包 Apps Script URL（部署後複製的「網頁應用程式」網址）</label><input id="setupOutsourceUrl" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-top:4px"></div>
+<div style="margin-bottom:12px"><label style="font-size:0.8rem;color:var(--muted)">Excel 日報路徑（選填，填寫後啟用每日自動同步。本機或網路磁碟的完整路徑，如 F:\\\\資料夾\\\\日報.xlsx）</label><input id="setupExcelPath" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-top:4px" placeholder="選填，無則不啟用每日自動同步"></div>
 <div id="setupStatus" style="font-size:0.85rem;margin-bottom:8px"></div>
 <button onclick="activateOutsource()" id="setupBtn" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">🔌 啟用外包功能</button>
 </div>`;return}
