@@ -722,6 +722,7 @@ function requestCloudSync(){
 }
 
 async function renderOutsource(){
+  if(!OUTSOURCE_SHEET_ID){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">尚未設定外包功能</div>';return}
   outsourceTasks=[];outsourceFetchError=false;
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   await fetchOutsource();
