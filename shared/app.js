@@ -702,6 +702,24 @@ async function syncOutsource(){
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   renderOutsource();
 }
+function activateOutsource(){
+  var id=document.getElementById('setupOutsourceId').value.trim();
+  var url=document.getElementById('setupOutsourceUrl').value.trim();
+  var status=document.getElementById('setupStatus');
+  var btn=document.getElementById('setupBtn');
+  if(!id||!url){status.innerHTML='<span style="color:var(--red)">請填寫兩個欄位</span>';return}
+  btn.disabled=true;
+  status.innerHTML='<span style="color:var(--yellow)">⏳ 驗證 Sheet ID...</span>';
+  fetch('https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
+    status.innerHTML='<span style="color:var(--yellow)">⏳ 送出啟用請求...</span>';
+    var req=JSON.stringify({action:'activate_outsource',folder:location.pathname.split('/').filter(Boolean).pop(),outsourceSheetId:id,outsourceScriptUrl:url});
+    return fetch(SCRIPT_URL+'?action=saveNote&month=activate_outsource_request&text='+encodeURIComponent(req));
+  }).then(function(){
+    status.innerHTML='<span style="color:var(--green)">✅ 請求已送出，等待啟用中...</span>';
+    var poll=setInterval(function(){fetch(location.href+'config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){if(t.indexOf(id)>=0){clearInterval(poll);status.innerHTML='<span style="color:var(--green)">✅ 外包功能已啟用！請重新整理頁面。</span>';btn.disabled=false}}).catch(function(){})},10000);
+    setTimeout(function(){clearInterval(poll);if(btn.disabled){status.innerHTML='<span style="color:var(--muted)">⏳ 仍在處理中，請稍後重新整理確認</span>';btn.disabled=false}},300000);
+  }).catch(function(){status.innerHTML='<span style="color:var(--red)">❌ Sheet ID 無效或未設為公開</span>';btn.disabled=false});
+}
 function requestCloudSync(){
   if(!confirm('確定通知秘書執行雲端資料更新？\n\n同步期間可繼續操作，完成後頁面會顯示通知。'))return;
   const btn=document.querySelector('[onclick="requestCloudSync()"]');if(btn){btn.disabled=true;btn.style.opacity='0.5'}
@@ -722,7 +740,54 @@ function requestCloudSync(){
 }
 
 async function renderOutsource(){
-  if(!OUTSOURCE_SHEET_ID){document.getElementById('outsourceContent').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">尚未設定外包功能</div>';return}
+  if(!OUTSOURCE_SHEET_ID){document.getElementById('outsourceContent').innerHTML=`<div style="max-width:600px;margin:20px auto;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+<h3 style="color:var(--accent);margin-bottom:12px">尚未設定外包功能</h3>
+<p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px">請依照以下步驟建立外包 Sheet 並填入資料以啟用。</p>
+<details style="margin-bottom:12px"><summary style="cursor:pointer;color:var(--accent);font-size:0.9rem">📋 建立外包 Sheet 步驟</summary>
+<ol style="font-size:0.8rem;color:var(--muted);padding-left:20px;margin-top:8px;line-height:1.8">
+<li>Google Drive → 新增 → Google 試算表</li>
+<li>命名為「外包工作項目」</li>
+<li>第一個分頁命名「2026/05」（年/月，月份補零）</li>
+<li>A1~G1 填入：負責人、工作項目、狀態、開始日、截止日、備註、工時</li>
+<li>新增分頁「zones」，A1~C1：負責人、區域、排序</li>
+<li>共用 → 知道連結的任何人 → 檢視者</li>
+<li>擴充功能 → Apps Script → 全選刪除預設程式碼 → 貼上下方程式碼 → 按「儲存」→ 點「部署」→「新增部署」→ 左側齒輪⚙️點選「類型」→ 選擇「網頁應用程式」→「誰可以存取」選「所有人」→ 按「部署」→ 複製產生的網址</li>
+</ol>
+</details>
+<details style="margin-bottom:16px"><summary style="cursor:pointer;color:var(--accent);font-size:0.9rem">📋 外包 Apps Script 程式碼</summary>
+<button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent).then(()=>{this.textContent='✅ 已複製';setTimeout(()=>this.textContent='📋 複製程式碼',2000)})" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:0.8rem;cursor:pointer;margin:8px 0">📋 複製程式碼</button>
+<pre style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:0.75rem;overflow-x:auto">function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (data.action === 'clear') {
+    const ws = ss.getSheetByName(data.month);
+    if (ws && ws.getLastRow() > 1) ws.getRange(2, 1, ws.getLastRow()-1, 7).clearContent();
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'add') {
+    let ws = ss.getSheetByName(data.month);
+    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,7).setValues([['負責人','工作項目','狀態','開始日','截止日','備註','工時']]); }
+    ws.appendRow([data.owner, data.task, data.status, data.startDate, data.dueDate, data.note, data.hours]);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.action === 'saveZone') {
+    let ws = ss.getSheetByName('zones');
+    if (!ws) { ws = ss.insertSheet('zones'); ws.getRange(1,1,1,3).setValues([['負責人','區域','排序']]); }
+    const rows = ws.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][0] === data.owner) { ws.getRange(i+1,2).setValue(data.zone); ws.getRange(i+1,3).setValue(data.sort); found = true; break; }
+    }
+    if (!found) ws.appendRow([data.owner, data.zone, data.sort]);
+    return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({result:'unknown'})).setMimeType(ContentService.MimeType.JSON);
+}</pre></details>
+<div style="margin-bottom:8px"><label style="font-size:0.8rem;color:var(--muted)">外包 Sheet ID（從網址 /d/ 和 /edit 之間複製）</label><input id="setupOutsourceId" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-top:4px"></div>
+<div style="margin-bottom:12px"><label style="font-size:0.8rem;color:var(--muted)">外包 Apps Script URL（部署後複製的「網頁應用程式」網址）</label><input id="setupOutsourceUrl" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;margin-top:4px"></div>
+<div id="setupStatus" style="font-size:0.85rem;margin-bottom:8px"></div>
+<button onclick="activateOutsource()" id="setupBtn" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer">🔌 啟用外包功能</button>
+</div>`;return}
   outsourceTasks=[];outsourceFetchError=false;
   document.getElementById('outsourceContent').innerHTML='<div class="spinner"></div>';
   await fetchOutsource();
