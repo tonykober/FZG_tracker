@@ -146,7 +146,7 @@ function saveNoteHandler(ss, month, text) {
 <input id="f-sheetId" placeholder="從 Sheet 網址 /d/ 和 /edit 之間複製">
 <label>內部 Apps Script URL（部署後複製的「網頁應用程式」網址）<span style="color:var(--red)"> *必填</span></label><input id="f-scriptUrl" placeholder="https://script.google.com/macros/s/AKfyc.../exec">
 <label>外包 Sheet ID（選填，無外包可留空，事後可追加）</label><input id="f-outsourceSheetId" placeholder="從外包 Sheet 網址 /d/ 和 /edit 之間複製">
-<label>外包 Apps Script URL（選填，部署後複製的「網頁應用程式」網址）</label><input id="f-outsourceScriptUrl" placeholder="https://script.google.com/macros/s/AKfyc.../exec">
+<label>外包 Apps Script URL（選填，部署後複製的「網頁應用程式」網址）</label><input id="f-outsourceScriptUrl" placeholder="https://script.google.com/macros/s/AKfyc.../exec"><label>外包 Excel 日報路徑（選填，填寫後啟用每日自動同步。須為本機或網路磁碟的完整路徑）</label><input id="f-excelPath" placeholder="選填，如 F:\資料夾\日報.xlsx，無則不啟用每日自動同步">
 <label>管理密碼（選填，未填寫則預設為 0000）</label><input id="f-password" placeholder="自訂密碼，留空則為 0000">
 </div>
 
@@ -171,6 +171,7 @@ function createVersion(){
   const scriptUrl=document.getElementById('f-scriptUrl').value.trim();
   const outsourceSheetId=document.getElementById('f-outsourceSheetId').value.trim();
   const outsourceScriptUrl=document.getElementById('f-outsourceScriptUrl').value.trim();
+  const excelPath=(document.getElementById('f-excelPath')||{}).value||'';
   const password=document.getElementById('f-password').value.trim()||'0000';
   const log=document.getElementById('createLog');
   const btn=document.getElementById('createBtn');
@@ -188,7 +189,7 @@ function createVersion(){
     setLog('⏳ 驗證內部 Sheet ID...','var(--yellow)');
     fetch('https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
       setLog('⏳ 送出建立請求...','var(--yellow)');
-      var config=JSON.stringify({folder:folder,subtitle:subtitle,sheetId:sheetId,scriptUrl:scriptUrl,outsourceSheetId:outsourceSheetId,outsourceScriptUrl:outsourceScriptUrl,password:password});
+      var config=JSON.stringify({folder:folder,subtitle:subtitle,sheetId:sheetId,scriptUrl:scriptUrl,outsourceSheetId:outsourceSheetId,outsourceScriptUrl:outsourceScriptUrl,excelPath:excelPath.trim(),password:password});
       var mainScript='https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec';
       fetch(mainScript+'?action=saveNote&month=create_request&text='+encodeURIComponent(config)).then(function(){
         setLog('✅ 請求已送出，等待建立完成...','var(--green)');
