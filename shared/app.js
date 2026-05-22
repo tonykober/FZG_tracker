@@ -587,7 +587,7 @@ function renderReport(){
   if(Object.keys(ownerMap).length){html+=`<div class="report-section"><h3>👤 各負責人工作數量</h3>`;Object.entries(ownerMap).forEach(([n,d])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：共${d.total}項（待辦${d.todo}/進行中${d.doing}/完成${d.done}）</p>`});html+=`</div>`}
   const hourMap={};filtered.forEach(t=>{const o=t['負責人']||'未指派';let days=0;if(t['開始日']&&t['截止日']){const s=new Date(t['開始日'].substring(0,10)),e=new Date(t['截止日'].substring(0,10));days=Math.max(1,Math.round((e-s)/(1000*60*60*24))+1)}else if(t['開始日']||t['截止日']){days=1}if(!hourMap[o])hourMap[o]=0;hourMap[o]+=days});
   const totalDays=Object.values(hourMap).reduce((s,v)=>s+v,0);
-  if(totalDays>0){html+=`<div class="report-section"><h3>📅 工作天數統計（本月共 ${totalDays} 天）</h3>`;Object.entries(hourMap).filter(([,h])=>h>0).sort((a,b)=>b[1]-a[1]).forEach(([n,h])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：${h} 天</p>`});html+=`</div>`}
+  if(totalDays>0){html+=`<div class="report-section"><h3>📅 工作天數統計（本月共 ${totalDays} 天）</h3>`;Object.entries(hourMap).filter(([,h])=>h>0).sort((a,b)=>b[1]-a[1]).forEach(([n,h])=>{html+=`<p style="margin-bottom:4px">• <strong>${n}</strong>：${h} 天（${Math.round(h/totalDays*100)}%）</p>`});html+=`</div>`}
   if(overdue.length)html+=`<div class="report-section"><h3>⚠️ 逾期任務</h3>${overdue.map(t=>`<p class="overdue">• ${t['任務名稱']}（截止：${t['截止日']}）</p>`).join('')}</div>`;
   document.getElementById('reportView').innerHTML=html;
 }
