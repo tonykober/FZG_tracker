@@ -615,6 +615,10 @@ async function fetchOutsource(){
     if(!json.table.rows||!json.table.rows.length){outsourceTasks=[];return}
     const cols=json.table.cols.map(c=>c.label.trim());
     const items=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['工作項目']);
+    // Verify data belongs to requested month (gviz returns first tab if requested tab doesn't exist)
+    const monthPrefix=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);
+    const hasCorrectMonth=items.length===0||items.some(t=>(t['開始日']||'').startsWith(monthPrefix));
+    if(!hasCorrectMonth){outsourceTasks=[];return}
     // Group similar tasks (no merge, keep all items)
     const normalize=s=>(s||'').replace(/[\d\s+]/g,'').trim();
     const similarity=(a,b)=>{const na=normalize(a),nb=normalize(b);if(!na||!nb)return 0;const longer=na.length>nb.length?na:nb,shorter=na.length>nb.length?nb:na;let matches=0;const used=[];for(let i=0;i<shorter.length;i++){const idx=longer.indexOf(shorter[i],0);if(idx!==-1&&!used.includes(idx)){matches++;used.push(idx)}}return matches/longer.length};
