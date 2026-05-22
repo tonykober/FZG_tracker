@@ -718,7 +718,7 @@ function activateOutsource(){
   fetch('https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json&headers=1').then(function(r){if(!r.ok)throw new Error();return r.text()}).then(function(){
     status.innerHTML='<span style="color:var(--yellow)">⏳ 送出啟用請求...</span>';
     var req=JSON.stringify({action:'activate_outsource',folder:location.pathname.split('/').filter(Boolean).pop(),outsourceSheetId:id,outsourceScriptUrl:url,excelPath:excelPath.trim()});
-    return fetch(SCRIPT_URL+'?action=saveNote&month=activate_outsource_request&text='+encodeURIComponent(req));
+    return fetch('https://script.google.com/macros/s/AKfycbyNevW7oTS-hKWXTkFknvQfVmai9pqlkUXmU9viGTPHDqs261F312cvY_JMEGwOrt_4/exec?action=saveNote&month=activate_outsource_request&text='+encodeURIComponent(req));
   }).then(function(){
     status.innerHTML='<span style="color:var(--green)">✅ 請求已送出，等待啟用中...</span>';
     var poll=setInterval(function(){fetch(location.href+'config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){if(t.indexOf(id)>=0){clearInterval(poll);status.innerHTML='<span style="color:var(--green)">✅ 外包功能已啟用！請重新整理頁面。</span>';btn.disabled=false}}).catch(function(){})},10000);
