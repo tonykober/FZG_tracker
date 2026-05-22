@@ -729,7 +729,7 @@ function requestCloudSync(){
   if(!confirm('確定通知秘書執行雲端資料更新？\n\n同步期間可繼續操作，完成後頁面會顯示通知。'))return;
   const btn=document.querySelector('[onclick="requestCloudSync()"]');if(btn){btn.disabled=true;btn.style.opacity='0.5'}
   const ts=Date.now();
-  saveNote('sync_request_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),String(ts));
+  saveNote('sync_request_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),ts+'|'+currentMonth.getFullYear()+'/'+('0'+(currentMonth.getMonth()+1)).slice(-2));
   const el=document.getElementById('cloudSyncStatus');
   el.style.display='block';el.style.color='var(--yellow)';el.textContent='☁️ 已通知秘書，同步中...';
   const origTime=localStorage.getItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'';
