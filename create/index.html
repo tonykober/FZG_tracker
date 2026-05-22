@@ -204,7 +204,7 @@ function pollOnline(url,onDone){
   var status=document.getElementById('resultStatus');
   var poll=setInterval(function(){
     fetch(url+'/config.js?_='+Date.now(),{cache:'no-store'}).then(function(r){
-      if(r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>';if(onDone)onDone()}
+      if(r.ok){clearInterval(poll);status.innerHTML='<span style="color:#3fb950">✅ 新版本已上線！</span>';document.getElementById('createLog').innerHTML='<span style="color:#3fb950">✅ 建立完成</span>';if(onDone)onDone()}
     }).catch(function(){});
   },10000);
   setTimeout(function(){clearInterval(poll);if(status.textContent.indexOf('建立中')>=0){status.innerHTML='<span style="color:#8b949e">⏳ 仍在建立中，請稍後手動確認連結</span>';if(onDone)onDone()}},300000);
