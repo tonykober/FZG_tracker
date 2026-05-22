@@ -305,7 +305,7 @@ function moveBoardItem(owner,key,dir,e){e.stopPropagation();if(!unlocked)return;
 function boardCardDragStart(e,el){if(!unlocked){e.preventDefault();return}e.stopPropagation();e.dataTransfer.setData('text/board-item',el.dataset.boardItem);el.classList.add('dragging')}
 function boardCardDragEnd(){document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bottom').forEach(x=>x.classList.remove('dragging','drag-over-top','drag-over-bottom'));document.querySelectorAll('[style*="outline: 2px dashed"]').forEach(x=>x.style.outline='')}
 function boardCardDragOver(e,el){e.preventDefault();const item=e.dataTransfer.types.includes('text/board-item');if(!item)return;document.querySelectorAll('[style*="outline: 2px dashed"]').forEach(x=>x.style.outline='');const target=el.closest('[data-board-group]')||el;target.style.outline='2px dashed var(--accent)'}
-function boardCardDrop(e,el){e.preventDefault();e.stopPropagation();el.style.outline='';const src=e.dataTransfer.getData('text/board-item');if(!src||!unlocked)return;const groupEl=el.closest('[data-board-group]');const targetGroup=groupEl?.dataset.boardGroup||el.dataset.boardGroup;const target=el.dataset.boardItem;if(!targetGroup&&!target)return;if(targetGroup){if(targetGroup===src)return;_manualBoardGroups[src]=targetGroup;const gid=window._getTaskId||(t=>t['工作項目']);outsourceTasks.forEach(t=>{const id=gid(t);if(_manualBoardGroups[id]===targetGroup||id===targetGroup)_manualBoardGroups[id]=targetGroup})}else if(target){if(target===src)return;_manualBoardGroups[src]=target;_manualBoardGroups[target]=target}saveBoardGroups();boardCardDragEnd();renderOutsourceFromCache()}
+function boardCardDrop(e,el){e.preventDefault();e.stopPropagation();el.style.outline='';const src=e.dataTransfer.getData('text/board-item');if(!src||!unlocked)return;const groupEl=el.closest('[data-board-group]');const targetGroup=groupEl?.dataset.boardGroup||el.dataset.boardGroup;const target=el.dataset.boardItem;if(!targetGroup&&!target)return;if(targetGroup){if(targetGroup===src)return;_manualBoardGroups[src]=targetGroup;const gid=_getTaskId;outsourceTasks.forEach(t=>{const id=gid(t);if(_manualBoardGroups[id]===targetGroup||id===targetGroup)_manualBoardGroups[id]=targetGroup})}else if(target){if(target===src)return;_manualBoardGroups[src]=target;_manualBoardGroups[target]=target}saveBoardGroups();boardCardDragEnd();renderOutsourceFromCache()}
 function moveOutOfGroup(e,itemId){e.stopPropagation();if(!unlocked)return;delete _manualBoardGroups[itemId];saveBoardGroups();renderOutsourceFromCache()}
 let _collapsedOutsourceBoardGroups=new Set();
 function toggleOutsourceGroup(el){var wrapper=el.closest('[data-group]');var d=wrapper.children[1];d.style.display=d.style.display==='none'?'block':'none';el.textContent=d.style.display==='none'?'▶':'▼';var name=wrapper.dataset.group;if(!name)return;if(d.style.display!=='none')_collapsedOutsourceGroups.add(name);else _collapsedOutsourceGroups.delete(name);if(!unlocked)return;localStorage.setItem(getOutsourceGroupCollapseKey(),JSON.stringify([..._collapsedOutsourceGroups]));saveNote('expanded_outsource_groups_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),JSON.stringify([..._collapsedOutsourceGroups]))}
@@ -594,6 +594,7 @@ function renderReport(){
 const OUTSOURCE_SHEET_ID=CONFIG.outsourceSheetId;
 const OUTSOURCE_SCRIPT_URL=CONFIG.outsourceScriptUrl;
 let outsourceTasks=[],outsourceMode='list',outsourceZones={},outsourceFetchError=false;
+function _getTaskId(t){return(t['負責人']||'')+'_'+(t['工作項目']||'')+'_'+(t['開始日']||'')}
 async function loadOutsourceZones(){
   try{
     const url=`https://docs.google.com/spreadsheets/d/${OUTSOURCE_SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=zones`;
@@ -625,7 +626,6 @@ async function fetchOutsource(){
     const isSimilar=(a,b)=>{if(a===b)return true;return similarity(a,b)>=0.5};
     // Store isSimilar for use in rendering
     window._isSimilar=isSimilar;
-    window._getTaskId=(t)=>(t['負責人']||'')+'_'+(t['工作項目']||'')+'_'+(t['開始日']||'');
     outsourceTasks=items;outsourceFetchError=false;
   }catch(e){outsourceTasks=[];outsourceFetchError=true;}
 }
@@ -820,7 +820,7 @@ function renderOutsourceFromCache(){
     const done=items.filter(t=>t['狀態']==='已完成').length;
     let c=`<div class="outsource-group" data-owner="${owner}" data-sort="${outsourceZones['_sort_'+owner]||i}" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="outsourceOwnerDragStart(event,this.closest('.outsource-group'))" ondragend="outsourceOwnerDragEnd()" onclick="toggleOutsourceOwner(this,'${owner.replace(/'/g,"\\'")}')" style="color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:grab"><span class="tog">${_collapsedOutsourceOwners.has(owner)?'▶':'▼'}</span> 👤 ${owner} (${items.length})</div><div${_collapsedOutsourceOwners.has(owner)?' style="display:none"':''}>`;
     // Group items by manual board groups only (no auto-grouping)
-    const gid=window._getTaskId||(t=>t['工作項目']);
+    const gid=_getTaskId;
     const groups2=[];
     items.forEach(t=>{const id=gid(t);const mk=_manualBoardGroups[id];if(mk&&mk!=='__independent__'){const g=groups2.find(gr=>gr.key===mk);if(g){g.push(t)}else{const ng=[t];ng.key=mk;groups2.push(ng)}}else{groups2.push([t])}});
     const boardSort=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');
@@ -858,7 +858,7 @@ function renderOutsourceFromCache(){
     Object.entries(gGroups).sort((a,b)=>{const ai=tlSort2.indexOf(a[0]),bi=tlSort2.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
       gh+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
       // Group items for gantt (same as board - manual only)
-      const gid=window._getTaskId||(t=>t['工作項目']);
+      const gid=_getTaskId;
       const tGroups=[];items.forEach(t=>{const id=gid(t);const mk=_manualBoardGroups[id];if(mk&&mk!=='__independent__'){const g=tGroups.find(gr=>gr.key===mk);if(g){g.push(t)}else{const ng=[t];ng.key=mk;tGroups.push(ng)}}else{tGroups.push([t])}});
       const parseDay=(str)=>{const s=(str||'').replace(/[^\d\/]/g,'').replace(/\//g,'-').split('-');if(s.length<3)return null;const sy=+s[0],sm=+s[1]-1,sd=+s[2];if(sy===y&&sm===m)return sd;if(sy>y||(sy===y&&sm>m))return days+1;return sy<y||(sy===y&&sm<m)?0:1};
       const boardSort2=JSON.parse(localStorage.getItem(getBoardItemSortKey())||'{}');const ownerOrder2=boardSort2[owner]||[];
