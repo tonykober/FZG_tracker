@@ -5,5 +5,5 @@ const CONFIG = {
   outsourceSheetId: '1n7GrSGPfZkXScaji_h74_Vsl07e4e0apgdTfxKY6eK0',
   outsourceScriptUrl: 'https://script.google.com/macros/s/AKfycbyQGrEoHFDrxHRaNOFDpOUC6Rxq-4NAf0JwJnExAapoQ3rXe7AFuhBbShhBsIEur8v9hQ/exec',
   dailySheetId: '',
-  password: 'fzg'
+  password: '0000'
 };
