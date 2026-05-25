@@ -202,12 +202,13 @@ function saveOwnerSort(status,sortArray){
 }
 function filterByMonth(list){
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
+  const toYM=d=>{if(!d)return'';if(d.includes('-'))return d.substring(0,7);const p=d.split('/');return p.length>=2?p[0]+'-'+(p[1].length<2?'0'+p[1]:p[1]):''};
   return list.filter(t=>{
     const sd=t['開始日']||'';const ed=t['截止日']||'';
     if(!sd&&!ed)return true;
-    if(sd&&sd.startsWith(prefix))return true;
-    if(ed&&ed.startsWith(prefix))return true;
-    if(sd&&ed)return sd.substring(0,7)<=prefix&&ed.substring(0,7)>=prefix;
+    const sym=toYM(sd),eym=toYM(ed);
+    if(sym===prefix||eym===prefix)return true;
+    if(sym&&eym)return sym<=prefix&&eym>=prefix;
     return false;
   });
 }
