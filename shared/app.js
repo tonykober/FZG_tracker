@@ -5,6 +5,7 @@ function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+enc
 
 const SCRIPT_URL=CONFIG.scriptUrl;
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
+function getSheetUrl(){const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;const name=y+'/'+(m<10?'0'+m:m);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`}
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
 async function syncAndReload(){
@@ -200,18 +201,7 @@ function loadNotes(){
 function saveOwnerSort(status,sortArray){
   saveNote('owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),JSON.stringify(sortArray));
 }
-function filterByMonth(list){
-  const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
-  const toYM=d=>{if(!d)return'';if(d.includes('-'))return d.substring(0,7);const p=d.split('/');return p.length>=2?p[0]+'-'+(p[1].length<2?'0'+p[1]:p[1]):''};
-  return list.filter(t=>{
-    const sd=t['開始日']||'';const ed=t['截止日']||'';
-    if(!sd&&!ed)return true;
-    const sym=toYM(sd),eym=toYM(ed);
-    if(sym===prefix||eym===prefix)return true;
-    if(sym&&eym)return sym<=prefix&&eym>=prefix;
-    return false;
-  });
-}
+function filterByMonth(list){return list;}
 function getFiltered(){
   let list=filterByMonth(tasks);
   const q=(document.getElementById('search')||{}).value||'';const ql=q.toLowerCase();
@@ -257,7 +247,7 @@ async function fetchData(){
   document.getElementById('timelineView').innerHTML='<div class="spinner"></div>';
   document.getElementById('reportView').innerHTML='<div class="spinner"></div>';
   try{
-    const res=await fetch(CSV_URL);const text=await res.text();
+    const res=await fetch(getSheetUrl());const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
     const cols=json.table.cols.map(c=>c.label.trim());
     tasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']);
