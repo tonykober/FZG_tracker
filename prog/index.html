@@ -17,6 +17,7 @@
       <span id="monthLabel"></span>
       <input type="month" id="monthPicker" style="position:absolute;opacity:0;width:0;height:0" onchange="jumpToMonth(this.value)">
       <button onclick="changeMonth(1)">▶</button>
+      <button data-unmod-btn onclick="toggleUnmodified()" style="margin-left:8px;font-size:0.75rem">📋 顯示未修正</button>
     </div>
   </div>
   <span id="syncStatus" style="font-size:0.75rem;color:var(--muted);min-width:80px;text-align:center"></span>

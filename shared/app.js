@@ -188,6 +188,16 @@ function quickDelete(idx,e){
 function updateMonthLabel(){const lbl=document.getElementById('monthLabel');if(window._unscheduledMode){lbl.textContent='未排期';lbl.style.cursor='pointer';lbl.onclick=()=>{window._unscheduledMode=false;updateMonthLabel();fetchData()};return}lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
 function jumpToMonth(v){if(!v)return;window._unscheduledMode=false;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadCollapsedOwners();fetchData();loadNotes();renderOutsource()}
 function showUnscheduled(){window._unscheduledMode=true;updateMonthLabel();fetchData()}
+let _showUnmodified=false,_unmodifiedTasks=[];
+async function toggleUnmodified(){
+  _showUnmodified=!_showUnmodified;
+  const btn=document.querySelector('[data-unmod-btn]');
+  if(btn)btn.textContent=_showUnmodified?'🔽 隱藏未修正':'📋 顯示未修正';
+  if(_showUnmodified&&!_unmodifiedTasks.length){
+    try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未排期')}`);const t=await r.text();const j=JSON.parse(t.substring(47).slice(0,-2));const c=j.table.cols.map(x=>x.label.trim());_unmodifiedTasks=j.table.rows.map(r=>{const o={};c.forEach((col,i)=>{if(r.c&&r.c[i])o[col]=r.c[i].f||String(r.c[i].v||'');else o[col]=''});return o}).filter(x=>x['任務名稱'])}catch(e){}
+  }
+  render();renderFilterBar();
+}
 function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes&headers=0`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
@@ -217,6 +227,7 @@ function filterByMonth(list){
 }
 function getFiltered(){
   let list=filterByMonth(tasks);
+  if(_showUnmodified&&_unmodifiedTasks.length)list=list.concat(_unmodifiedTasks.filter(t=>!list.find(e=>e['任務名稱']===t['任務名稱'])));
   const q=(document.getElementById('search')||{}).value||'';const ql=q.toLowerCase();
   if(ql)list=list.filter(t=>Object.values(t).join(' ').toLowerCase().includes(ql));
   if(activeFilter)list=list.filter(t=>(t['標籤']||'').includes(activeFilter));
@@ -417,7 +428,7 @@ function renderBoard(){
     return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" ondragover="ownerGroupOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="toggleOwnerGroup(this)" style="display:flex;align-items:center;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})<span class="edit-ctrl" style="margin-left:auto;display:flex;gap:2px;flex-shrink:0"><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', -1, event)" style="cursor:pointer;padding:0 4px">▲</span><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', 1, event)" style="cursor:pointer;padding:0 4px">▼</span></span></div><div>${cardHtml(list)}</div></div>`).join('');
   };
   document.getElementById('boardWarn').innerHTML='';
-  const unCol=unHtml?`<div class="column" style="border-color:var(--red)"><h3 onclick="toggleColumn(this)" style="color:var(--red);cursor:pointer"><span class="tog">▼</span> ⚠️ 待修正 (${unassigned.length})</h3><div>${unassigned.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" style="display:flex;align-items:center;gap:8px"><span>${t['任務名稱']}</span><span class="edit-ctrl" style="margin-left:auto;display:flex;gap:4px"><span onclick="openModal(${idx})" style="cursor:pointer">✏️</span><span onclick="deleteTask(${idx})" style="cursor:pointer;color:var(--red)">🗑️</span></span></div>`}).join('')}</div></div>`:'';
+  const unCol=unHtml?`<div class="column" style="border-color:var(--red)"><h3 onclick="toggleColumn(this)" style="color:var(--red);cursor:pointer"><span class="tog">${_showUnmodified?'▶':'▼'}</span> ⚠️ 待修正 (${unassigned.length})</h3><div${_showUnmodified?' style="display:none"':''}>${unassigned.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" style="display:flex;align-items:center;gap:8px"><span>${t['任務名稱']}</span><span class="edit-ctrl" style="margin-left:auto;display:flex;gap:4px"><span onclick="openModal(${idx})" style="cursor:pointer">✏️</span><span onclick="deleteTask(${idx})" style="cursor:pointer;color:var(--red)">🗑️</span></span></div>`}).join('')}</div></div>`:'';
   document.getElementById('boardView').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">${unCol}<div class="column" data-status="待辦" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'待辦')"><h3 onclick="toggleColumn(this)" style="color:var(--muted);cursor:pointer"><span class="tog">▼</span> 📝 待辦 (${todo.length})</h3><div>${todo.length?groupByOwner(todo,'待辦'):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div></div>
     <div class="column" data-status="進行中" ondragover="event.preventDefault();if(_taskDragIdx!==null||_dragOwner)this.style.outline='2px dashed var(--accent)'" ondragleave="this.style.outline=''" ondrop="this.style.outline='';colTaskDrop(event,'進行中')"><h3 onclick="toggleColumn(this)" style="color:var(--yellow);cursor:pointer"><span class="tog">▼</span> 🔄 進行中 (${doing.length})</h3><div>${doing.length?groupByOwner(doing,'進行中'):'<div style="text-align:center;color:var(--muted);padding:20px">無任務</div>'}</div></div>
