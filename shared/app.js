@@ -370,15 +370,16 @@ function renderBoard(){
   const _taskCollapseList=JSON.parse(localStorage.getItem('fzg_task_collapse_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'[]');
   // Collapse states now stored in _collapsedOwners with owner::status keys
   const filtered=getFiltered();
-  const unassigned=filtered.filter(t=>!t['負責人']);
+  const unassigned=filtered.filter(t=>!t['負責人']||!t['開始日']||!t['截止日']||!t['任務名稱']);
   const unHtml=unassigned.length?`<div style="margin-bottom:8px"><div onclick="toggleColumn(this)" style="color:var(--red);padding:4px 0;border-bottom:1px solid var(--red);margin-bottom:4px;cursor:pointer"><span class="tog">▶</span> ⚠️ 有 ${unassigned.length} 筆任務資訊不全</div><div style="display:none">${unassigned.map(t=>{const idx=tasks.indexOf(t);return `<div class="card" style="display:flex;align-items:center;gap:8px"><span>${t['任務名稱']}</span><span class="edit-ctrl" style="margin-left:auto;display:flex;gap:4px"><span onclick="openModal(${idx})" style="cursor:pointer">✏️</span><span onclick="deleteTask(${idx})" style="cursor:pointer;color:var(--red)">🗑️</span></span></div>`}).join('')}</div></div>`:'';
   if(!filtered.length){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">本月無任務</div>';return}
   const parentTasks=filtered.filter(t=>!t['父任務']||!filtered.find(p=>p['任務名稱']===t['父任務']));
   const getChildren=name=>filtered.filter(t=>t['父任務']===name);
   const sortFn=(a,b)=>(parseInt(a['排序'])||999)-(parseInt(b['排序'])||999);
-  const todo=parentTasks.filter(t=>t['狀態']==='待辦'&&t['負責人']).sort(sortFn);
-  const doing=parentTasks.filter(t=>t['狀態']==='進行中'&&t['負責人']).sort(sortFn);
-  const done=parentTasks.filter(t=>t['狀態']==='已完成'&&t['負責人']).sort(sortFn);
+  const isComplete=t=>t['負責人']&&t['開始日']&&t['截止日'];
+  const todo=parentTasks.filter(t=>t['狀態']==='待辦'&&isComplete(t)).sort(sortFn);
+  const doing=parentTasks.filter(t=>t['狀態']==='進行中'&&isComplete(t)).sort(sortFn);
+  const done=parentTasks.filter(t=>t['狀態']==='已完成'&&isComplete(t)).sort(sortFn);
   const getLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p)return 0;if(!p['父任務'])return 1;const gp=tasks.find(x=>x['任務名稱']===p['父任務']);if(!gp)return 1;return 2};
   const cardHtml=(items)=>items.map(t=>{
     const idx=tasks.indexOf(t);
