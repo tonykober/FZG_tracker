@@ -5,7 +5,7 @@ function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+enc
 
 const SCRIPT_URL=CONFIG.scriptUrl;
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
-function getSheetUrl(){if(window._unscheduledMode)return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未排期')}`;const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;const name=y+'/'+(m<10?'0'+m:m);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`}
+function getSheetUrl(){if(window._unscheduledMode)return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未修正')}`;const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;const name=y+'/'+(m<10?'0'+m:m);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`}
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
 async function syncAndReload(){
@@ -188,7 +188,7 @@ function quickDelete(idx,e){
   setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',row:idx}),});
   tasks.splice(idx,1);render();
 }
-function updateMonthLabel(){const lbl=document.getElementById('monthLabel');if(window._unscheduledMode){lbl.textContent='未排期';lbl.style.cursor='pointer';lbl.onclick=()=>{window._unscheduledMode=false;updateMonthLabel();fetchData()};return}lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
+function updateMonthLabel(){const lbl=document.getElementById('monthLabel');if(window._unscheduledMode){lbl.textContent='未修正';lbl.style.cursor='pointer';lbl.onclick=()=>{window._unscheduledMode=false;updateMonthLabel();fetchData()};return}lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
 function jumpToMonth(v){if(!v)return;window._unscheduledMode=false;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadCollapsedOwners();fetchData();loadNotes();renderOutsource()}
 function showUnscheduled(){window._unscheduledMode=true;updateMonthLabel();fetchData()}
 let _showUnmodified=false,_unmodifiedTasks=[];
@@ -197,7 +197,7 @@ async function toggleUnmodified(){
   const btn=document.querySelector('[data-unmod-btn]');
   if(btn)btn.textContent=_showUnmodified?'🔽 隱藏未修正':'📋 顯示未修正';
   if(_showUnmodified&&!_unmodifiedTasks.length){
-    try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未排期')}`);const t=await r.text();const j=JSON.parse(t.substring(47).slice(0,-2));const c=j.table.cols.map(x=>x.label.trim());_unmodifiedTasks=j.table.rows.map(r=>{const o={};c.forEach((col,i)=>{if(r.c&&r.c[i])o[col]=r.c[i].f||String(r.c[i].v||'');else o[col]=''});return o}).filter(x=>x['任務名稱'])}catch(e){}
+    try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未修正')}`);const t=await r.text();const j=JSON.parse(t.substring(47).slice(0,-2));const c=j.table.cols.map(x=>x.label.trim());_unmodifiedTasks=j.table.rows.map(r=>{const o={};c.forEach((col,i)=>{if(r.c&&r.c[i])o[col]=r.c[i].f||String(r.c[i].v||'');else o[col]=''});return o}).filter(x=>x['任務名稱'])}catch(e){}
   }
   render();renderFilterBar();
 }
@@ -263,7 +263,7 @@ async function submitTask(){
       const unIdx=_unmodifiedTasks.findIndex(t=>t['任務名稱']===data.name);
       if(unIdx!==-1){
         const toMonth=data.startDate.substring(0,7).replace('-','/');
-        fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:'未排期',toMonth:toMonth,row:unIdx})});
+        fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:'未修正',toMonth:toMonth,row:unIdx})});
         _unmodifiedTasks.splice(unIdx,1);
         render();renderFilterBar();
       }
