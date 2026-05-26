@@ -69,7 +69,7 @@ function openModal(idx){
     const sd=t['開始日']||'';const _toISO=d=>{if(!d)return'';if(d.includes('-'))return d.substring(0,10);const p=d.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''};document.getElementById('f-start').value=_toISO(sd);
     const ed=t['截止日']||'';document.getElementById('f-due').value=_toISO(ed);
     document.getElementById('f-tags').value=t['標籤']||'';
-    document.getElementById('f-parent').value=t['父任務']||'';
+    document.getElementById('f-parent').value=t['父任務']||'';document.getElementById('f-parent-select').value=t['父任務']||'';
     document.getElementById('f-note').value=t['備註']||'';
     document.getElementById('f-hours').value=t['工時']||0;
     document.getElementById('f-comment').value=t['評論']||'';
@@ -93,7 +93,10 @@ function populateSelects(){
   const parentSel=document.getElementById('f-parent-select');
   const getTaskLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p||!p['父任務'])return 1;return 2};
   const parentNames=tasks.filter(t=>getTaskLevel(t)<2).map(t=>t['任務名稱']).filter(Boolean);
-  parentSel.innerHTML='<option value="">選擇...</option>'+[...new Set(parentNames)].map(n=>`<option value="${n}">${n}</option>`).join('')+'<option value="__new">+ 新增</option>';
+  const curParent=document.getElementById('f-parent').value;
+  if(curParent&&!parentNames.includes(curParent))parentNames.unshift(curParent);
+  parentSel.innerHTML='<option value="">選擇...</option>'+[...new Set(parentNames)].map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(curParent)parentSel.value=curParent;
   const ownerSel=document.getElementById('f-owner-select');
   const owners=[...new Set(tasks.map(t=>t['負責人']).filter(Boolean))];
   ownerSel.innerHTML='<option value="">選擇...</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('')+'<option value="__new">+ 新增</option>';

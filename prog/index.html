@@ -79,7 +79,7 @@
     <label style="font-size:0.75em;color:var(--muted)">標籤</label>
     <div style="display:flex;gap:4px"><input id="f-tags" style="flex:1"/><select id="f-tags-select" onchange="onTagSelect()" style="width:auto"></select></div>
     <label style="font-size:0.75em;color:var(--muted)">父任務</label>
-    <div style="display:flex;gap:4px"><input id="f-parent" style="flex:1;min-width:0"/><select id="f-parent-select" onchange="onParentSelect()" style="width:auto;max-width:50%"></select></div>
+    <div style="display:flex;gap:4px"><input id="f-parent" type="hidden"/><select id="f-parent-select" onchange="document.getElementById('f-parent').value=this.value" style="width:100%"></select></div>
     <label style="font-size:0.75em;color:var(--muted)">備註</label>
     <input id="f-note" />
     <label style="font-size:0.75em;color:var(--muted)">工時（小時）</label>
