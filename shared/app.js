@@ -116,8 +116,8 @@ function onParentSelect(){
 function onOwnerSelect(){
   const sel=document.getElementById('f-owner-select');
   const input=document.getElementById('f-owner');
-  if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
-  else if(sel.value){input.value=sel.value;sel.value=''}
+  if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v){const cur=input.value?input.value.split(',').map(s=>s.trim()):[];if(!cur.includes(v))cur.push(v);input.value=cur.join(',')}sel.value=''}
+  else if(sel.value){const cur=input.value?input.value.split(',').map(s=>s.trim()):[];if(!cur.includes(sel.value))cur.push(sel.value);input.value=cur.join(',');sel.value=''}
 }
 function changeMonth(dir){window._unscheduledMode=false;currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();loadCollapsedOwners();fetchData();loadNotes();renderOutsource()}
 function toggleStatus(idx,e){
