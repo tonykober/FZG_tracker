@@ -547,7 +547,7 @@ function renderTimeline(){
   for(let d=1;d<=days;d++){const dow=new Date(y,m,d).getDay();const wd=weekdays[dow];const isToday=isThisMonth&&d===today.getDate();const isWeekend=dow===0||dow===6;h+=`<div style="flex:1;text-align:center;font-size:0.75rem;color:${isToday?'var(--red)':'var(--muted)'};font-weight:${isToday?'bold':'normal'};${isWeekend?'background:rgba(56,139,253,0.12);border-radius:2px':''}">${d}<br>${wd}</div>`}
   h+='</div></div>';
 
-  const groups={};filtered.filter(t=>t['負責人']).forEach(t=>{const o=t['負責人'];if(!groups[o])groups[o]=[];groups[o].push(t)});
+  const groups={};filtered.filter(t=>t['負責人']).forEach(t=>{(t['負責人']||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(o=>{if(!groups[o])groups[o]=[];groups[o].push(t)})});
   const tlSort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
   Object.entries(groups).sort((a,b)=>{const ai=tlSort.indexOf(a[0]),bi=tlSort.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
     h+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
