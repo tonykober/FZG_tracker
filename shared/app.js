@@ -255,6 +255,16 @@ async function submitTask(){
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
     }
     closeModal();render();renderFilterBar();
+    // Auto-move: if task was in unmodified list and now complete, move to monthly tab
+    if(_showUnmodified&&data.owner&&data.startDate&&data.dueDate&&data.name){
+      const unIdx=_unmodifiedTasks.findIndex(t=>t['任務名稱']===data.name);
+      if(unIdx!==-1){
+        const toMonth=data.startDate.substring(0,7).replace('-','/');
+        fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:'未排期',toMonth:toMonth,row:unIdx})});
+        _unmodifiedTasks.splice(unIdx,1);
+        render();renderFilterBar();
+      }
+    }
   }catch(e){alert('❌ 失敗：'+e.message)}
 }
 function deleteTask(idx){
