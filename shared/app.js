@@ -66,8 +66,8 @@ function openModal(idx){
     document.getElementById('f-owner').value=t['負責人']||'';
     document.getElementById('f-status').value=t['狀態']||'待辦';
     document.getElementById('f-priority').value=t['優先級']||'';
-    const sd=t['開始日']||'';document.getElementById('f-start').value=sd.length>=10?sd.substring(0,10):'';
-    const ed=t['截止日']||'';document.getElementById('f-due').value=ed.length>=10?ed.substring(0,10):'';
+    const sd=t['開始日']||'';const _toISO=d=>{if(!d)return'';if(d.includes('-'))return d.substring(0,10);const p=d.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''};document.getElementById('f-start').value=_toISO(sd);
+    const ed=t['截止日']||'';document.getElementById('f-due').value=_toISO(ed);
     document.getElementById('f-tags').value=t['標籤']||'';
     document.getElementById('f-parent').value=t['父任務']||'';
     document.getElementById('f-note').value=t['備註']||'';
