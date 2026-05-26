@@ -435,7 +435,7 @@ function renderBoard(){
     </div></div>`}).join('');
   const groupByOwner=(items,status)=>{
     const groups={};
-    items.forEach(t=>{const o=t['負責人']||'未指派';if(!groups[o])groups[o]=[];groups[o].push(t)});
+    items.forEach(t=>{const owners=(t['負責人']||'未指派').split(',').map(s=>s.trim()).filter(Boolean);if(!owners.length)owners.push('未指派');owners.forEach(o=>{if(!groups[o])groups[o]=[];groups[o].push(t)})});
     const ownerSort=JSON.parse(localStorage.getItem('fzg_owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'{}');
     return Object.entries(groups).sort((a,b)=>{if(a[0]===_lastMovedOwner)return -1;if(b[0]===_lastMovedOwner)return 1;return(parseInt(ownerSort[a[0]])||999)-(parseInt(ownerSort[b[0]])||999)}).map(([owner,list])=>`<div class="owner-group" data-owner="${owner}" ondragover="ownerGroupOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="ownerGroupDrop(event,this)" style="margin-bottom:8px"><div class="owner-title" draggable="true" ondragstart="ownerDragStart(event,this.closest('.owner-group'))" ondragend="ownerDragEnd()" onclick="toggleOwnerGroup(this)" style="display:flex;align-items:center;color:var(--accent);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer"><span class="tog">▼</span> 👤 ${owner} (${list.length})<span class="edit-ctrl" style="margin-left:auto;display:flex;gap:2px;flex-shrink:0"><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', -1, event)" style="cursor:pointer;padding:0 4px">▲</span><span onclick="moveOwnerGroup('${owner.replace(/'/g,"\\'")}', 1, event)" style="cursor:pointer;padding:0 4px">▼</span></span></div><div>${cardHtml(list)}</div></div>`).join('');
   };
