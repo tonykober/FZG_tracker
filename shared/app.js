@@ -394,7 +394,7 @@ function renderBoard(){
   const getLevel=(t)=>{if(!t['父任務'])return 0;const p=tasks.find(x=>x['任務名稱']===t['父任務']);if(!p)return 0;if(!p['父任務'])return 1;const gp=tasks.find(x=>x['任務名稱']===p['父任務']);if(!gp)return 1;return 2};
   const cardHtml=(items)=>items.map(t=>{
     const idx=tasks.indexOf(t);
-    const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':t['優先級']==='低'?'p-low':'';
+    const pClass=t['優先級']==='高'||t['優先級']==='緊急'?'p-high':t['優先級']==='中'?'p-mid':t['優先級']==='低'?'p-low':'';
     const children=getChildren(t['任務名稱']);
     const childDone=children.filter(c=>c['狀態']==='已完成').length;
     const tags=(t['標籤']||'').split(',').filter(Boolean);
@@ -407,7 +407,7 @@ function renderBoard(){
       <div class="meta" style="flex-wrap:nowrap;gap:6px"><span onclick="inlineEdit(${idx},'負責人',event)" style="color:var(--green);cursor:pointer;white-space:nowrap">${t['負責人']||'未指派'}</span>${tags.length?'<span style="display:inline-flex;gap:3px;flex:1;overflow:hidden">'+tags.map(tg=>'<span class="tag-pill" onclick="inlineEdit('+idx+',\'標籤\',event)" style="cursor:pointer">'+tg.trim()+'</span>').join('')+'</span>':'<span style="flex:1"></span>'}<span onclick="inlineEdit(${idx},'日期',event)" style="cursor:pointer;white-space:nowrap;color:${getDeadlineColor(t)||'var(--accent)'}">${t['開始日']?t['開始日'].substring(0,10):''}${t['開始日']||t['截止日']?' ~ ':''}${t['截止日']?t['截止日'].substring(0,10):''}</span></div>
       ${t['評論']?'<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;font-style:italic">💬 '+t['評論'].substring(0,50)+(t['評論'].length>50?'...':'')+'</div>':''}
       ${children.length?'<div class="subtasks" onclick="toggleSub(this,event)" style="cursor:pointer"><span style="font-size:0.75rem">'+(JSON.parse(localStorage.getItem('fzg_sub_collapse_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'[]').includes(t['任務名稱'])?'▶':'▼')+'</span> 子任務：'+childDone+'/'+children.length+'<div style="margin-top:4px'+(JSON.parse(localStorage.getItem('fzg_sub_collapse_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'[]').includes(t['任務名稱'])?';display:none':'')+'">'+children.map(c=>{
-        const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
+        const ci=tasks.indexOf(c);const cpClass=c['優先級']==='高'||c['優先級']==='緊急'?'p-high':c['優先級']==='中'?'p-mid':c['優先級']==='低'?'p-low':'';
         const grandChildren=getChildren(c['任務名稱']);const gcDone=grandChildren.filter(g=>g['狀態']==='已完成').length;
         const cLevel=getLevel(c);const cCanAddSub=cLevel<2;const _cdbg=getDeadlineBg(c);
         return `<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:4px;${_cdbg||'background:var(--surface)'};padding:6px 8px;transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
@@ -421,7 +421,7 @@ function renderBoard(){
             <span class="edit-ctrl" onclick="quickDelete(${ci},event)" style="cursor:pointer;font-size:0.75rem;background:var(--red);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px">✕</span>
           </div>
           ${grandChildren.length?'<div style="margin-top:4px;padding-left:12px">'+grandChildren.map(g=>{
-            const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
+            const gi=tasks.indexOf(g);const gpClass=g['優先級']==='高'||g['優先級']==='緊急'?'p-high':g['優先級']==='中'?'p-mid':g['優先級']==='低'?'p-low':'';const _gdbg=getDeadlineBg(g);
             return `<div onclick="event.stopPropagation();openModal(${gi})" style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:0.875rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;margin-bottom:3px;${_gdbg||'background:var(--bg)'};transition:border-color .2s" onmouseover="this.style.outline='2px solid var(--accent)';this.style.outlineOffset='-2px'" onmouseout="this.style.outline='none'">
               <span onclick="toggleStatus(${gi},event)" style="cursor:pointer;color:${g['狀態']==='已完成'?'var(--green)':g['狀態']==='進行中'?'var(--yellow)':'var(--muted)'}">${g['狀態']==='已完成'?'✅':g['狀態']==='進行中'?'🔄':'⬜'}</span>
               ${gpClass?'<span class="priority-dot '+gpClass+'"></span>':''}
@@ -565,7 +565,7 @@ function renderTimeline(){
       const hasKids=tasks.some(c=>c['父任務']===t['任務名稱']);
       const color=t['狀態']==='已完成'?(hasKids?'var(--accent)':'var(--green)'):t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
       const l=((sd-1)/days*100).toFixed(1),w=((ed-sd+1)/days*100).toFixed(1);
-      const pClass=t['優先級']==='高'?'p-high':t['優先級']==='中'?'p-mid':'';
+      const pClass=t['優先級']==='高'||t['優先級']==='緊急'?'p-high':t['優先級']==='中'?'p-mid':'';
       const pl=level===0?12:level===1?24:36;const _ti=tasks.indexOf(t);
       h+=`<div data-task="${t['任務名稱'].replace(/"/g,'&quot;')}"${hasChildren?' data-has-kids':''} ${level===0?'draggable="true" ondragstart="tlTaskDragStart(event,this)" ondragend="tlTaskDragEnd()" ondragover="tlTaskDragOver(event,this)" ondragleave="this.classList.remove(\'drag-over-top\',\'drag-over-bottom\')" ondrop="tlTaskDrop(event,this)"':''} onclick="ganttRowClick(this,'${t['任務名稱'].replace(/'/g,"\\'")}')" style="display:flex;align-items:center;padding:2px 0;cursor:${level===0?'grab':'pointer'}"><div style="width:200px;flex-shrink:0;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:${pl}px;${level?'color:var(--yellow)':''}">${level===0?(hasChildren?'<span onclick="event.stopPropagation();toggleTlChildren(this)" style="display:inline-block;width:16px;text-align:center;cursor:pointer">'+(collapsed?'▶':'▼')+'</span>':'<span style="display:inline-block;width:16px"></span>'):''}${level?'└ ':''}${pClass?'<span class="priority-dot '+pClass+'"></span>':''}${t['任務名稱']}</div><div class="gantt-track" style="flex:1;position:relative;height:${level?'12':'16'}px;background:var(--bg);border-radius:3px"><div class="gantt-bar" data-idx="${_ti}" style="position:absolute;left:${l}%;width:${w}%;height:100%;background:${color};border-radius:3px;opacity:0.8;cursor:default"><div class="gantt-handle gantt-handle-l" data-idx="${_ti}" data-side="l" style="position:absolute;left:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:3px 0 0 3px"></div><div class="gantt-handle gantt-handle-r" data-idx="${_ti}" data-side="r" style="position:absolute;right:0;top:0;width:6px;height:100%;cursor:ew-resize;border-radius:0 3px 3px 0"></div></div></div></div>`;
     };
