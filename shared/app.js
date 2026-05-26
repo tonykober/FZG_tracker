@@ -5,7 +5,7 @@ function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+enc
 
 const SCRIPT_URL=CONFIG.scriptUrl;
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
-function getSheetUrl(){const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;const name=y+'/'+(m<10?'0'+m:m);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`}
+function getSheetUrl(){if(window._unscheduledMode)return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未排期')}`;const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1;const name=y+'/'+(m<10?'0'+m:m);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`}
 let tasks=[],currentMonth=new Date(),activeFilter='';
 let unlocked=sessionStorage.getItem('fzg_unlocked')==='1';
 async function syncAndReload(){
@@ -116,7 +116,7 @@ function onOwnerSelect(){
   if(sel.value==='__new'){const v=prompt('輸入新負責人名稱：');if(v)input.value=v;sel.value=''}
   else if(sel.value){input.value=sel.value;sel.value=''}
 }
-function changeMonth(dir){currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();loadCollapsedOwners();render();loadNotes();renderOutsource()}
+function changeMonth(dir){window._unscheduledMode=false;currentMonth.setMonth(currentMonth.getMonth()+dir);updateMonthLabel();loadCollapsedOwners();fetchData();loadNotes();renderOutsource()}
 function toggleStatus(idx,e){
   e.stopPropagation();if(!unlocked)return;
   const t=tasks[idx];
@@ -185,8 +185,9 @@ function quickDelete(idx,e){
   setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',row:idx}),});
   tasks.splice(idx,1);render();
 }
-function updateMonthLabel(){const lbl=document.getElementById('monthLabel');lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
-function jumpToMonth(v){if(!v)return;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadCollapsedOwners();render();loadNotes();renderOutsource()}
+function updateMonthLabel(){const lbl=document.getElementById('monthLabel');if(window._unscheduledMode){lbl.textContent='未排期';lbl.style.cursor='pointer';lbl.onclick=()=>{window._unscheduledMode=false;updateMonthLabel();fetchData()};return}lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
+function jumpToMonth(v){if(!v)return;window._unscheduledMode=false;const[y,m]=v.split('-').map(Number);currentMonth=new Date(y,m-1,1);updateMonthLabel();loadCollapsedOwners();fetchData();loadNotes();renderOutsource()}
+function showUnscheduled(){window._unscheduledMode=true;updateMonthLabel();fetchData()}
 function loadNotes(){
   const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes&headers=0`;
   fetch(notesUrl).then(r=>r.text()).then(text=>{
@@ -202,6 +203,7 @@ function saveOwnerSort(status,sortArray){
   saveNote('owner_sort_'+status+'_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),JSON.stringify(sortArray));
 }
 function filterByMonth(list){
+  if(window._unscheduledMode)return list;
   const y=currentMonth.getFullYear(),m=currentMonth.getMonth()+1,prefix=y+'-'+(m<10?'0'+m:m);
   const toYM=d=>{if(!d)return'';const p=d.split('/');if(p.length>=2)return p[0]+'-'+(p[1].length<2?'0'+p[1]:p[1]);if(d.includes('-'))return d.substring(0,7);return''};
   return list.filter(t=>{
