@@ -551,15 +551,16 @@ function renderTimeline(){
   const tlSort=JSON.parse(localStorage.getItem(getTimelineSortKey())||'[]');
   Object.entries(groups).sort((a,b)=>{const ai=tlSort.indexOf(a[0]),bi=tlSort.indexOf(b[0]);return(ai<0?999:ai)-(bi<0?999:bi)}).forEach(([owner,items])=>{
     h+=`<div style="border-bottom:2px solid rgba(88,166,255,0.4);padding:4px 0" ondragover="timelineDragOver(event,this)" ondragleave="this.classList.remove('drag-over-top','drag-over-bottom')" ondrop="timelineDrop(event,this)"><span data-owner="${owner}" draggable="true" ondragstart="timelineDragStart(event,this)" ondragend="timelineDragEnd()" onclick="toggleTimelineGroup(this)" style="cursor:grab;font-size:1rem;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="tog">${_collapsedTimelineOwners.has(owner)?'▶':'▼'}</span>&nbsp;👤 ${owner} (${items.length})</span><div${_collapsedTimelineOwners.has(owner)?' style="display:none"':''}>`;
-    const parents=items.filter(t=>!t['父任務']);
+    const parents=items.filter(t=>!t['父任務']||!items.find(p=>p['任務名稱']===t['父任務']));
     const tlTaskSort=JSON.parse(localStorage.getItem(getTlTaskSortKey())||'{}');
     const ownerTaskOrder=tlTaskSort[owner]||[];
     parents.sort((a,b)=>{const ai=ownerTaskOrder.indexOf(a['任務名稱']),bi=ownerTaskOrder.indexOf(b['任務名稱']);return(ai<0?999:ai)-(bi<0?999:bi)});
     const renderGanttRow=(t,level,hasChildren,collapsed)=>{
       const startStr=(t['開始日']||'').substring(0,10);const endStr=(t['截止日']||'').substring(0,10);
+      const _dp=d=>{if(!d)return null;const sep=d.includes('-')?'-':'/';const p=d.split(sep).map(Number);return p.length>=3?p:null};
       let sd=1,ed=days;
-      if(startStr){const p=startStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)sd=parseInt(p[2]);else if(parseInt(p[0])>y||(parseInt(p[0])===y&&parseInt(p[1])-1>m))sd=days+1;else sd=1}
-      if(endStr){const p=endStr.split('-');if(parseInt(p[0])===y&&parseInt(p[1])-1===m)ed=parseInt(p[2]);else if(parseInt(p[0])<y||(parseInt(p[0])===y&&parseInt(p[1])-1<m))ed=0;else ed=days}else{ed=sd}
+      if(startStr){const p=_dp(startStr);if(p){const py=p[0],pm=startStr.includes('-')?p[1]-1:p[1]-1,pd=p[2];if(py===y&&pm===m)sd=pd;else if(py>y||(py===y&&pm>m))sd=days+1;else sd=1}}
+      if(endStr){const p=_dp(endStr);if(p){const py=p[0],pm=endStr.includes('-')?p[1]-1:p[1]-1,pd=p[2];if(py===y&&pm===m)ed=pd;else if(py<y||(py===y&&pm<m))ed=0;else ed=days}}else{ed=sd}
       if(sd>days||ed<1)return;sd=Math.max(1,sd);ed=Math.min(days,ed);
       const hasKids=tasks.some(c=>c['父任務']===t['任務名稱']);
       const color=t['狀態']==='已完成'?(hasKids?'var(--accent)':'var(--green)'):t['狀態']==='進行中'?'var(--yellow)':'var(--muted)';
@@ -575,7 +576,7 @@ function renderTimeline(){
         // Calculate group date range
         const allGroup=[t,...children,...children.flatMap(c=>items.filter(g=>g['父任務']===c['任務名稱']))];
         let gsd=days+1,ged=0;
-        allGroup.forEach(g=>{const s=(g['開始日']||'').substring(0,10),e=(g['截止日']||'').substring(0,10);if(s){const p=s.split('-');if(+p[0]===y&&+p[1]-1===m)gsd=Math.min(gsd,+p[2]);else if(+p[0]<y||(+p[0]===y&&+p[1]-1<m))gsd=1}if(e){const p=e.split('-');if(+p[0]===y&&+p[1]-1===m)ged=Math.max(ged,+p[2]);else if(+p[0]>y||(+p[0]===y&&+p[1]-1>m))ged=days}});
+        allGroup.forEach(g=>{const s=(g['開始日']||'').substring(0,10),e=(g['截止日']||'').substring(0,10);if(s){const sep=s.includes('-')?'-':'/';const p=s.split(sep).map(Number);if(p[0]===y&&p[1]-1===m)gsd=Math.min(gsd,p[2]);else if(p[0]<y||(p[0]===y&&p[1]-1<m))gsd=1}if(e){const sep=e.includes('-')?'-':'/';const p=e.split(sep).map(Number);if(p[0]===y&&p[1]-1===m)ged=Math.max(ged,p[2]);else if(p[0]>y||(p[0]===y&&p[1]-1>m))ged=days}});
         if(gsd>days||ged<1){gsd=1;ged=days}
         const gl=((gsd-1)/days*100).toFixed(1),gw=((ged-gsd+1)/days*100).toFixed(1);
         const rowCount=1+children.length+children.reduce((s,c)=>s+items.filter(g=>g['父任務']===c['任務名稱']).length,0);
