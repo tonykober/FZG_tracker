@@ -161,14 +161,32 @@ function inlineEdit(idx,field,e){
     if(field==='負責人'){const sel=m.querySelector('#ie-owner');const inp=m.querySelector('#ie-owner-new');t['負責人']=sel.value==='__new'||!sel.value?inp.value:sel.value}
     else if(field==='日期'){t['開始日']=m.querySelector('#ie-start').value;t['截止日']=m.querySelector('#ie-due').value}
     else if(field==='標籤'){t['標籤']=m.querySelector('#ie-tags').value}
+    // Auto-adjust parent date if child task date exceeds parent range
+    if(field==='日期'&&t['父任務']){
+      const parent=tasks.find(p=>p['任務名稱']===t['父任務']);
+      if(parent){
+        const children=tasks.filter(c=>c['父任務']===parent['任務名稱']);
+        const dates=children.map(c=>({s:c['開始日']||'',e:c['截止日']||''})).filter(d=>d.s&&d.e);
+        if(dates.length){
+          const minS=dates.map(d=>d.s).sort()[0];
+          const maxE=dates.map(d=>d.e).sort().pop();
+          let changed=false;
+          if(!parent['開始日']||minS<parent['開始日']){parent['開始日']=minS;changed=true}
+          if(!parent['截止日']||maxE>parent['截止日']){parent['截止日']=maxE;changed=true}
+          if(changed){const pi=tasks.indexOf(parent);fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:pi,name:parent['任務名稱'],owner:parent['負責人'],status:parent['狀態'],progress:'',startDate:parent['開始日'],dueDate:parent['截止日'],note:parent['備註'],priority:parent['優先級'],tags:parent['標籤'],parent:parent['父任務'],hours:parent['工時'],comment:parent['評論']})})}
+        }
+      }
+    }
     const _curMonth=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
     const _newStart=t['開始日']||'';
     const _newMonth=_newStart?(_newStart.includes('-')?_newStart.substring(0,4)+'/'+_newStart.substring(5,7):(()=>{const p=_newStart.split('/');return p.length>=2?p[0]+'/'+p[1].padStart(2,'0'):''})()):'';
+    // Only move if this is a top-level task (no parent, or parent not in current tasks)
+    const _isTopLevel=!t['父任務']||!tasks.find(p=>p['任務名稱']===t['父任務']);
     // Always update first
     setSyncStatus('🔄 同步中...','var(--yellow)');
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']})}).then(()=>{
-      // Then move if month changed
-      if(_newMonth&&_newMonth!==_curMonth){
+      // Only top-level tasks trigger move
+      if(_isTopLevel&&_newMonth&&_newMonth!==_curMonth){
         fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_curMonth,toMonth:_newMonth,row:idx})});
       }
     });
@@ -262,10 +280,11 @@ async function submitTask(){
   try{
     const _curM=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
     const _sd=data.startDate||'';const _nm=_sd?(_sd.includes('-')?_sd.substring(0,4)+'/'+_sd.substring(5,7):(()=>{const p=_sd.split('/');return p.length>=2?p[0]+'/'+p[1].padStart(2,'0'):''})()):'';
+    const _isTop=!data.parent||!tasks.find(p=>p['任務名稱']===data.parent);
     // Always send update first
     setSyncStatus('🔄 同步中...','var(--yellow)');
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(data)}).then(()=>{
-      if(data.action==='update'&&_nm&&_nm!==_curM){
+      if(data.action==='update'&&_isTop&&_nm&&_nm!==_curM){
         fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_curM,toMonth:_nm,row:parseInt(m.dataset.editIdx)})});
       }
     });
