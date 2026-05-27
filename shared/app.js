@@ -376,7 +376,10 @@ async function fetchData(){
     Object.keys(_pending).forEach(name=>{const e=_pending[name];if(_now-e.ts>300000){delete _pending[name];return}const t=tasks.find(x=>x['任務名稱']===name);if(t){Object.assign(t,e.data)}});
     localStorage.setItem('fzg_pending_edits',JSON.stringify(_pending));
     // Also fetch previous month for cross-month tasks
-    try{const pm=new Date(currentMonth);pm.setMonth(pm.getMonth()-1);const py=pm.getFullYear(),pmm=pm.getMonth()+1;const prevUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(py+'/'+(pmm<10?'0'+pmm:pmm))}`;const r2=await fetch(prevUrl);const t2=await r2.text();const j2=JSON.parse(t2.substring(47).slice(0,-2));const c2=j2.table.cols.map(c=>c.label.trim());const prev=j2.table.rows.map(r=>{const obj={};c2.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']&&!tasks.find(e=>e['任務名稱']===t['任務名稱']));tasks=tasks.concat(prev)}catch(e){}
+    try{const pm=new Date(currentMonth);pm.setMonth(pm.getMonth()-1);const py=pm.getFullYear(),pmm=pm.getMonth()+1;const prevUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(py+'/'+(pmm<10?'0'+pmm:pmm))}`;const r2=await fetch(prevUrl);const t2=await r2.text();const j2=JSON.parse(t2.substring(47).slice(0,-2));const c2=j2.table.cols.map(c=>c.label.trim());const prev=j2.table.rows.map(r=>{const obj={};c2.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']&&!tasks.find(e=>e['任務名稱']===t['任務名稱']));tasks=tasks.concat(prev);
+    // Re-apply pending edits to prev month tasks
+    const _p2=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');Object.keys(_p2).forEach(name=>{const e=_p2[name];if(Date.now()-e.ts<=300000){const t=tasks.find(x=>x['任務名稱']===name);if(t)Object.assign(t,e.data)}});
+    }catch(e){}
     render();renderFilterBar();
   }catch(e){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入失敗<br><button onclick="fetchData()" style="margin-top:10px;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer">重試</button></div>'}
 }
