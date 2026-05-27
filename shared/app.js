@@ -26,6 +26,7 @@ function applyLock(){
   document.getElementById('adminPw').style.display=unlocked?'none':'';
 }
 function _normDate(s){if(!s)return'';if(s.includes('-'))return s.substring(0,10);const p=s.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''}
+function _savePendingEdit(t){const p=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');p[t['任務名稱']]={ts:Date.now(),data:{'開始日':t['開始日'],'截止日':t['截止日'],'負責人':t['負責人'],'狀態':t['狀態'],'標籤':t['標籤'],'優先級':t['優先級'],'父任務':t['父任務'],'備註':t['備註'],'工時':t['工時'],'評論':t['評論']}};localStorage.setItem('fzg_pending_edits',JSON.stringify(p))}
 function getDeadlineColor(t){if(t['狀態']==='已完成')return '';const due=_normDate(t['截止日']||'');if(!due)return '';const today=new Date();today.setHours(0,0,0,0);const d=new Date(due+'T00:00:00');if(isNaN(d))return '';const diff=Math.round((d-today)/(1000*60*60*24));if(diff<0)return '#dc143c';if(diff===0)return '#ff8c00';if(diff===1)return '#ffd700';return ''}
 function getDeadlineBg(t){
   if(t['狀態']==='已完成')return 'border-left:6px solid var(--border)';
@@ -161,6 +162,7 @@ function inlineEdit(idx,field,e){
     if(field==='負責人'){const sel=m.querySelector('#ie-owner');const inp=m.querySelector('#ie-owner-new');t['負責人']=sel.value==='__new'||!sel.value?inp.value:sel.value}
     else if(field==='日期'){t['開始日']=m.querySelector('#ie-start').value;t['截止日']=m.querySelector('#ie-due').value}
     else if(field==='標籤'){t['標籤']=m.querySelector('#ie-tags').value}
+    _savePendingEdit(t);
     // Auto-adjust parent date if child task date exceeds parent range
     if(field==='日期'&&t['父任務']){
       const parent=tasks.find(p=>p['任務名稱']===t['父任務']);
@@ -292,6 +294,7 @@ async function submitTask(){
       const t=tasks[parseInt(m.dataset.editIdx)];
       const oldName=t['任務名稱'];
       t['任務名稱']=data.name;t['負責人']=data.owner;t['狀態']=data.status;t['開始日']=data.startDate;t['截止日']=data.dueDate;t['備註']=data.note;t['優先級']=data.priority;t['標籤']=data.tags;t['父任務']=data.parent;t['工時']=data.hours;t['評論']=data.comment;
+      _savePendingEdit(t);
       if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;const ci=tasks.indexOf(c);setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']}),})})}
     }else{
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
@@ -327,6 +330,11 @@ async function fetchData(){
     const json=JSON.parse(text.substring(47).slice(0,-2));
     const cols=json.table.cols.map(c=>c.label.trim());
     tasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']);
+    // Merge localStorage pending edits (gviz cache workaround)
+    const _pending=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');
+    const _now=Date.now();
+    Object.keys(_pending).forEach(name=>{const e=_pending[name];if(_now-e.ts>300000){delete _pending[name];return}const t=tasks.find(x=>x['任務名稱']===name);if(t){Object.assign(t,e.data)}});
+    localStorage.setItem('fzg_pending_edits',JSON.stringify(_pending));
     // Also fetch previous month for cross-month tasks
     try{const pm=new Date(currentMonth);pm.setMonth(pm.getMonth()-1);const py=pm.getFullYear(),pmm=pm.getMonth()+1;const prevUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(py+'/'+(pmm<10?'0'+pmm:pmm))}`;const r2=await fetch(prevUrl);const t2=await r2.text();const j2=JSON.parse(t2.substring(47).slice(0,-2));const c2=j2.table.cols.map(c=>c.label.trim());const prev=j2.table.rows.map(r=>{const obj={};c2.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']&&!tasks.find(e=>e['任務名稱']===t['任務名稱']));tasks=tasks.concat(prev)}catch(e){}
     render();renderFilterBar();
