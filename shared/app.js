@@ -197,6 +197,24 @@ function inlineEdit(idx,field,e){
         }
       }
     }
+    // Reverse rule: if this task is a parent and dates shrink, push children
+    if(field==='日期'){
+      const _children=tasks.filter(c=>c['父任務']===t['任務名稱']);
+      if(_children.length){
+        const pStart=t['開始日']||'';const pEnd=t['截止日']||'';
+        _children.forEach(c=>{
+          let cChanged=false;
+          if(pStart&&c['開始日']&&c['開始日']<pStart){c['開始日']=pStart;cChanged=true}
+          if(pEnd&&c['截止日']&&c['截止日']>pEnd){c['截止日']=pEnd;cChanged=true}
+          // Ensure at least 1 day duration
+          if(c['開始日']&&c['截止日']&&c['開始日']>=c['截止日']){c['截止日']=c['開始日'];cChanged=true}
+          if(cChanged){
+            const ci=tasks.indexOf(c);_savePendingEdit(c);
+            fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:ci,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:c['父任務'],hours:c['工時'],comment:c['評論']})});
+          }
+        });
+      }
+    }
     const _curMonth=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
     const _newStart=t['開始日']||'';
     const _newMonth=_newStart?(_newStart.includes('-')?_newStart.substring(0,4)+'/'+_newStart.substring(5,7):(()=>{const p=_newStart.split('/');return p.length>=2?p[0]+'/'+p[1].padStart(2,'0'):''})()):'';
