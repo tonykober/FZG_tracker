@@ -140,9 +140,11 @@ function inlineEdit(idx,field,e){
     html+=`<select id="ie-owner" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:8px"><option value="">選擇...</option>${owners.map(o=>`<option value="${o}" ${o===t['負責人']?'selected':''}>${o}</option>`).join('')}<option value="__new">+ 新增</option></select>`;
     html+=`<input id="ie-owner-new" placeholder="或直接輸入" value="${t['負責人']||''}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);box-sizing:border-box">`;
   }else if(field==='日期'){
+    const _d2i=d=>{if(!d)return'';if(d.includes('-'))return d.substring(0,10);const p=d.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''};
+    const _sv=_d2i(t['開始日']||''),_ev=_d2i(t['截止日']||'');
     html+=`<label style="font-size:0.8em;color:var(--accent);margin-bottom:6px;display:block">修改日期</label>`;
-    html+=`<div style="margin-bottom:6px"><span style="font-size:0.75em;color:var(--muted)">開始日</span><input id="ie-start" type="date" value="${(()=>{const d=t['開始日']||'';if(!d)return'';if(d.includes('-'))return d.substring(0,10);const p=d.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''})()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
-    html+=`<div><span style="font-size:0.75em;color:var(--muted)">截止日</span><input id="ie-due" type="date" value="${(()=>{const d=t['截止日']||'';if(!d)return'';if(d.includes('-'))return d.substring(0,10);const p=d.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''})()" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
+    html+=`<div style="margin-bottom:6px"><span style="font-size:0.75em;color:var(--muted)">開始日</span><input id="ie-start" type="date" value="${_sv}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
+    html+=`<div><span style="font-size:0.75em;color:var(--muted)">截止日</span><input id="ie-due" type="date" value="${_ev}" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text)" onclick="this.showPicker()"></div>`;
   }else if(field==='標籤'){
     const allTags=[...new Set(tasks.flatMap(x=>(x['標籤']||'').split(',').filter(Boolean).map(s=>s.trim())))];
     html+=`<label style="font-size:0.8em;color:var(--accent);margin-bottom:6px;display:block">修改標籤</label>`;
