@@ -27,6 +27,10 @@ function applyLock(){
 }
 function _normDate(s){if(!s)return'';if(s.includes('-'))return s.substring(0,10);const p=s.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''}
 function _savePendingEdit(t){const p=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');p[t['任務名稱']]={ts:Date.now(),data:{'開始日':t['開始日'],'截止日':t['截止日'],'負責人':t['負責人'],'狀態':t['狀態'],'標籤':t['標籤'],'優先級':t['優先級'],'父任務':t['父任務'],'備註':t['備註'],'工時':t['工時'],'評論':t['評論']}};localStorage.setItem('fzg_pending_edits',JSON.stringify(p))}
+function _moveTaskToMonth(t,row,fromMonth,toMonth){
+  fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',month:fromMonth,row:row})});
+  fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註']||'',priority:t['優先級']||'',tags:t['標籤']||'',parent:t['父任務']||'',hours:t['工時']||'',comment:t['評論']||'',month:toMonth})});
+}
 function getDeadlineColor(t){if(t['狀態']==='已完成')return '';const due=_normDate(t['截止日']||'');if(!due)return '';const today=new Date();today.setHours(0,0,0,0);const d=new Date(due+'T00:00:00');if(isNaN(d))return '';const diff=Math.round((d-today)/(1000*60*60*24));if(diff<0)return '#dc143c';if(diff===0)return '#ff8c00';if(diff===1)return '#ffd700';return ''}
 function getDeadlineBg(t){
   if(t['狀態']==='已完成')return 'border-left:6px solid var(--border)';
@@ -184,7 +188,9 @@ function inlineEdit(idx,field,e){
               const _ps=parent['開始日']||'';const _pm2=_ps?(_ps.includes('-')?_ps.substring(0,4)+'/'+_ps.substring(5,7):(()=>{const pp=_ps.split('/');return pp.length>=2?pp[0]+'/'+pp[1].padStart(2,'0'):''})()):'';
               const _parentIsTop=!parent['父任務']||!tasks.find(x=>x['任務名稱']===parent['父任務']);
               if(_parentIsTop&&_pm2&&_pm2!==_cm){
-                fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_cm,toMonth:_pm2,row:pi})});
+                _moveTaskToMonth(parent,pi,_cm,_pm2);
+                // Also move children
+                tasks.filter(c=>c['父任務']===parent['任務名稱']).forEach((c,ci)=>{const cIdx=tasks.indexOf(c);_moveTaskToMonth(c,cIdx>pi?cIdx-1:cIdx,_cm,_pm2)});
               }
             });
           }
@@ -201,7 +207,9 @@ function inlineEdit(idx,field,e){
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:idx,name:t['任務名稱'],owner:t['負責人'],status:t['狀態'],progress:'',startDate:t['開始日'],dueDate:t['截止日'],note:t['備註'],priority:t['優先級'],tags:t['標籤'],parent:t['父任務'],hours:t['工時'],comment:t['評論']})}).then(()=>{
       // Only top-level tasks trigger move
       if(_isTopLevel&&_newMonth&&_newMonth!==_curMonth){
-        fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_curMonth,toMonth:_newMonth,row:idx})});
+        _moveTaskToMonth(t,idx,_curMonth,_newMonth);
+        // Also move children
+        tasks.filter(c=>c['父任務']===t['任務名稱']).forEach((c)=>{const ci=tasks.indexOf(c);_moveTaskToMonth(c,ci>idx?ci-1:ci,_curMonth,_newMonth)});
       }
     });
     m.remove();render();
@@ -299,7 +307,9 @@ async function submitTask(){
     setSyncStatus('🔄 同步中...','var(--yellow)');
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(data)}).then(()=>{
       if(data.action==='update'&&_isTop&&_nm&&_nm!==_curM){
-        fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_curM,toMonth:_nm,row:parseInt(m.dataset.editIdx)})});
+        const _t=tasks[parseInt(m.dataset.editIdx)];
+        _moveTaskToMonth(_t,parseInt(m.dataset.editIdx),_curM,_nm);
+        tasks.filter(c=>c['父任務']===_t['任務名稱']).forEach(c=>{const ci=tasks.indexOf(c);_moveTaskToMonth(c,ci,_curM,_nm)});
       }
     });
     if(data.action==='update'){
