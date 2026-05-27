@@ -25,12 +25,13 @@ function applyLock(){
   document.getElementById('adminBtn').textContent=unlocked?'鎖定':'管理';
   document.getElementById('adminPw').style.display=unlocked?'none':'';
 }
-function getDeadlineColor(t){if(t['狀態']==='已完成')return '';const due=(t['截止日']||'').substring(0,10);if(!due)return '';const today=new Date();today.setHours(0,0,0,0);const d=new Date(due+'T00:00:00');const diff=Math.round((d-today)/(1000*60*60*24));if(diff<0)return '#dc143c';if(diff===0)return '#ff8c00';if(diff===1)return '#ffd700';return ''}
+function _normDate(s){if(!s)return'';if(s.includes('-'))return s.substring(0,10);const p=s.split('/');return p.length===3?p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0'):''}
+function getDeadlineColor(t){if(t['狀態']==='已完成')return '';const due=_normDate(t['截止日']||'');if(!due)return '';const today=new Date();today.setHours(0,0,0,0);const d=new Date(due+'T00:00:00');if(isNaN(d))return '';const diff=Math.round((d-today)/(1000*60*60*24));if(diff<0)return '#dc143c';if(diff===0)return '#ff8c00';if(diff===1)return '#ffd700';return ''}
 function getDeadlineBg(t){
   if(t['狀態']==='已完成')return 'border-left:6px solid var(--border)';
-  const due=(t['截止日']||'').substring(0,10);if(!due)return 'border-left:6px solid var(--border)';
+  const due=_normDate(t['截止日']||'');if(!due)return 'border-left:6px solid var(--border)';
   const today=new Date();today.setHours(0,0,0,0);
-  const d=new Date(due+'T00:00:00');
+  const d=new Date(due+'T00:00:00');if(isNaN(d))return 'border-left:6px solid var(--border)';
   const diff=Math.round((d-today)/(1000*60*60*24));
   if(diff<0)return 'border-left:6px solid #dc143c';
   if(diff===0)return 'border-left:6px solid #ff8c00';
