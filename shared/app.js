@@ -175,7 +175,19 @@ function inlineEdit(idx,field,e){
           let changed=false;
           if(!parent['開始日']||minS<parent['開始日']){parent['開始日']=minS;changed=true}
           if(!parent['截止日']||maxE>parent['截止日']){parent['截止日']=maxE;changed=true}
-          if(changed){const pi=tasks.indexOf(parent);fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:pi,name:parent['任務名稱'],owner:parent['負責人'],status:parent['狀態'],progress:'',startDate:parent['開始日'],dueDate:parent['截止日'],note:parent['備註'],priority:parent['優先級'],tags:parent['標籤'],parent:parent['父任務'],hours:parent['工時'],comment:parent['評論']})})}
+          if(changed){
+            const pi=tasks.indexOf(parent);
+            _savePendingEdit(parent);
+            fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:pi,name:parent['任務名稱'],owner:parent['負責人'],status:parent['狀態'],progress:'',startDate:parent['開始日'],dueDate:parent['截止日'],note:parent['備註'],priority:parent['優先級'],tags:parent['標籤'],parent:parent['父任務'],hours:parent['工時'],comment:parent['評論']})}).then(()=>{
+              // Check if parent needs to move to different month
+              const _cm=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
+              const _ps=parent['開始日']||'';const _pm2=_ps?(_ps.includes('-')?_ps.substring(0,4)+'/'+_ps.substring(5,7):(()=>{const pp=_ps.split('/');return pp.length>=2?pp[0]+'/'+pp[1].padStart(2,'0'):''})()):'';
+              const _parentIsTop=!parent['父任務']||!tasks.find(x=>x['任務名稱']===parent['父任務']);
+              if(_parentIsTop&&_pm2&&_pm2!==_cm){
+                fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'moveTask',fromMonth:_cm,toMonth:_pm2,row:pi})});
+              }
+            });
+          }
         }
       }
     }
