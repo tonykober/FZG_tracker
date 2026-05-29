@@ -1,7 +1,7 @@
 
 const SHEET_ID=CONFIG.sheetId;
 function setSyncStatus(msg,color){const el=document.getElementById('syncStatus');if(el){el.textContent=msg;el.style.color=color||'var(--muted)'}}
-function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+encodeURIComponent(month)+'&text='+encodeURIComponent(text);setSyncStatus('🔄 同步中...','var(--yellow)');if(url.length<2000)return fetch(url).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'));navigator.sendBeacon(SCRIPT_URL,JSON.stringify({action:'saveNote',month:month,text:text}));setSyncStatus('📤 已送出','var(--green)');setTimeout(()=>setSyncStatus(''),3000);return Promise.resolve()}
+function saveNote(month,text){const url=SCRIPT_URL+'?action=saveNote&month='+encodeURIComponent(month)+'&text='+encodeURIComponent(text);setSyncStatus('🔄 同步中...','var(--yellow)');if(url.length<2000)return fetch(url).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'));return fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveNote',month:month,text:text})}).then(()=>{setSyncStatus('✅ 已同步','var(--green)');setTimeout(()=>setSyncStatus(''),3000)}).catch(()=>setSyncStatus('❌ 同步失敗','var(--red)'))}
 
 const SCRIPT_URL=CONFIG.scriptUrl;
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`;
