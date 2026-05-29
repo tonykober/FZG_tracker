@@ -12,7 +12,7 @@ async function syncAndReload(){
   const keys=Object.keys(localStorage).filter(k=>k.startsWith('fzg_'));
   if(!confirm('確定執行以下操作？\n\n1. 清除本機快取（'+keys.length+' 筆）\n2. 重新載入頁面（從雲端讀取設定）\n\n※ 所有操作已即時同步到雲端'))return;
   document.body.innerHTML='<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999"><div class="spinner"></div></div>';
-  Object.keys(localStorage).filter(k=>k.startsWith('fzg_')).forEach(k=>localStorage.removeItem(k));location.reload()
+  Object.keys(localStorage).filter(k=>k.startsWith('fzg_')&&!k.includes('collapse')&&!k.includes('sort')&&!k.includes('board_groups')&&!k.includes('group_names')).forEach(k=>localStorage.removeItem(k));location.reload()
 }
 function toggleAdmin(){
   if(unlocked){unlocked=false;sessionStorage.removeItem('fzg_unlocked')}
