@@ -257,7 +257,7 @@ function quickDelete(idx,e){
       if(!parentOfDeleted){g['父任務']=c['任務名稱']}
     });
   });
-  setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',row:idx}),});
+  setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',month:currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1),row:idx}),});
   tasks.splice(idx,1);render();
 }
 function updateMonthLabel(){const lbl=document.getElementById('monthLabel');if(window._unscheduledMode){lbl.textContent='未修正';lbl.style.cursor='pointer';lbl.onclick=()=>{window._unscheduledMode=false;updateMonthLabel();fetchData()};return}lbl.textContent=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1);lbl.style.cursor='pointer';lbl.onclick=()=>{const p=document.getElementById('monthPicker');p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0');p.showPicker()};const p=document.getElementById('monthPicker');if(p)p.value=currentMonth.getFullYear()+'-'+String(currentMonth.getMonth()+1).padStart(2,'0')}
@@ -361,7 +361,7 @@ function deleteTask(idx){
   const row=idx!==undefined?idx:m.dataset.editIdx;
   if(row===undefined)return;
   if(!confirm('確定刪除？'))return;
-  setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',row:row}),});
+  setSyncStatus('🔄 同步中...','var(--yellow)');fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',month:currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1),row:row}),});
   tasks.splice(parseInt(row),1);if(idx===undefined)closeModal();render();
 }
 async function fetchData(){
