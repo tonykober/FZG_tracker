@@ -91,6 +91,7 @@ function closeModal(){const m=document.getElementById('addModal');m.classList.ad
 function openModalWithParent(parentName){
   openModal();
   document.getElementById('f-parent').value=parentName;
+  document.getElementById('f-parent-select').value=parentName;
 }
 function populateSelects(){
   const allTags=new Set();tasks.forEach(t=>(t['標籤']||'').split(',').filter(Boolean).forEach(tag=>allTags.add(tag.trim())));
@@ -339,6 +340,8 @@ async function submitTask(){
     }else{
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
+      // Auto-expand parent date range if child exceeds
+      if(data.parent){const parent=tasks.find(p=>p['任務名稱']===data.parent);if(parent){let pc=false;if(data.startDate&&(!parent['開始日']||data.startDate<parent['開始日'])){parent['開始日']=data.startDate;pc=true}if(data.dueDate&&(!parent['截止日']||data.dueDate>parent['截止日'])){parent['截止日']=data.dueDate;pc=true}if(pc){_savePendingEdit(parent);const pi=tasks.indexOf(parent);fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',row:pi,name:parent['任務名稱'],owner:parent['負責人'],status:parent['狀態'],progress:'',startDate:parent['開始日'],dueDate:parent['截止日'],note:parent['備註'],priority:parent['優先級'],tags:parent['標籤'],parent:parent['父任務'],hours:parent['工時'],comment:parent['評論']})})}}}
     }
     closeModal();render();renderFilterBar();
     // Auto-move: if task was in unmodified list and now complete, move to monthly tab
