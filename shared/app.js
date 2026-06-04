@@ -373,7 +373,10 @@ async function fetchData(){
     const res=await fetch(getSheetUrl());const text=await res.text();
     const json=JSON.parse(text.substring(47).slice(0,-2));
     const cols=json.table.cols.map(c=>c.label.trim());
-    tasks=json.table.rows.map(r=>{const obj={};cols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']);
+    // 防呆：如果沒有標題行（第一欄不是'任務名稱'），使用預設欄位名
+    const expectedCols=['任務名稱','負責人','狀態','進度','開始日','截止日'];
+    const useCols=cols.includes('任務名稱')?cols:expectedCols;
+    tasks=json.table.rows.map(r=>{const obj={};useCols.forEach((c,i)=>{if(r.c&&r.c[i])obj[c]=r.c[i].f||String(r.c[i].v||'');else obj[c]=''});return obj}).filter(t=>t['任務名稱']);
     // Merge localStorage pending edits (gviz cache workaround)
     const _pending=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');
     const _now=Date.now();
@@ -896,8 +899,8 @@ async function renderOutsource(){
   }
   if (data.action === 'add') {
     let ws = ss.getSheetByName(data.month);
-    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,7).setValues([['負責人','工作項目','狀態','開始日','截止日','備註','工時']]); }
-    ws.appendRow([data.owner, data.task, data.status, data.startDate, data.dueDate, data.note, data.hours]);
+    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,6).setValues([['任務名稱','負責人','狀態','進度','開始日','截止日']]); }
+    ws.appendRow([data.task, data.owner, data.status, data.progress||'', data.startDate, data.dueDate]);
     return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
   }
   if (data.action === 'saveZone') {

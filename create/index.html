@@ -116,8 +116,8 @@ function saveNoteHandler(ss, month, text) {
   }
   if (data.action === 'add') {
     let ws = ss.getSheetByName(data.month);
-    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,7).setValues([['負責人','工作項目','狀態','開始日','截止日','備註','工時']]); }
-    ws.appendRow([data.owner, data.task, data.status, data.startDate, data.dueDate, data.note, data.hours]);
+    if (!ws) { ws = ss.insertSheet(data.month); ws.getRange(1,1,1,6).setValues([['任務名稱','負責人','狀態','進度','開始日','截止日']]); }
+    ws.appendRow([data.task, data.owner, data.status, data.progress||'', data.startDate, data.dueDate]);
     return ContentService.createTextOutput(JSON.stringify({result:'ok'})).setMimeType(ContentService.MimeType.JSON);
   }
   if (data.action === 'saveZone') {
