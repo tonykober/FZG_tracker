@@ -318,7 +318,18 @@ async function submitTask(){
   if(!valid)return;
   const dupIdx=tasks.findIndex(t=>t['任務名稱']===data.name);
   if(dupIdx!==-1&&(m.dataset.editIdx===undefined||dupIdx!==parseInt(m.dataset.editIdx))){alert('任務名稱已存在，請使用不同名稱');return}
-  if(m.dataset.editIdx!==undefined){data.action='update';const _editTask=tasks[parseInt(m.dataset.editIdx)];data.row=_editTask._row;data.month=_editTask._month}
+  if(m.dataset.editIdx!==undefined){data.action='update';const _editTask=tasks[parseInt(m.dataset.editIdx)];data.row=_editTask._row;data.month=_editTask._month;
+    // Cross-month sync check
+    if(_editTask['ID']){
+      const _otherMonths=tasks.filter(t=>t['ID']===_editTask['ID']&&t._month!==_editTask._month);
+      if(_otherMonths.length>0){
+        const _months=[...new Set(_otherMonths.map(t=>t._month))].join(', ');
+        const _choice=prompt('此任務也存在於「'+_months+'」月份。\n\n請選擇：\n1 = 同步所有月份\n2 = 僅更新當月\n3 = 取消操作','1');
+        if(_choice==='3'||_choice===null)return;
+        data._syncAll=(_choice==='1');
+      }
+    }
+  }
   try{
     const _curM=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
     const _sd=data.startDate||'';const _nm=_sd?(_sd.includes('-')?_sd.substring(0,4)+'/'+_sd.substring(5,7):(()=>{const p=_sd.split('/');return p.length>=2?p[0]+'/'+p[1].padStart(2,'0'):''})()):'';
@@ -339,6 +350,7 @@ async function submitTask(){
       _savePendingEdit(t);
       if(oldName!==data.name&&t['ID']){fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'syncRename',id:t['ID'],oldName:oldName,newName:data.name})})}
       else if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',month:c._month,row:c._row,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']})})})}
+      if(data._syncAll&&t['ID']){fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'syncUpdate',id:t['ID'],fields:{name:data.name,owner:data.owner,status:data.status,startDate:data.startDate,dueDate:data.dueDate,note:data.note,priority:data.priority,tags:data.tags,parent:data.parent,hours:data.hours,comment:data.comment}})})}
     }else{
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
