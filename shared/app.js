@@ -403,6 +403,8 @@ async function fetchData(){
     // Re-apply pending edits to prev month tasks
     const _p2=JSON.parse(localStorage.getItem('fzg_pending_edits')||'{}');Object.keys(_p2).forEach(name=>{const e=_p2[name];if(Date.now()-e.ts<=300000){const t=tasks.find(x=>x['任務名稱']===name);if(t)Object.assign(t,e.data)}});
     }catch(e){}
+    // Also check next month for cross-month detection (don't merge, just mark)
+    try{const nm=new Date(currentMonth);nm.setMonth(nm.getMonth()+1);const ny=nm.getFullYear(),nmm=nm.getMonth()+1;const nextMonth=ny+'/'+(nmm<10?'0'+nmm:nmm);const nextUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nextMonth)}`;const rn=await fetch(nextUrl);const tn=await rn.text();const jn=JSON.parse(tn.substring(47).slice(0,-2));const cn=jn.table.cols.map(c=>c.label.trim());const idIdx=cn.indexOf('ID');if(idIdx>=0){const nextIds=new Set(jn.table.rows.map(r=>r.c&&r.c[idIdx]?String(r.c[idIdx].v||''):'').filter(Boolean));tasks.forEach(t=>{if(t['ID']&&nextIds.has(t['ID'])&&!t._crossMonth)t._crossMonth=nextMonth})}}catch(e){}
     render();renderFilterBar();
   }catch(e){document.getElementById('boardView').innerHTML='<div style="text-align:center;color:var(--muted);padding:40px">載入失敗<br><button onclick="fetchData()" style="margin-top:10px;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer">重試</button></div>'}
 }
