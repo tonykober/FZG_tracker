@@ -268,7 +268,7 @@ let _showUnmodified=false,_unmodifiedTasks=[];
 async function toggleUnmodified(){
   _showUnmodified=!_showUnmodified;
   const btn=document.querySelector('[data-unmod-btn]');
-  if(btn)btn.textContent=_showUnmodified?'🔽 隱藏未修正':'📋 顯示未修正';
+  if(btn)btn.textContent=_showUnmodified?'🔽 隱藏未修正':'📋 顯示未修正'+(_unmodifiedTasks.length?'('+_unmodifiedTasks.length+')':'');
   if(_showUnmodified&&!_unmodifiedTasks.length){
     try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未修正')}`);const t=await r.text();const j=JSON.parse(t.substring(47).slice(0,-2));const c=j.table.cols.map(x=>x.label.trim());_unmodifiedTasks=j.table.rows.map(r=>{const o={};c.forEach((col,i)=>{if(r.c&&r.c[i])o[col]=r.c[i].f||String(r.c[i].v||'');else o[col]=''});return o}).filter(x=>x['任務名稱'])}catch(e){}
   }
@@ -1023,5 +1023,6 @@ function renderOutsourceFromCache(){
   document.getElementById('outsourceContent').innerHTML='<div class="board"><div class="column" data-zone="一區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'一區\')">'+cols[0]+'</div><div class="column" data-zone="二區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'二區\')">'+cols[1]+'</div><div class="column" data-zone="三區" ondragover="event.preventDefault();this.style.outline=\'2px dashed var(--accent)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';outsourceDrop(event,\'三區\')">'+cols[2]+'</div></div>';
 }
 fetchData();updateMonthLabel();loadNotes();applyLock();
+(async function(){try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent('未修正')}`);const t=await r.text();const j=JSON.parse(t.substring(47).slice(0,-2));const cnt=(j.table.rows||[]).filter(r=>r.c&&r.c[0]&&(r.c[0].v||r.c[0].f)).length;const btn=document.querySelector('[data-unmod-btn]');if(btn&&cnt>0)btn.textContent='📋 顯示未修正('+cnt+')'}catch(e){}})();
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()))}
 
