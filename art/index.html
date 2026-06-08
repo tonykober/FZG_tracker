@@ -53,7 +53,7 @@
       <button class="btn-tab active" style="white-space:nowrap" onclick="outsourceMode='list';renderOutsourceFromCache();this.classList.add('active');this.parentElement.querySelector('.btn-tab:nth-child(2)').classList.remove('active')">看板</button>
       <button class="btn-tab" style="white-space:nowrap" onclick="outsourceMode='gantt';renderOutsourceFromCache();this.classList.add('active');this.parentElement.querySelector('.btn-tab:nth-child(1)').classList.remove('active')">時間軸</button>
       <button class="btn" onclick="syncOutsource()" style="background:var(--accent);color:#fff;white-space:nowrap" title="從雲端重新讀取外包工作項目並重新渲染">🔄 重新載入</button>
-      <button class="btn edit-ctrl" onclick="requestCloudSync()" style="background:var(--green);color:#fff;white-space:nowrap" title="通知秘書從本機Excel同步最新資料到雲端">☁️ 雲端資料更新</button>
+      <button class="btn edit-ctrl" onclick="requestCloudSync()" style="background:var(--green);color:#fff;white-space:nowrap" title="從唯晶日報同步當月外包資料到外包Sheet">🔄 當月資料同步</button>
     </div>
     <span class="outsource-legend" style="font-size:0.85rem;color:var(--muted);white-space:nowrap;margin-left:auto">🟡進行中 🟢已完成 ⬜待辦 🔵群組</span>
     <span id="syncTimestamp" style="font-size:0.75rem;color:var(--muted);white-space:nowrap"></span>

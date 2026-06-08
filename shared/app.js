@@ -854,22 +854,25 @@ function activateOutsource(){
   }).catch(function(){status.innerHTML='<span style="color:var(--red)">❌ Sheet ID 無效或未設為公開</span>';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'});
 }
 function requestCloudSync(){
-  if(!confirm('確定通知秘書執行雲端資料更新？\n\n同步期間可繼續操作，完成後頁面會顯示通知。'))return;
+  if(!confirm('確定執行當月資料同步？\n\n將從唯晶日報讀取當月資料並更新外包Sheet。'))return;
   const btn=document.querySelector('[onclick="requestCloudSync()"]');if(btn){btn.disabled=true;btn.style.opacity='0.5'}
-  const ts=Date.now();
-  saveNote('sync_request_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),ts+'|'+currentMonth.getFullYear()+'/'+('0'+(currentMonth.getMonth()+1)).slice(-2));
   const el=document.getElementById('cloudSyncStatus');
-  el.style.display='block';el.style.color='var(--yellow)';el.textContent='☁️ 已通知秘書，同步中...';
-  const origTime=localStorage.getItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1))||'';
-  const poll=setInterval(()=>{
-    const notesUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=notes&headers=0`;
-    fetch(notesUrl).then(r=>r.text()).then(text=>{
-      try{const json=JSON.parse(text.substring(47).slice(0,-2));
-      json.table.rows.forEach(r=>{if(r.c&&r.c[0]&&r.c[0].v==='sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1)){const newTime=r.c[1]?r.c[1].v:'';if(newTime&&newTime!==origTime){clearInterval(poll);localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),newTime);el.style.color='var(--green)';el.textContent='✅ 雲端資料已更新，請重新載入';if(btn){btn.disabled=false;btn.style.opacity='1'}}}})
-      }catch(e){}
-    }).catch(()=>{});
-  },10000);
-  setTimeout(()=>{clearInterval(poll);if(el.textContent.includes('同步中')){el.style.color='var(--red)';el.textContent='❌ 同步逾時，可能秘書離線，請稍後再試或到頻道通知';if(btn){btn.disabled=false;btn.style.opacity='1'}}},300000);
+  el.style.display='block';el.style.color='var(--yellow)';el.textContent='🔄 同步中...';
+  const url=CONFIG.outsourceScriptUrl+'?action=dailySync&month='+encodeURIComponent(currentMonth.getFullYear()+'/'+('0'+(currentMonth.getMonth()+1)).slice(-2));
+  fetch(url).then(r=>r.json()).then(res=>{
+    if(res.success){
+      el.style.color='var(--green)';el.textContent='✅ 同步完成：'+res.count+' 筆';
+      localStorage.setItem('fzg_sync_time_'+currentMonth.getFullYear()+'_'+(currentMonth.getMonth()+1),res.syncTime||'');
+      updateSyncTimestamp();
+      setTimeout(()=>renderOutsource(),1000);
+    }else{
+      el.style.color='var(--red)';el.textContent='❌ '+res.error;
+    }
+    if(btn){btn.disabled=false;btn.style.opacity='1'}
+  }).catch(e=>{
+    el.style.color='var(--red)';el.textContent='❌ 同步失敗：'+e.message;
+    if(btn){btn.disabled=false;btn.style.opacity='1'}
+  });
 }
 
 async function renderOutsource(){
