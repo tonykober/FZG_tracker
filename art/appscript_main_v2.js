@@ -5,6 +5,13 @@
  * 欄位(15): 任務名稱,負責人,狀態,進度,開始日,截止日,備註,優先級,標籤,父任務,工時,評論,排序,收合,ID
  */
 
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'saveNote') {
+    return _saveNote({month: e.parameter.month, text: e.parameter.text});
+  }
+  return _json({result: 'unknown'});
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
