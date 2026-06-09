@@ -133,13 +133,17 @@ function _saveNote(data) {
   var sheet = ss.getSheetByName('notes');
   if (!sheet) { sheet = ss.insertSheet('notes'); }
   var values = sheet.getDataRange().getValues();
+  var found = false;
+  var dupes = [];
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] === data.month) {
-      sheet.getRange(i + 1, 2).setValue(data.text);
-      return _json({result: 'ok'});
+      if (!found) { sheet.getRange(i + 1, 2).setValue(data.text); found = true; }
+      else { dupes.push(i + 1); }
     }
   }
-  sheet.appendRow([data.month, data.text]);
+  // Remove duplicate rows (from bottom to top)
+  for (var d = dupes.length - 1; d >= 0; d--) { sheet.deleteRow(dupes[d]); }
+  if (!found) sheet.appendRow([data.month, data.text]);
   return _json({result: 'ok'});
 }
 
