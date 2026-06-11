@@ -354,6 +354,7 @@ async function submitTask(){
       else if(oldName!==data.name){tasks.filter(c=>c['父任務']===oldName).forEach(c=>{c['父任務']=data.name;fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'update',month:c._month,row:c._row,name:c['任務名稱'],owner:c['負責人'],status:c['狀態'],progress:'',startDate:c['開始日'],dueDate:c['截止日'],note:c['備註'],priority:c['優先級'],tags:c['標籤'],parent:data.name,hours:c['工時'],comment:c['評論']})})})}
       if(data._syncAll&&t['ID']){fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'syncUpdate',id:t['ID'],fields:{name:data.name,owner:data.owner,status:data.status,startDate:data.startDate,dueDate:data.dueDate,note:data.note,priority:data.priority,tags:data.tags,parent:data.parent,hours:data.hours,comment:data.comment}})})}
     }else{
+      data.action='add';data.month=currentMonth.getFullYear()+'/'+(currentMonth.getMonth()+1<10?'0':'')+(currentMonth.getMonth()+1);
       const maxSort=Math.max(0,...tasks.map(t=>parseInt(t['排序'])||0));
       tasks.push({'任務名稱':data.name,'負責人':data.owner||'','狀態':data.status||'待辦','進度':'','開始日':data.startDate||'','截止日':data.dueDate||'','備註':data.note||'','優先級':data.priority||'','標籤':data.tags||'','父任務':data.parent||'','工時':data.hours||'','評論':data.comment||'','排序':String(maxSort+1)});
       // Auto-expand parent date range if child exceeds
